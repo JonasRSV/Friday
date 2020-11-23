@@ -1,0 +1,10 @@
+[package]
+name = "friday"
+version = "0.1.0"
+authors = ["Jonas Valfridsson <jonas@valfridsson.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+audio-io = { path = "audio-io" }
