@@ -72,7 +72,12 @@ pub fn record(r: &RecordingConfig) -> Box<IStream> {
 impl IStream {
     pub fn read(&self) -> Option<Vec<i16>> {
         return match self.buffer.lock() {
-            Ok(guard) => Some(guard.asc_iter().copied().collect()),
+            Ok(guard) => {
+                let mut data: Vec<i16> = Vec::with_capacity(self.config.model_frame_size);
+                data.extend(guard.asc_iter());
+                data.resize(self.config.model_frame_size, 0);
+                return Some(data);
+            }
             Err(_) => {
                 eprint!("Failed to aquire lock for reading audio data");
                 None
