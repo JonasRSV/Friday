@@ -2,10 +2,21 @@ use std::path::{PathBuf, Path};
 use std::env;
 use std::collections::HashMap;
 use serde_json;
+use serde_derive::Deserialize;
+use friday_error;
+
+#[derive(Deserialize)]
+struct DiscriminativeJsonConfig {
+    export_dir: String,
+    class_map: String,
+    sensitivity: f64
+}
 
 pub struct Discriminative {
     pub export_dir: PathBuf,
-    pub class_map: Vec<String>
+    pub class_map: Vec<String>,
+    pub sensitivity: f64
+        
 }
 
 fn get_file(file: String, root_path: &Path) -> Option<PathBuf> {
@@ -21,88 +32,91 @@ fn get_file(file: String, root_path: &Path) -> Option<PathBuf> {
 }
 
 impl Discriminative {
-    fn get_class_map(m: &HashMap<String, String>) -> Vec<String> {
+    fn get_class_map(class_map_file: &String) -> Result<Vec<String>, friday_error::FridayError> {
         // Open class_map json file
-        let class_map_file = PathBuf::from(
-            m.get("class_map")
-            .expect("discriminative_config did not contain field 'class_map'"));
 
-        let class_map_text_content = 
-            std::fs::read_to_string(class_map_file.clone()).expect(
-                format!("Unable to open class_map: {}", 
-                    class_map_file.to_str().unwrap(
-                    )).as_ref());
+        let class_map_file_name = class_map_file.clone();
 
-        let class_map_mappings: HashMap<String, i32> = 
-            serde_json::from_str(&class_map_text_content)
-            .expect("Failed to parse JSON");
+        std::fs::read_to_string(class_map_file.clone()).map_or_else(
+            |_| Err(friday_error::FridayError::from(
+            format!("Unable to read file {}", class_map_file_name))),
+            |contents| serde_json::from_str(&contents).map_or_else(
+                |err| Err(
+                    friday_error::FridayError::from(
+                        format!("Unable to parse json in {} - Reason: {}",
+                            class_map_file_name, err))),
+                |class_map: HashMap<String, i32>| {
+                    let mut class_map_mappings_vec: Vec<(String, i32)> = class_map
+                        .iter()
+                        .map(|k| (k.0.clone(), k.1.clone()))
+                        .collect();
 
-        // Extract Sorted map
-        let mut class_map_mappings_vec: Vec<(String, i32)> = class_map_mappings
-            .iter()
-            .map(|k| (k.0.clone(), k.1.clone()))
-            .collect();
+                    class_map_mappings_vec.sort_by_key(|k| k.1);
 
-        class_map_mappings_vec.sort_by_key(|k| k.1);
+                    // Finally we have the class_map
+                    return Ok(class_map_mappings_vec.iter().map(|k| k.0.clone()).collect());
 
-        // Finally we have the class_map
-        return class_map_mappings_vec.iter().map(|k| k.0.clone()).collect();
+                }))
+    
+
     }
 
-    fn get_export_dir(m: &HashMap<String, String>) -> PathBuf {
-        // Open class_map json file
-        return PathBuf::from(
-            m.get("export_dir")
-            .expect("discriminative_config did not contain field 'export_dir'"));
+    fn get_discriminative(map: &DiscriminativeJsonConfig) -> Result<Discriminative, friday_error::FridayError> {
+        let maybe_class_map = Discriminative::get_class_map(&map.class_map);
+        
+        return maybe_class_map.map_or_else(
+            |err| Err(err.push("Could not to load class map for discriminative model")),
+            |class_map| return Ok(
+                    Discriminative {
+                        export_dir: PathBuf::from(map.export_dir.clone()),
+                        class_map,
+                        sensitivity: map.sensitivity
+                    }));
     }
 
-    pub fn new() -> Discriminative {
-        match env::var("FRIDAY_CONFIG") {
-            Ok(config) => {
-                let path = PathBuf::from(config);
-                if !path.is_dir() {
-                    eprintln!("\nFRIDAY_CONFIG does not point to a directory\n");
-                    eprintln!("{} is not a directory\n\n", path.to_str().unwrap());
-                    panic!("Exiting - could not load discriminative config..");
+    fn read_config(config_file: PathBuf) -> Result<Discriminative, friday_error::FridayError> {
+        let debug_file = config_file.clone();
+        let file_name = debug_file.file_name().unwrap().to_str().unwrap();
+
+
+        return std::fs::read_to_string(config_file)
+            .map_or_else(
+                |_| Err(friday_error::FridayError::from(format!("Unable to read file {}", file_name))),
+                |contents| serde_json::from_str(&contents)
+                .map_or_else(
+                    |err| Err(friday_error::FridayError::from(
+                            format!("Unable to parse json in {}, reason: {}", 
+                                file_name, 
+                                err))),
+                    |map: DiscriminativeJsonConfig| Discriminative::get_discriminative(&map) 
+                )
+
+            );
+    }
+
+    pub fn new() -> Result<Discriminative, friday_error::FridayError> {
+        return env::var("FRIDAY_CONFIG").map_or_else(
+            |_| Err(friday_error::FridayError::new("The environment variable \
+            FRIDAY_CONFIG needs to point to a configuration directory.\
+            \nPlease set the FRIDAY_CONFIG environment variable.\
+            \n\n\
+            For example: \n\
+            FRIDAY_CONFIG=./configs")),
+            |config_path| {
+                let path = PathBuf::from(config_path.clone());
+                if ! path.is_dir() {
+                    return Err(friday_error::FridayError::from(
+                            format!("{} is not a valid directory", config_path)))
                 }
 
-                let discriminative_config_file = String::from("discriminative.json");
-
-                // Open config json_file
-                let discriminative_config = get_file(
-                    discriminative_config_file.clone(), 
-                    path.as_path()).expect(format!(
-                        "{} not found in {}", 
-                        discriminative_config_file.clone(),
-                        path.to_str().unwrap()
-                    ).as_ref()
-                    );
-
-                let discriminative_text_content = 
-                    std::fs::read_to_string(discriminative_config.clone()).expect(
-                        format!("Unable to open {}", 
-                            discriminative_config.to_str().unwrap(
-                            )).as_ref());
-
-                let config_mappings: HashMap<String, String> = 
-                    serde_json::from_str(&discriminative_text_content)
-                    .expect("Failed to parse JSON");
-
-                return Discriminative{
-                    export_dir: Discriminative::get_export_dir(&config_mappings),
-                    class_map: Discriminative::get_class_map(&config_mappings)
-                };
-            },
-            Err(_) => {
-                eprintln!("\nPlease set the environment variable FRIDAY_CONFIG\n");
-                eprintln!("FRIDAY_CONFIG should contain a path to the config directory");
-                eprintln!("For example in a shell: FRIDAY_CONFIG=./test-resources\n\n");
-                eprintln!("The discriminative model uses this environment variable to load its deps\n\n");
-                eprintln!("If you don't know what the config directory should contain leave it empty and run again, friday will complain until everything is right\n\n");
-                panic!("Exiting - could not load discriminative config.. nothing more todo.");
+                let config_file_name = "discriminative.json";
+                get_file(String::from(config_file_name),
+                path.as_path()).map_or_else(
+                || Err(friday_error::FridayError::from(
+                        format!("{}/{} does not exist", config_path, config_file_name))),
+                        Discriminative::read_config)
             }
-
-        }
+        );
     }
 }
 
@@ -112,6 +126,6 @@ mod tests {
     use super::*;
     #[test]
     fn config_loading() {
-        Discriminative::new();
+        Discriminative::new().expect("Failed to read config");
     }
 }

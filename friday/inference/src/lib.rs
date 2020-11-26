@@ -1,30 +1,37 @@
 
 #[derive(Debug, Clone)]
-pub struct Prediciton {
-    pub class: String
+pub enum Prediction {
+    Result {
+        class: String,
+        index: u32
+    },
+    Silence,
+    Inconclusive
+
 }
 
 pub trait Model {
-    fn predict(&mut self, v :&Vec<i16>) -> Prediciton;
+    fn predict(&mut self, v :&Vec<i16>) -> Prediction;
     fn expected_frame_size(&self) -> usize;
 }
 
 pub struct DummyModel {
-    ret: Prediciton
+    ret: Prediction
 }
 
 impl DummyModel {
     pub fn new(c: String) -> DummyModel {
         return DummyModel{
-            ret: Prediciton {
-                class: c
+            ret: Prediction::Result {
+                class: c,
+                index: 1
             }
         }
     }
 }
 
 impl Model for DummyModel {
-    fn predict(&mut self, _ :&Vec<i16>) -> Prediciton {
+    fn predict(&mut self, _ :&Vec<i16>) -> Prediction {
         return self.ret.clone();
     }
 
@@ -42,6 +49,6 @@ mod tests {
         let mut dummy = DummyModel::new(String::from("Hello"));
 
         let v: Vec<i16> = vec![0];
-        assert_eq!(dummy.predict(&v).class, String::from("Hello"));
+        assert_eq!(dummy.predict(&v).unwrap().class, String::from("Hello"));
     }
 }

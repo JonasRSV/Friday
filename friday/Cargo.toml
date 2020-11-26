@@ -8,8 +8,10 @@ edition = "2018"
 
 [dependencies]
 audio-io = { path = "audio-io" }
-action-io = { path = "action-io" }
+vendor-io = { path = "vendor-io" }
+philips-hue = { path = "vendor-io/philips-hue" }
 inference = { path = "inference" }
 tensorflow-models = { path = "inference/tensorflow-models" }
+speaker-detection = { path = "speaker-detection" }
 ctrlc = "3.1.7"
 argparse = "0.2.2"

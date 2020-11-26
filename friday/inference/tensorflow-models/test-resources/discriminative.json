@@ -1,4 +1,5 @@
 {
   "export_dir": "test-resources/1602921240",
-  "class_map": "test-resources/class_map.json"
+  "class_map": "test-resources/class_map.json",
+  "sensitivity": 0.6
 }

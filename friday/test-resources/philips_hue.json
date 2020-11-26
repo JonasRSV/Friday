@@ -1,0 +1,13 @@
+{
+  "hue_config": {
+    "tänd ljuset": [{
+      "id": "4",
+      "dispatch": "On"
+    }],
+
+    "släck ljuset": [{
+      "id": "4",
+      "dispatch": "Off"
+    }]
+  }
+}

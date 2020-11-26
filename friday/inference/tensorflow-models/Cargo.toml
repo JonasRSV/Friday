@@ -11,4 +11,7 @@ libc = "0.2"
 float-ord = "0.2.0"
 tensorflow-rust-sys = { path="tensorflow-rust-sys" } 
 inference = { path="../" } 
+friday-error = { path="../../friday-error" } 
 serde_json = "1.0"
+serde = "1.0"
+serde_derive = "1.0"

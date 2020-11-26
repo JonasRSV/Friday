@@ -1,5 +1,5 @@
 [package]
-name = "audio-io"
+name = "philips-hue"
 version = "0.1.0"
 authors = ["Jonas Valfridsson <jonas@valfridsson.net>"]
 edition = "2018"
@@ -7,7 +7,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cpal = {version = "*", features = ["asio"] }
-circular-queue = "0.2.6"
-wav = "0.4.1"
-friday-error = { path="../friday-error" }
+vendor-io = { path = ".." }
+huelib = "0.10.0"
+serde_json = "1.0"
+serde = "1.0"
+serde_derive = "1.0"
+friday-error = { path="../../friday-error" } 

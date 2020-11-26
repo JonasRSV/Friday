@@ -2,6 +2,7 @@ use cpal;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::{Arc, Mutex, MutexGuard};
 use circular_queue::CircularQueue;
+use friday_error;
 
 
 #[derive(Clone)]
@@ -34,39 +35,54 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>)
 
     }
 
-pub fn record(r: &RecordingConfig) -> Box<IStream> {
-    let host = cpal::default_host();
-    let device = host
-        .default_input_device()
-        .expect("No input device available");
-
-
-    let config = cpal::StreamConfig {
-        channels: 1,
-        sample_rate: cpal::SampleRate{ 0: r.sample_rate },
-        buffer_size: cpal::BufferSize::Fixed(r.buffer_size),
+fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, friday_error::FridayError> {
+    return match cpal::default_host().default_input_device() {
+        Some(device) => Ok(device),
+        None => Err(friday_error::FridayError::new(
+                "Could not find any default input device for recording"))
     };
 
-    let write_buffer = Arc::new(
-        Mutex::new(
-            CircularQueue::with_capacity(r.model_frame_size)));
+}
 
-    let read_buffer = write_buffer.clone();
+pub fn record(r: &RecordingConfig) -> Result<Box<IStream>, friday_error::FridayError> {
+    return get_recording_device(r)
+        .map_or_else(
+            |err| Err(err.push("Could not setup any recording device...")),
+            |device| {
+                let config = cpal::StreamConfig {
+                    channels: 1,
+                    sample_rate: cpal::SampleRate{ 0: r.sample_rate },
+                    buffer_size: cpal::BufferSize::Fixed(r.buffer_size),
+                };
 
+                let write_buffer = Arc::new(
+                    Mutex::new(
+                        CircularQueue::with_capacity(r.model_frame_size)));
 
-    let stream = device.build_input_stream(
-        &config.into(),
-        move |data, _: &_| write_to_buffer::<i16>(data, &write_buffer),
-        |err| println!("Recording error - {}", err)).expect("Failed to create input stream");
+                let read_buffer = write_buffer.clone();
 
-    stream.play().expect("Recording Failed");
+                return device.build_input_stream(
+                    &config.into(),
+                    move |data, _: &_| write_to_buffer::<i16>(data, &write_buffer),
+                    |err| println!("Recording error - {}", err)
+                ).map_or_else(
+                |err| Err(friday_error::FridayError::from(
+                        format!("Failed to create input stream {}", err))),
+                |stream| {
+                    stream.play()
+                        .map_or_else(
+                            |err| Err(friday_error::FridayError::from(
+                                    format!("Recording Failed {}", 
+                                        err))),
+                            |_| {
+                                Ok(Box::new(IStream{
+                                    config: r.clone(),
+                                    stream,
+                                    buffer: read_buffer}))
+                            })
 
-    return Box::new(
-        IStream{
-            config: r.clone(),
-            stream,
-            buffer: read_buffer
-        })
+                });
+            });
 }
 
 impl IStream {

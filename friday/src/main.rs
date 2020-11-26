@@ -1,22 +1,30 @@
 use ctrlc;
-use action_io;
+use vendor_io;
+use philips_hue;
+use vendor_io::DispatchResponse;
 use audio_io;
 use inference;
 use tensorflow_models;
+use speaker_detection;
+use speaker_detection::SpeakDetector;
 use inference::Model;
-use action_io::Vendor;
+use vendor_io::Vendor;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 
-
 fn main() {
-    let vendors: Vec<Box<dyn action_io::Vendor>> = vec![
-        Box::new(action_io::DummyVendor::new()),
-        Box::new(action_io::DummyVendor::new()),
+    let vendors: Vec<Box<dyn vendor_io::Vendor>> = vec![
+        Box::new(philips_hue::Hue::new().expect("Failed to create Philips Hue Vendor")),
+        Box::new(vendor_io::DummyVendor::new()),
     ];
 
-    let mut model = tensorflow_models::discriminative::Discriminative::new();
+    let mut model = tensorflow_models::discriminative::Discriminative::new()
+        .expect("Failed to load model");
+
+    let mut speak = speaker_detection::EnergyBasedDetector::new(
+        /*threshold=*/300.0
+    );
 
     let config = audio_io::RecordingConfig {
         sample_rate: 8000,
@@ -24,21 +32,17 @@ fn main() {
         model_frame_size: model.expected_frame_size()
     };
 
-    let istream = audio_io::record(&config);
+    let istream = audio_io::record(&config).expect("Failed to start audio recording");
 
-    serve_friday(&mut model, &vendors, &istream);
+    serve_friday(&mut speak, &mut model, &vendors, &istream);
 
     println!("Exiting..");
-
-    drop(istream);
-    drop(config);
-    drop(model);
-    drop(vendors);
 }
 
 
-fn serve_friday<M, V>(model: &mut M, vendors: &Vec<Box<V>>, istream: &audio_io::IStream) 
+fn serve_friday<M, S, V>(speak: &mut S, model: &mut M, vendors: &Vec<Box<V>>, istream: &audio_io::IStream) 
     where M: Model,
+          S: SpeakDetector,
           V: Vendor + ?Sized {
 
               // Create interrupt handler
@@ -54,20 +58,31 @@ fn serve_friday<M, V>(model: &mut M, vendors: &Vec<Box<V>>, istream: &audio_io::
                   std::thread::sleep(std::time::Duration::from_millis(250));
                   match istream.read() {
                       Some(audio) => {
-                          let prediction = model.predict(&audio);
+                          if speak.detect(&audio) {
+                              match model.predict(&audio) {
+                                  inference::Prediction::Result{
+                                      class,
+                                      index: _
+                                  } => {
+                                      for vendor in vendors.iter() {
+                                          match vendor.dispatch(&class) {
+                                              DispatchResponse::Success => (),
+                                              DispatchResponse::NoMatch => (),
+                                              DispatchResponse::Err{err} => eprintln!(
+                                                  "Error occured during dispatch {:?}", err)
+                                          }
+                                      }
 
-                          for vendor in vendors.iter() {
-                              match vendor.dispatch(&prediction.class) {
-                                  Ok(_) => (),
-                                  Err(e) => eprintln!("Failed to dispatch {}", e)
-                              }
+                                      // Sleep to clear the replay buffer
+                                      // TODO: maybe just empty the buffer instead of sleeping?
+                                      std::thread::sleep(std::time::Duration::from_millis(2000));
+                                  },
+                                      inference::Prediction::Silence => (),
+                                      inference::Prediction::Inconclusive => ()
+                              };
                           }
-
                       },
                       None => eprintln!("(main) Failed to read audio")
-
                   }
-
               }
-
-}
+          }
