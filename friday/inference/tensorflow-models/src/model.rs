@@ -3,10 +3,16 @@ use std::path::Path;
 use std::ffi::CString;
 use libc;
 
+#[cfg(target_arch="x86_64")] pub type Char = i8;
+#[cfg(target_arch="x86_64")] pub type UInt = u64;
+
+#[cfg(target_arch="arm")] pub type Char = u8;
+#[cfg(target_arch="arm")] pub type UInt = u32;
+
 fn is_status_ok(status: *const tensorflow_rust_sys::TF_Status) -> bool {
     unsafe {
         if tensorflow_rust_sys::TF_GetCode(status) != tensorflow_rust_sys::TF_Code_TF_OK {
-            let message = CString::from_raw(tensorflow_rust_sys::TF_Message(status) as *mut i8);
+            let message = CString::from_raw(tensorflow_rust_sys::TF_Message(status) as *mut Char);
             let rust_message = message.to_str().expect("Failed to make string");
 
             eprintln!("(tensorflow-models): Error {}", rust_message);
@@ -115,7 +121,7 @@ impl Tensor {
                 /*dims=*/self.dims.as_ptr(), 
                 /*num_dims=*/self.dims.len() as i32, 
                 /*data=*/c_data, 
-                /*length=*/data_sz as u64,
+                /*length=*/data_sz as UInt,
                 /*deallocator=*/Some(deallocator),
                 /*deallocator_args=*/std::ptr::null::<libc::c_void>() as *mut libc::c_void)
         };

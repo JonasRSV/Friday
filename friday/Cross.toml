@@ -1,0 +1,7 @@
+[target.x86_64-unknown-linux-gnu]
+image = "friday-x86_64-unknown-linux-gnu:latest"
+target_arch = "x86_64"
+
+[target.armv7-unknown-linux-gnueabihf]
+image = "friday-armv7-unknown-linux-gnueabinhf:latest"
+target_arch = "arm"

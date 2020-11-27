@@ -38,6 +38,13 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>)
     }
 
 fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError> {
+    for host in cpal::available_hosts().iter() {
+        println!("Found Host {}", host.name());
+    }
+    for device in cpal::default_host().input_devices().unwrap() {
+        println!("Found {}", device.name().unwrap());
+
+    }
     return match cpal::default_host().default_input_device() {
         Some(device) => Ok(device),
         None => frierr!("Could not find any default input device for recording")
@@ -50,6 +57,8 @@ pub fn record(r: &RecordingConfig) -> Result<Box<IStream>, FridayError> {
         .map_or_else(
             |err| err.push("Could not setup any recording device...").into(),
             |device| {
+                println!("Using device {}", device.name().unwrap());
+
                 let config = cpal::StreamConfig {
                     channels: 1,
                     sample_rate: cpal::SampleRate{ 0: r.sample_rate },
@@ -67,7 +76,7 @@ pub fn record(r: &RecordingConfig) -> Result<Box<IStream>, FridayError> {
                     move |data, _: &_| write_to_buffer::<i16>(data, &write_buffer),
                     |err| println!("Recording error - {}", err)
                 ).map_or_else(
-                |err| frierr!("Failed to create input stream {}", err),
+                |err| frierr!("Failed to create input stream: {}", err),
                     |stream| {
                         stream.play()
                             .map_or_else(
@@ -121,7 +130,7 @@ mod tests {
         };
 
 
-        let istream = record(&r);
+        let istream = record(&r).unwrap();
 
 
         std::thread::sleep(std::time::Duration::from_secs(1));
@@ -152,7 +161,7 @@ mod tests {
         };
 
 
-        let istream = record(&r);
+        let istream = record(&r).unwrap();
 
 
         for _ in 0..50 {
@@ -176,7 +185,7 @@ mod tests {
         };
 
 
-        let istream = record(&r);
+        let istream = record(&r).unwrap();
 
 
         for index in 0..8 {
