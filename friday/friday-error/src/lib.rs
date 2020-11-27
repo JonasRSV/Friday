@@ -5,24 +5,22 @@ pub struct FridayError{
     trace: VecDeque<String>
 }
 
-impl FridayError {
-    pub fn new(message: &str) -> FridayError {
-        let mut trace = VecDeque::new();
-        trace.push_back(String::from(message.clone()));
-
-        return FridayError{
-            trace
-        }
+#[macro_export]
+macro_rules! frierr {
+    ($str:expr $(,$arg: expr)*) => {
+        FridayError::new(format!($str $(,$arg)*)).into();
     }
+}
 
-    pub fn from(message: String) -> FridayError {
-        let mut trace = VecDeque::new();
-        trace.push_back(message);
+impl FridayError {
+    pub fn new<S>(message: S) -> FridayError 
+        where S: AsRef<str> {
+            let mut trace = VecDeque::new();
+            trace.push_back(String::from(message.as_ref()));
 
-        return FridayError{
-            trace
-        }
-
+            return FridayError{
+                trace
+            }
     }
 
     pub fn len(&self) -> usize {
@@ -68,10 +66,20 @@ impl Debug for FridayError {
     }
 }
 
+impl<T> Into<Result<T, FridayError>> for FridayError {
+    fn into(self) -> Result<T, FridayError> {
+        return Err(self);
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn it_works() {
+    fn frierr_macro() {
+        let f: FridayError = frierr!("Hello {} {} {}", "What", "Are you", "Doing");
+        println!("{:?}", f.trace);
         assert_eq!(2 + 2, 4);
     }
 }

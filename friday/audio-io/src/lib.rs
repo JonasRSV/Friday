@@ -3,6 +3,8 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::{Arc, Mutex, MutexGuard};
 use circular_queue::CircularQueue;
 use friday_error;
+use friday_error::frierr;
+use friday_error::FridayError;
 
 
 #[derive(Clone)]
@@ -35,19 +37,18 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>)
 
     }
 
-fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, friday_error::FridayError> {
+fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError> {
     return match cpal::default_host().default_input_device() {
         Some(device) => Ok(device),
-        None => Err(friday_error::FridayError::new(
-                "Could not find any default input device for recording"))
+        None => frierr!("Could not find any default input device for recording")
     };
 
 }
 
-pub fn record(r: &RecordingConfig) -> Result<Box<IStream>, friday_error::FridayError> {
+pub fn record(r: &RecordingConfig) -> Result<Box<IStream>, FridayError> {
     return get_recording_device(r)
         .map_or_else(
-            |err| Err(err.push("Could not setup any recording device...")),
+            |err| err.push("Could not setup any recording device...").into(),
             |device| {
                 let config = cpal::StreamConfig {
                     channels: 1,
@@ -66,22 +67,19 @@ pub fn record(r: &RecordingConfig) -> Result<Box<IStream>, friday_error::FridayE
                     move |data, _: &_| write_to_buffer::<i16>(data, &write_buffer),
                     |err| println!("Recording error - {}", err)
                 ).map_or_else(
-                |err| Err(friday_error::FridayError::from(
-                        format!("Failed to create input stream {}", err))),
-                |stream| {
-                    stream.play()
-                        .map_or_else(
-                            |err| Err(friday_error::FridayError::from(
-                                    format!("Recording Failed {}", 
-                                        err))),
-                            |_| {
-                                Ok(Box::new(IStream{
-                                    config: r.clone(),
-                                    stream,
-                                    buffer: read_buffer}))
-                            })
+                |err| frierr!("Failed to create input stream {}", err),
+                    |stream| {
+                        stream.play()
+                            .map_or_else(
+                                |err| frierr!("Recording Failed {}", err),
+                                |_| {
+                                    Ok(Box::new(IStream{
+                                        config: r.clone(),
+                                        stream,
+                                        buffer: read_buffer}))
+                                })
 
-                });
+                    });
             });
 }
 

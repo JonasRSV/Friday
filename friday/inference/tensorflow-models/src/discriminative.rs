@@ -4,6 +4,8 @@ use std::ffi::CString;
 use float_ord::FloatOrd;
 use inference;
 use friday_error;
+use friday_error::frierr;
+use friday_error::FridayError;
 
 
 pub struct Discriminative {
@@ -17,7 +19,7 @@ pub struct Discriminative {
 
 impl Discriminative {
 
-    pub fn new() -> Result<Discriminative, friday_error::FridayError>  {
+    pub fn new() -> Result<Discriminative, FridayError>  {
         match c::Discriminative::new() {
             Ok(config) => Discriminative::model_from_config(config),
             Err(e) => Err(e)
@@ -28,7 +30,7 @@ impl Discriminative {
         config: c::Discriminative,
         m: m::Model, 
         input_cstring: CString,
-        output_cstring: CString) -> Result<Discriminative, friday_error::FridayError> {
+        output_cstring: CString) -> Result<Discriminative, FridayError> {
 
         let input_tensor = m::Tensor::new(&m, &input_cstring);
         let output_tensor = m::Tensor::new(&m, &output_cstring);
@@ -38,14 +40,13 @@ impl Discriminative {
             .clone()
             .first()
             .map_or_else(
-                || Err(friday_error::FridayError::new("Failed to read dimension of output tensor")),
+                || frierr!("Failed to read dimension of output tensor"),
                 |dim| {
 
                     if dim.clone() as usize != config.class_map.len() {
-                        return Err(friday_error::FridayError::from(
-                                format!("Class map size ({}) \
+                        return frierr!("Class map size ({}) \
                         not matching output dimension of tensor ({})", 
-                        config.class_map.len(), dim)));
+                        config.class_map.len(), dim);
 
                     } 
                     return Ok(Discriminative {
@@ -61,17 +62,17 @@ impl Discriminative {
 
 
     fn model_from_config(config: c::Discriminative) ->
-        Result<Discriminative, friday_error::FridayError> {
+        Result<Discriminative, FridayError> {
 
             return m::Model::new(config.export_dir.as_path())
                 .map_or_else(
-                    || Err(friday_error::FridayError::new("Failed to create model")),
+                    || frierr!("Failed to create model"),
                     |model| {
                         CString::new("input").map_or_else(
-                            |_| Err(friday_error::FridayError::new("Failed to create cstring from 'input'")),
+                            |_| frierr!("Failed to create cstring from 'input'"),
                             |input| {
                                 CString::new("output").map_or_else(
-                                    |_| Err(friday_error::FridayError::new("Failed to create cstring from 'input'")),
+                                    |_| frierr!("Failed to create cstring from 'input'"),
                                     |output| Discriminative::make_discriminative(config, model, input, output)
                                 )
                             }

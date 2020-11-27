@@ -290,7 +290,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_load_model_and_tensors() {
-        let model_path = Path::new("test-resources/1602921240");
+        let model_path = Path::new("test-resources/1603634879");
         let mut model = Model::new(&model_path).expect("Failed to create model");
 
         let input_op_name = CString::new("input").expect("Failed to create input name");

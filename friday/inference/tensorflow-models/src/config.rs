@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use serde_json;
 use serde_derive::Deserialize;
 use friday_error;
+use friday_error::frierr;
+use friday_error::FridayError;
 
 #[derive(Deserialize)]
 struct DiscriminativeJsonConfig {
@@ -16,7 +18,7 @@ pub struct Discriminative {
     pub export_dir: PathBuf,
     pub class_map: Vec<String>,
     pub sensitivity: f64
-        
+
 }
 
 fn get_file(file: String, root_path: &Path) -> Option<PathBuf> {
@@ -32,19 +34,15 @@ fn get_file(file: String, root_path: &Path) -> Option<PathBuf> {
 }
 
 impl Discriminative {
-    fn get_class_map(class_map_file: &String) -> Result<Vec<String>, friday_error::FridayError> {
+    fn get_class_map(class_map_file: &String) -> Result<Vec<String>, FridayError> {
         // Open class_map json file
 
         let class_map_file_name = class_map_file.clone();
 
         std::fs::read_to_string(class_map_file.clone()).map_or_else(
-            |_| Err(friday_error::FridayError::from(
-            format!("Unable to read file {}", class_map_file_name))),
+            |_| frierr!("Unable to read file {}", class_map_file_name),
             |contents| serde_json::from_str(&contents).map_or_else(
-                |err| Err(
-                    friday_error::FridayError::from(
-                        format!("Unable to parse json in {} - Reason: {}",
-                            class_map_file_name, err))),
+                |err| frierr!("Unable to parse json in {} - Reason: {}", class_map_file_name, err),
                 |class_map: HashMap<String, i32>| {
                     let mut class_map_mappings_vec: Vec<(String, i32)> = class_map
                         .iter()
@@ -57,64 +55,59 @@ impl Discriminative {
                     return Ok(class_map_mappings_vec.iter().map(|k| k.0.clone()).collect());
 
                 }))
-    
+
 
     }
 
-    fn get_discriminative(map: &DiscriminativeJsonConfig) -> Result<Discriminative, friday_error::FridayError> {
+    fn get_discriminative(map: &DiscriminativeJsonConfig) -> Result<Discriminative, FridayError> {
         let maybe_class_map = Discriminative::get_class_map(&map.class_map);
-        
+
         return maybe_class_map.map_or_else(
-            |err| Err(err.push("Could not to load class map for discriminative model")),
+            |err| err.push("Could not to load class map for discriminative model").into(),
             |class_map| return Ok(
-                    Discriminative {
-                        export_dir: PathBuf::from(map.export_dir.clone()),
-                        class_map,
-                        sensitivity: map.sensitivity
-                    }));
+                Discriminative {
+                    export_dir: PathBuf::from(map.export_dir.clone()),
+                    class_map,
+                    sensitivity: map.sensitivity
+                }));
     }
 
-    fn read_config(config_file: PathBuf) -> Result<Discriminative, friday_error::FridayError> {
+    fn read_config(config_file: PathBuf) -> Result<Discriminative, FridayError> {
         let debug_file = config_file.clone();
         let file_name = debug_file.file_name().unwrap().to_str().unwrap();
 
 
         return std::fs::read_to_string(config_file)
             .map_or_else(
-                |_| Err(friday_error::FridayError::from(format!("Unable to read file {}", file_name))),
+                |_| frierr!("Unable to read file {}", file_name),
                 |contents| serde_json::from_str(&contents)
                 .map_or_else(
-                    |err| Err(friday_error::FridayError::from(
-                            format!("Unable to parse json in {}, reason: {}", 
-                                file_name, 
-                                err))),
+                    |err| frierr!("Unable to parse json in {}, reason: {}", file_name, err),
                     |map: DiscriminativeJsonConfig| Discriminative::get_discriminative(&map) 
                 )
 
             );
     }
 
-    pub fn new() -> Result<Discriminative, friday_error::FridayError> {
+    pub fn new() -> Result<Discriminative, FridayError> {
         return env::var("FRIDAY_CONFIG").map_or_else(
-            |_| Err(friday_error::FridayError::new("The environment variable \
+            |_| frierr!("The environment variable \
             FRIDAY_CONFIG needs to point to a configuration directory.\
             \nPlease set the FRIDAY_CONFIG environment variable.\
             \n\n\
             For example: \n\
-            FRIDAY_CONFIG=./configs")),
+            FRIDAY_CONFIG=./configs"),
             |config_path| {
                 let path = PathBuf::from(config_path.clone());
                 if ! path.is_dir() {
-                    return Err(friday_error::FridayError::from(
-                            format!("{} is not a valid directory", config_path)))
+                    return frierr!("{} is not a valid directory", config_path)
                 }
 
                 let config_file_name = "discriminative.json";
                 get_file(String::from(config_file_name),
                 path.as_path()).map_or_else(
-                || Err(friday_error::FridayError::from(
-                        format!("{}/{} does not exist", config_path, config_file_name))),
-                        Discriminative::read_config)
+                || frierr!("{}/{} does not exist", config_path, config_file_name),
+                Discriminative::read_config)
             }
         );
     }
