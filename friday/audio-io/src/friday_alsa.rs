@@ -19,6 +19,7 @@ impl Recorder for ALSAIStream {
             let io = device.direction;
 
             if let Some(io) = io {
+                println!("device {} io: {:?}", name, io);
                 if io != alsa::Direction::Playback {
                     continue;
                 }
