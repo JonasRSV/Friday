@@ -38,8 +38,12 @@ fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError
     }
     for device in cpal::default_host().input_devices().unwrap() {
         println!("Found {}", device.name().unwrap());
-
     }
+
+    for device in cpal::default_host().devices().unwrap() {
+        println!("Found device {}", device.name().unwrap());
+    }
+
     return match cpal::default_host().default_input_device() {
         Some(device) => Ok(device),
         None => frierr!("Could not find any default input device for recording")
