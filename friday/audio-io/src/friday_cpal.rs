@@ -118,7 +118,7 @@ mod tests {
     use std::path::Path;
     use wav;
     #[test]
-    fn some_printing() {
+    fn cpal_some_printing() {
         let r = RecordingConfig {
             sample_rate: 8000,
             buffer_size: 2000,
