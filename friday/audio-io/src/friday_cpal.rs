@@ -77,7 +77,7 @@ impl Recorder for CPALIStream {
                     let config = cpal::StreamConfig {
                         channels: 1,
                         sample_rate: cpal::SampleRate{ 0: conf.sample_rate },
-                        buffer_size: cpal::BufferSize::Fixed(conf.buffer_size),
+                        buffer_size: cpal::BufferSize::Default,
                     };
 
                     let write_buffer = Arc::new(
