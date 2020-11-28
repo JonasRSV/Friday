@@ -20,8 +20,12 @@ impl Recorder for ALSAIStream {
 
             for device in alsa::device_name::HintIter::new(Some(&card.unwrap()), &iface.unwrap()).unwrap() {
                 println!("Device {}", device.name.unwrap());
-
             }
+
+        }
+
+        for device in alsa::device_name::HintIter::new_str(None, "pcm").unwrap() {
+            println!("Device with new_str {}", device.name.unwrap());
         }
 
 
