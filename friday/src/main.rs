@@ -24,7 +24,7 @@ fn main() {
         .expect("Failed to load model");
 
     let mut speak = speaker_detection::EnergyBasedDetector::new(
-        /*threshold=*/900.0
+        /*threshold=*/400.0
     );
 
     let config = audio_io::RecordingConfig {
