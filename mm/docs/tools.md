@@ -17,6 +17,14 @@ python3 tools/friday_inspect.py \
  --mode=play_audio
 ```
 
+Play with augmentation
+
+```bash
+python3 tools/friday_inspect.py \
+ --path=${FRIDAY_SESSION?}/EXAMPLE_FILE_HERE \
+ --mode=play_augmented_audio
+```
+
 To show just meta information use
 
 ```bash 

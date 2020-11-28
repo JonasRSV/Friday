@@ -1,8 +1,8 @@
 import pathlib
 import tensorflow as tf
 import models.shared.audio as audio
+import models.shared.augmentation as augmentation
 import argparse
-import sys
 from enum import Enum
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
@@ -18,7 +18,8 @@ class Mode(Enum):
 def create_input_fn(mode: tf.estimator.ModeKeys,
                     input_prefix: str,
                     parallel_reads: int = 5,
-                    batch_size: int = 32):
+                    batch_size: int = 32,
+                    sample_rate=8000):
     feature_description = {
         'label': tf.io.FixedLenFeature([], tf.int64),
         'audio': tf.io.FixedLenFeature([AUDIO_SHAPE], tf.int64),
@@ -42,14 +43,18 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
                                           num_parallel_reads=parallel_reads)
         dataset = dataset.map(decode_example)
         dataset = dataset.map(cast_to_int16)
+        dataset = dataset.cache()
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.shuffle(buffer_size=100)
+            dataset = dataset.map(augmentation.randomly_apply_augmentations(sample_rate=sample_rate))
+
+        # Apply augmentation if is train
 
         dataset = dataset.batch(batch_size=batch_size)
 
         if mode == tf.estimator.ModeKeys.TRAIN:
-            dataset = dataset.repeat(100000000)
+            dataset = dataset.repeat()
 
         return dataset
 
@@ -360,7 +365,8 @@ def main():
             input_fn=create_input_fn(mode=tf.estimator.ModeKeys.TRAIN,
                                      input_prefix=args.train_prefix,
                                      parallel_reads=args.parallel_reads,
-                                     batch_size=args.batch_size),
+                                     batch_size=args.batch_size,
+                                     sample_rate=args.sample_rate),
             max_steps=args.max_steps,
         )
 
@@ -369,7 +375,8 @@ def main():
             input_fn=create_input_fn(mode=tf.estimator.ModeKeys.EVAL,
                                      input_prefix=args.eval_prefix,
                                      parallel_reads=args.parallel_reads,
-                                     batch_size=args.batch_size),
+                                     batch_size=args.batch_size,
+                                     sample_rate=args.sample_rate),
             throttle_secs=5,
         )
 

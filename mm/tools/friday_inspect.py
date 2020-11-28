@@ -1,3 +1,4 @@
+import models.shared.augmentation as augmentation
 import simpleaudio
 import tensorflow as tf
 import argparse
@@ -20,6 +21,7 @@ class InvalidFileError(Exception):
 
 class Mode(Enum):
     play_audio = "play_audio"
+    play_augmented_audio = "play_augmented_audio"
     visualize = "visualize"
     meta = "meta"
     count_labels = "count_labels"
@@ -41,6 +43,30 @@ def play_audio(file: str, *_):
 
         audio = np.array(tfexample_utils.get_audio(example), dtype=np.int16)
         sample_rate = tfexample_utils.get_sample_rate(example)
+
+        simpleaudio.play_buffer(audio, 1, 2,
+                                sample_rate=sample_rate).wait_done()
+
+
+def play_audio_with_augmentation(file: str, *_):
+    # TODO(jonasrsv): support for sharding and advanced choice
+
+    file_path = pathlib.Path(file)
+
+    if not file_path.is_file():
+        raise InvalidFileError(f"{file} is not a valid file")
+
+    dataset = tf.data.TFRecordDataset([file])
+    for serialized_example in dataset.take(100):
+        example = tf.train.Example()
+        example.ParseFromString(serialized_example.numpy())
+
+        sample_rate = tfexample_utils.get_sample_rate(example)
+        audio = tf.constant(tfexample_utils.get_audio(example), dtype=tf.int16)
+
+        audio = augmentation.randomly_apply_augmentations(sample_rate=sample_rate)({"audio": audio})["audio"]
+        audio = np.array(audio, dtype=np.int16)
+
 
         simpleaudio.play_buffer(audio, 1, 2,
                                 sample_rate=sample_rate).wait_done()
@@ -178,7 +204,8 @@ if __name__ == "__main__":
             Mode.visualize: visualize,
             Mode.meta: show_meta,
             Mode.count_labels: count_labels,
-            Mode.play_random: play_random
+            Mode.play_random: play_random,
+            Mode.play_augmented_audio: play_audio_with_augmentation
             }
 
     mode[args.mode](args.path, args.arg)
