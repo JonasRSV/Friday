@@ -11,3 +11,4 @@ cpal = {version = "*", features = ["asio"] }
 circular-queue = "0.2.6"
 wav = "0.4.1"
 friday-error = { path="../friday-error" }
+alsa = "0.4.3"

@@ -3,6 +3,7 @@ use vendor_io;
 use philips_hue;
 use vendor_io::DispatchResponse;
 use audio_io;
+use audio_io::recorder::Recorder;
 use inference;
 use tensorflow_models;
 use speaker_detection;
@@ -32,18 +33,20 @@ fn main() {
         model_frame_size: model.expected_frame_size()
     };
 
-    let istream = audio_io::record(&config).expect("Failed to start audio recording");
+    let istream = audio_io::friday_cpal::CPALIStream::record(
+        &config).expect("Failed to start audio recording");
 
-    serve_friday(&mut speak, &mut model, &vendors, &istream);
+    serve_friday(&mut speak, &mut model, &vendors, istream);
 
     println!("Exiting..");
 }
 
 
-fn serve_friday<M, S, V>(speak: &mut S, model: &mut M, vendors: &Vec<Box<V>>, istream: &audio_io::IStream) 
+fn serve_friday<M, S, V, R>(speak: &mut S, model: &mut M, vendors: &Vec<Box<V>>, istream: Box<R>) 
     where M: Model,
           S: SpeakDetector,
-          V: Vendor + ?Sized {
+          V: Vendor + ?Sized,
+          R: Recorder {
 
               // Create interrupt handler
               let running = Arc::new(AtomicBool::new(true));
