@@ -102,6 +102,7 @@ dependencies = [
 name = "audio-io"
 version = "0.1.0"
 dependencies = [
+ "alsa",
  "circular-queue",
  "cpal",
  "friday-error",
