@@ -14,6 +14,9 @@ impl Recorder for ALSAIStream {
     }
 
     fn record(conf: &RecordingConfig) -> Result<Box<Self>, FridayError> {
+        // This was mostly used to debug CPAL, since CPAL uses ALSA internally
+        // but one day maybe ill just use alsa directly for some reason
+        // so ill leave the code here
         for device in alsa::device_name::HintIter::new_str(None, "pcm").unwrap() {
             let name = device.name.unwrap();
             let io = device.direction;

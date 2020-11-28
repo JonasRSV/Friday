@@ -1,38 +1,34 @@
+![logo](art/friday-logo.png)
 
-Rewrite of https://github.com/JonasRSV/friday-voice-assistant but in rust! :)
+Friday is a free and open-source no-wake-word voice assistant. Friday and its [website](https://markusaj13.github.io/Monday/?page=home&lang=english) is currently under development
 
-very much WIP
 
-## Building 
+## Roadmap
 
-We build with https://github.com/rust-embedded/cross to enable easy cross-compilation to different platforms. For this you need [docker](https://www.docker.com/) installed
+* [x] Implement v1 Keyword spotting Engine
+* [x] Implement Philips Hue vendor to control lights
+* [ ] Add user manual and docs
+* [ ] Implement v2 Keyword spotting Engine
+* [ ] Add easy-to-use interfaces
 
-### x86-unknown-linux-gnu
+## Installation 
 
-You probably don't have to use cross-compilation for this if you're on a linux machine, just enter friday and run 
+Cross compilation have been tested for
+
+* [x] x86 Linux
+* [x] Raspberry Pi 3
+* [ ] Raspberry Pi 4
+* [ ] Windows
+* [ ] Mac
+
+Use the build script to compile, see: 
 
 ```bash
-cargo build --release
+./build -h
 ```
 
-But if you want to use the docker builder:
+For example to build for x86_64 linux
 
 ```bash
-NAME=friday-x86_64-unknown-linux-gnu
-
-docker build -t "${NAME?}" . -f platforms/x86_64-unknown-linux-gnu.Dockerfile
-
-cd friday && cross build --release --target x86_64-unknown-linux-gnu
-```
-
-### armv7-unknown-linux-gnueabinhf (Raspberry Pi 2, 3)
-
-To build for your PI (2 and 3, this might also work for 4 but have not been tested).
-
-```bash
-NAME="friday-armv7-unknown-linux-gnueabinhf"
-
-docker build -t "${NAME?}" . -f platforms/armv7-unknown-linux-gnueabinhf.Dockerfile
-
-cd friday && cross build --release --target armv7-unknown-linux-gnueabihf && cd ..
+./build -li
 ```

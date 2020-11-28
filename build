@@ -1,0 +1,111 @@
+#!/bin/bash
+
+set -e
+
+
+fg_black="$(tput setaf 0)"
+fg_red="$(tput setaf 1)"
+fg_green="$(tput setaf 2)"
+fg_yellow="$(tput setaf 3)"
+fg_blue="$(tput setaf 4)"
+fg_magenta="$(tput setaf 5)"
+fg_cyan="$(tput setaf 6)"
+fg_white="$(tput setaf 7)"
+reset="$(tput sgr0)"
+
+if ! command -v cargo 
+then 
+  echo "${fg_red}cargo not found Please install rust${fg_reset}"
+  echo "Installation instructions can be found here:"
+  echo "       https://www.rust-lang.org/tools/install"
+  exit 1
+fi
+
+if ! command -v docker 
+then 
+  echo "${fg_red}Docker not found Please install it${fg_reset}"
+  echo "Installation instructions can be found here:"
+  echo "       https://docs.docker.com/engine/install/"
+  exit 1
+fi
+
+if ! command -v cross 
+then 
+  echo "${fg_red}Cross not found Please install cross${fg_reset}"
+  echo "Installation instructions can be found here:"
+  echo "       https://github.com/rust-embedded/cross#installation"
+  exit 1
+fi
+
+build_pi_binary () {
+  echo "${fg_magenta}Building armv7 binary (PI)${fg_reset}"
+
+  NAME="friday-armv7-unknown-linux-gnueabinhf"
+  docker build -t "${NAME?}" . -f platforms/armv7-unknown-linux-gnueabinhf.Dockerfile
+
+  pushd friday
+  cross build --release --target armv7-unknown-linux-gnueabihf
+  popd
+
+  mkdir -p bin
+
+  echo "${fg_magenta}Copying binary to bin.. ${fg_reset}"
+  cp friday/target/armv7-unknown-linux-gnueabihf/release/friday bin/${NAME}
+
+  echo "${fg_green}Build successful! Binary should be in the local bin directory! :) ${fg_reset}"
+} 
+
+build_linux_binary () {
+  echo "${fg_magenta}Building x86 linux binary ${fg_reset}"
+
+  NAME="friday-x86_64-unknown-linux-gnu"
+  docker build -t "${NAME?}" . -f platforms/x86_64-unknown-linux-gnu.Dockerfile
+
+  pushd friday
+  cross build --release --target x86_64-unknown-linux-gnu
+  popd
+
+  mkdir -p bin
+
+  echo "${fg_magenta}Copying binary to bin.. ${fg_reset}"
+  cp friday/target/x86_64-unknown-linux-gnu/release/friday bin/${NAME}
+
+  echo "${fg_green}Build successful! Binary should be in the local bin directory! :) ${fg_reset}"
+}
+
+
+PID=""
+while test $# -gt 0; do
+  case "$1" in
+    -h|--help)
+      echo ""
+      echo ""
+      echo "${fg_green}  ******** Friday build script ******** ${fg_black}"
+      echo " "
+      echo "${fg_white} options:"
+      echo "-h, --help  show brief help"
+      echo "${fg_magenta}-pi --armv7-unknown-linux-gnueabinhf${fg_white},   E.g Raspberry Pi (2, 3..)s"
+      echo "${fg_magenta}-li --friday-x86_64-unknown-linux-gnu${fg_white},  Common Desktops and laptops (running linux)"
+      exit 0
+      ;;
+    --armv7-unknown-linux-gnueabinhf)
+      shift
+      build_pi_binary
+      ;;
+    -pi)
+      shift
+      build_pi_binary
+      ;;
+    --friday-x86_64-unknown-linux-gnu)
+      shift
+      build_linux_binary
+      ;;
+    -li)
+      shift
+      build_linux_binary
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
