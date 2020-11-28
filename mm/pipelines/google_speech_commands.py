@@ -1,4 +1,10 @@
 import warnings
+import sys
+import os
+
+
+# Some systems dont use the launching directory as root
+sys.path.append(os.getcwd())
 
 warnings.filterwarnings("ignore")
 import tensorflow as tf

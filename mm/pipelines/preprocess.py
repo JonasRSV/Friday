@@ -1,7 +1,13 @@
+import sys
+import os
+
+
+# Some systems dont use the launching directory as root
+sys.path.append(os.getcwd())
+
 import shared.tfexample_utils as tfexample_utils
 import pathlib
 import json
-import sys
 from typing import List, Callable
 import tensorflow as tf
 import numpy as np
