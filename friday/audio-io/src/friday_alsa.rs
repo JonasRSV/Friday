@@ -16,6 +16,13 @@ impl Recorder for ALSAIStream {
     fn record(conf: &RecordingConfig) -> Result<Box<Self>, FridayError> {
         for device in alsa::device_name::HintIter::new_str(None, "pcm").unwrap() {
             let name = device.name.unwrap();
+            let io = device.direction;
+
+            if let Some(io) = io {
+                if io != alsa::Direction::Playback {
+                    continue;
+                }
+            }
             let has_available_input = {
                 let capture_handle =
                     alsa::pcm::PCM::new(&name, alsa::Direction::Capture, true);
