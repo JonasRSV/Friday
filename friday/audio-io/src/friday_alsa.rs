@@ -1,3 +1,5 @@
+use std::ffi::CString;
+
 use friday_error::frierr;
 use friday_error::FridayError;
 use crate::recorder::Recorder;
@@ -13,8 +15,15 @@ impl Recorder for ALSAIStream {
 
     fn record(conf: &RecordingConfig) -> Result<Box<Self>, FridayError> {
         for card in alsa::card::Iter::new() {
-            println!("card name {}", card.unwrap().get_name().unwrap());
+            println!("Card {}", card.unwrap().get_name().unwrap());
+            let iface = CString::new("pcm");
+
+            for device in alsa::device_name::HintIter::new(Some(&card.unwrap()), &iface.unwrap()).unwrap() {
+                println!("Device {}", device.name.unwrap());
+
+            }
         }
+
 
         todo!()
     }
