@@ -220,15 +220,24 @@ def make_model_fn(summary_output_dir: str,
                 labels=labels, logits=logits),
                                   name="loss_op")
 
-            exp_learning_rate = tf.compat.v1.train.exponential_decay(
+           # decay_learning_rate = tf.compat.v1.train.exponential_decay(
+           #     learning_rate=learning_rate,
+           #     global_step=tf.compat.v1.train.get_global_step(),
+           #     decay_steps=decay_steps,
+           #     decay_rate=decay_rate,
+           #     staircase=True)
+
+            decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
                 learning_rate=learning_rate,
                 global_step=tf.compat.v1.train.get_global_step(),
-                decay_steps=decay_steps,
-                decay_rate=decay_rate,
-                staircase=True)
+                first_decay_steps=1000,
+                t_mul=2.0,
+                m_mul=1.0,
+                alpha=0.0
+            )
 
             # Add to summary
-            tf.summary.scalar("learning_rate", exp_learning_rate)
+            tf.summary.scalar("learning_rate", decay_learning_rate)
 
             # Add regularization
             reg_loss = tf.compat.v1.losses.get_regularization_loss()
@@ -238,7 +247,7 @@ def make_model_fn(summary_output_dir: str,
             tf.summary.scalar("total_loss", total_loss)
 
             train_op = tf.compat.v1.train.AdamOptimizer(
-                learning_rate=exp_learning_rate).minimize(
+                learning_rate=decay_learning_rate).minimize(
                     loss=total_loss,
                     global_step=tf.compat.v1.train.get_global_step())
 
