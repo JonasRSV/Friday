@@ -7,18 +7,10 @@ def normalize_audio(signal: tf.Tensor):
 
 
 def normalize_mfcc(mfcc: tf.Tensor) -> tf.Tensor:
-    # These values are from manually inspecting spectrograms using the friday_inspect.py
-    # We do this to try to standardize our data a bit, NN's work better with data
-    # centered around 0 with not too high std.
-    MFCC_MEAN, MFCC_STD = tf.constant(125.0), tf.constant(150.0)
-    return mfcc #- MFCC_MEAN) / MFCC_STD
+    return mfcc
 
 
 def normalize_mel_spectrogram(spectrogram: tf.Tensor):
-    # These values are from manually inspecting spectrograms using the friday_inspect.py
-    # We do this to try to standardize our data a bit, NN's work better with data
-    # centered around 0 with not too high std.
-
     return spectrogram / tf.constant(10.0)
 
 
