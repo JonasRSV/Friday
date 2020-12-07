@@ -21,11 +21,11 @@ python3 models/magikarp/magikarp.py\
     --clip_length=2.0\
     --batch_size=32\
     --start_learning_rate=0.001\
-    --use_mixup=True\
+    --use_mixup\
     --num_labels=10\
     --max_steps=1000000\
-    --save_summary_every=500\
-    --eval_every=500\
+    --save_summary_every=1000\
+    --eval_every=1000\
     --parallel_reads=5
 ```
 
