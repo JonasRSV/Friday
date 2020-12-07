@@ -31,7 +31,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
                     sample_rate=8000,
                     use_mixup: bool = True):
     feature_description = {
-        'labels': tf.io.FixedLenFeature([], tf.int64),
+        'label': tf.io.FixedLenFeature([], tf.int64),
         'audio': tf.io.FixedLenFeature([AUDIO_SHAPE], tf.int64),
     }
 
@@ -75,15 +75,15 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
                 record["audio"] = audio.normalize_audio(record["audio"])
 
                 x1, x2 = record["audio"], tf.gather(record["audio"], indexes)
-                y1, y2 = tf.one_hot(record["labels"],
-                                    depth=num_labels), tf.one_hot(tf.gather(record["labels"], indexes),
+                y1, y2 = tf.one_hot(record["label"],
+                                    depth=num_labels), tf.one_hot(tf.gather(record["label"], indexes),
                                                                   depth=num_labels)
 
                 x = x1 * weights + x2 * (1 - weights)
                 y = y1 * weights + y2 * (1 - weights)
 
                 record["audio"] = x
-                record["soft-labels"] = y
+                record["soft-label"] = y
 
                 return record
 
@@ -171,11 +171,11 @@ def make_model_fn(summary_output_dir: str,
             # If we are using mixup optimize towards mixup labels instead
             if mode == tf.estimator.ModeKeys.TRAIN and use_mixup:
                 loss_op = tf.identity(tf.losses.softmax_cross_entropy(
-                    onehot_labels=features["soft-labels"], logits=logits),
+                    onehot_labels=features["soft-label"], logits=logits),
                     name="loss_op")
             else:
                 loss_op = tf.identity(tf.losses.sparse_softmax_cross_entropy(
-                    labels=features["labels"], logits=logits),
+                    labels=features["label"], logits=logits),
                     name="loss_op")
 
             decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
@@ -211,7 +211,7 @@ def make_model_fn(summary_output_dir: str,
             ]
 
             if mode == tf.estimator.ModeKeys.EVAL:
-                eval_metric_ops = get_metric_ops(labels=features["labels"],
+                eval_metric_ops = get_metric_ops(labels=features["label"],
                                                  predicted_class=tf.argmax(predict_op, axis=-1),
                                                  num_labels=num_labels)
 
