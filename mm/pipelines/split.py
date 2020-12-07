@@ -1,3 +1,10 @@
+import sys
+import os
+
+
+# Some systems dont use the launching directory as root
+sys.path.append(os.getcwd())
+
 import pathlib
 import tensorflow as tf
 import random

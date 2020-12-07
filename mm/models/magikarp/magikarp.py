@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Some systems dont use the launching directory as root
+sys.path.append(os.getcwd())
+
 import pathlib
 import tensorflow as tf
 import models.shared.audio as audio
@@ -47,7 +53,9 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.shuffle(buffer_size=100)
-            dataset = dataset.map(augmentation.randomly_apply_augmentations(sample_rate=sample_rate))
+            dataset = dataset.map(
+                augmentation.randomly_apply_augmentations(
+                    sample_rate=sample_rate))
 
         # Apply augmentation if is train
 
@@ -92,9 +100,39 @@ def raw_audio_model(signal: tf.Tensor, num_labels: int,
     return x
 
 
-def mfcc_model(x: tf.Tensor, num_labels: int,
-               mode: tf.estimator.ModeKeys,
-               regularization: float = 1e-6) -> tf.Tensor:
+def mfcc_model_big(x: tf.Tensor,
+                   num_labels: int,
+                   mode: tf.estimator.ModeKeys,
+                   regularization: float = 1e-6) -> tf.Tensor:
+    x = tf.expand_dims(x, -1)
+    x = tf.compat.v1.layers.Conv2D(filters=64,
+                                   kernel_size=(7, 3),
+                                   activation=tf.nn.relu)(x)
+    x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 3), strides=(1, 1))(x)
+    x = tf.compat.v1.layers.Conv2D(filters=128,
+                                   kernel_size=(1, 7),
+                                   activation=tf.nn.relu)(x)
+    x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 4), strides=(1, 1))(x)
+    x = tf.compat.v1.layers.Conv2D(filters=256,
+                                   kernel_size=(1, 10),
+                                   padding="valid",
+                                   activation=tf.nn.relu)(x)
+    x = tf.compat.v1.layers.Conv2D(filters=512,
+                                   kernel_size=(7, 1),
+                                   activation=tf.nn.relu)(x)
+    x = tf.keras.layers.GlobalMaxPooling2D()(x)
+
+    x = tf.compat.v1.layers.Dropout(rate=0.5)(
+        x, training=mode == tf.estimator.ModeKeys.TRAIN)
+    x = tf.compat.v1.layers.Dense(256, activation=tf.nn.relu)(x)
+    logits = tf.compat.v1.layers.Dense(num_labels, activation=None)(x)
+    return logits
+
+
+def mfcc_model_tiny(x: tf.Tensor,
+                    num_labels: int,
+                    mode: tf.estimator.ModeKeys,
+                    regularization: float = 1e-6) -> tf.Tensor:
 
     x = tf.expand_dims(x, -1)
 
@@ -114,13 +152,13 @@ def mfcc_model(x: tf.Tensor, num_labels: int,
         kernel_regularizer=tf.contrib.layers.l2_regularizer(regularization))(x)
     print("X", x.shape)
     x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 2), strides=(1, 1))(x)
-    # print("X", x.shape)
-    # x = tf.compat.v1.layers.Conv2D(
-        # filters=256,
-        # kernel_size=(1, 2),
-        # padding="valid",
-        # activation=tf.nn.relu,
-        # kernel_regularizer=tf.contrib.layers.l2_regularizer(regularization))(x)
+    print("X", x.shape)
+    x = tf.compat.v1.layers.Conv2D(
+    filters=256,
+    kernel_size=(1, 2),
+    padding="valid",
+    activation=tf.nn.relu,
+    kernel_regularizer=tf.contrib.layers.l2_regularizer(regularization))(x)
     print("X", x.shape)
     x = tf.compat.v1.layers.Conv2D(
         filters=256,
@@ -134,6 +172,10 @@ def mfcc_model(x: tf.Tensor, num_labels: int,
     x = tf.compat.v1.layers.Dropout(rate=0.50)(
         x, training=mode == tf.estimator.ModeKeys.TRAIN)
     print("X", x.shape)
+    x = tf.compat.v1.layers.Dense(
+        128,
+        activation=tf.nn.relu,
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(regularization))(x)
     x = tf.compat.v1.layers.Dense(
         128,
         activation=tf.nn.relu,
@@ -198,7 +240,7 @@ def make_model_fn(summary_output_dir: str,
                              sample_rate=sample_rate)
 
         signal = audio.mfcc_feature(signal=signal,
-                                    coefficients=13,
+                                    coefficients=27,
                                     sample_rate=sample_rate,
                                     frame_length=512,
                                     frame_step=256,
@@ -209,7 +251,7 @@ def make_model_fn(summary_output_dir: str,
 
         # logits = raw_audio_model(signal=signal, num_labels=num_labels, mode=mode)
 
-        logits = mfcc_model(x=signal, num_labels=num_labels, mode=mode)
+        logits = mfcc_model_tiny(x=signal, num_labels=num_labels, mode=mode)
         predict_op = tf.nn.softmax(logits)
 
         loss_op, train_op, train_logging_hooks, eval_metric_ops = None, None, None, None
@@ -220,12 +262,12 @@ def make_model_fn(summary_output_dir: str,
                 labels=labels, logits=logits),
                                   name="loss_op")
 
-           # decay_learning_rate = tf.compat.v1.train.exponential_decay(
-           #     learning_rate=learning_rate,
-           #     global_step=tf.compat.v1.train.get_global_step(),
-           #     decay_steps=decay_steps,
-           #     decay_rate=decay_rate,
-           #     staircase=True)
+            # decay_learning_rate = tf.compat.v1.train.exponential_decay(
+            #     learning_rate=learning_rate,
+            #     global_step=tf.compat.v1.train.get_global_step(),
+            #     decay_steps=decay_steps,
+            #     decay_rate=decay_rate,
+            #     staircase=True)
 
             decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
                 learning_rate=learning_rate,
@@ -233,8 +275,7 @@ def make_model_fn(summary_output_dir: str,
                 first_decay_steps=1000,
                 t_mul=2.0,
                 m_mul=1.0,
-                alpha=0.0
-            )
+                alpha=0.0)
 
             # Add to summary
             tf.summary.scalar("learning_rate", decay_learning_rate)
