@@ -69,10 +69,13 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
             distribution = tfp.distributions.Beta(2.0, 2.0)
 
             def apply_mixup(record: dict):
-                weights = tf.reshape(distribution.sample(batch_size), [batch_size, 1])
+                dyn_batch_size = tf.shape(record["label"])[0]
 
-                indexes = tf.random.shuffle(tf.range(0, batch_size))
+                weights = tf.reshape(distribution.sample(dyn_batch_size), [dyn_batch_size, 1])
+                indexes = tf.random.shuffle(tf.range(0, dyn_batch_size))
                 record["audio"] = audio.normalize_audio(record["audio"])
+
+                print("audio", record["audio"], "indexes", indexes)
 
                 x1, x2 = record["audio"], tf.gather(record["audio"], indexes)
                 y1, y2 = tf.one_hot(record["label"],
@@ -140,7 +143,7 @@ def make_model_fn(summary_output_dir: str,
             audio_signal = tf.expand_dims(audio_signal, 0)
 
         # Normalize audio to [-1, 1]
-        if mode == tf.estimator.ModeKeys.TRAIN and use_mixup:
+        if (mode == tf.estimator.ModeKeys.TRAIN) and use_mixup:
             # IF we are using mixup and training, the input audio has already been normalize
             signal = audio_signal
         else:
@@ -169,7 +172,7 @@ def make_model_fn(summary_output_dir: str,
         loss_op, train_op, train_logging_hooks, eval_metric_ops = None, None, None, None
         if mode != tf.estimator.ModeKeys.PREDICT:
             # If we are using mixup optimize towards mixup labels instead
-            if mode == tf.estimator.ModeKeys.TRAIN and use_mixup:
+            if (mode == tf.estimator.ModeKeys.TRAIN) and use_mixup:
                 loss_op = tf.identity(tf.losses.softmax_cross_entropy(
                     onehot_labels=features["soft-label"], logits=logits),
                     name="loss_op")
