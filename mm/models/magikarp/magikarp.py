@@ -31,7 +31,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
                     sample_rate=8000,
                     use_mixup: bool = True):
     feature_description = {
-        'label': tf.io.FixedLenFeature([], tf.int64),
+        'labels': tf.io.FixedLenFeature([], tf.int64),
         'audio': tf.io.FixedLenFeature([AUDIO_SHAPE], tf.int64),
     }
 
