@@ -75,8 +75,8 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
                 record["audio"] = audio.normalize_audio(record["audio"])
 
                 x1, x2 = record["audio"], tf.gather(record["audio"], indexes)
-                y1, y2 = tf.one_hot(record["label"],
-                                    depth=num_labels), tf.one_hot(tf.gather(record["label"], indexes),
+                y1, y2 = tf.one_hot(record["labels"],
+                                    depth=num_labels), tf.one_hot(tf.gather(record["labels"], indexes),
                                                                   depth=num_labels)
 
                 x = x1 * weights + x2 * (1 - weights)
