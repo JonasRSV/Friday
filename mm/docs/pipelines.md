@@ -96,11 +96,18 @@ LABEL_MAP_PATH=${PWD}/resources/class_maps/kombination.json
 
 
 python3 pipelines/preprocess.py \
- "--source_prefix=${FRIDAY_SESSION?}/tfexamples*"\
-  --output_path=${FRIDAY_SESSION?}/ptfexamples\
+ "--source=${FRIDAY_SESSION?}/tfexamples*"\
+  --sink_prefix=${FRIDAY_SESSION?}/ptfexamples\
   --label_map_path=${LABEL_MAP_PATH?}\
-  --maximum_clip_length=2\
-  --in_memory_files=20
+  --maximum_clip_length=2
+```
+
+After this pipeline run the within file shuffling
+
+### Shuffling
+
+```bash
+python3 pipelines/shuffle.py "--source=${FRIDAY_SESSION?}/ptfexamples*"
 ```
 
 After this pipeline run the splitting
