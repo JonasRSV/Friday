@@ -20,7 +20,7 @@ def spectrogram_model_tiny(x: tf.Tensor,
         kernel_regularizer=tf.contrib.layers.l2_regularizer(regularization))(x)
     x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 2), strides=(1, 1))(x)
     x = tf.compat.v1.layers.Conv2D(
-        filters=256,
+        filters=128,
         kernel_size=(1, 2),
         padding="valid",
         activation=tf.nn.relu,
@@ -32,7 +32,7 @@ def spectrogram_model_tiny(x: tf.Tensor,
         kernel_regularizer=tf.contrib.layers.l2_regularizer(regularization))(x)
     x = tf.keras.layers.GlobalMaxPooling2D()(x)
 
-    x = tf.compat.v1.layers.Dropout(rate=0.50)(
+    x = tf.compat.v1.layers.Dropout(rate=0.2)(
         x, training=mode == tf.estimator.ModeKeys.TRAIN)
     x = tf.compat.v1.layers.Dense(
         128,

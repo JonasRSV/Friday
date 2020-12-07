@@ -3,6 +3,9 @@
 - [Common Voice](#common-voice)
 - [Google Speech Commands](#google-speech-commands)
 - [Common Pipelines](#common-pipelines)
+    - [Preprocess](#preprocessing)
+    - [Shuffle](#shuffle)
+    - [Split](#split)
 
 
 ### Dependencies

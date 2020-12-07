@@ -121,6 +121,10 @@ if __name__ == '__main__':
     jobs = [job.add_preprocessing_fn(doFns=doFns).add_sinks(sinks) for job in jobs]
 
     with tqdm(total=memory_to_process) as progress_bar:
+        # TODO look into creating some kind of custom lock so we can run this across multiple processes
+        # The current problem is that by naively multiprocessing this we will run into race conditions when writing
+        # to file. Also it is unclear if the tensorflow writers can be pickled and used with python MP.
+        # Need to figure out what the bottleneck is, perhaps it is IO and in that case threading might be enough.
         for job in jobs:
             job.execute()
             progress_bar.update(n=job.size)
