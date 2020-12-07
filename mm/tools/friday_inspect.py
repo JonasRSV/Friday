@@ -1,7 +1,6 @@
 import sys
 import os
 
-
 # Some systems dont use the launching directory as root
 sys.path.append(os.getcwd())
 
@@ -15,6 +14,8 @@ import matplotlib.pyplot as plt
 import random
 from enum import Enum
 from tqdm import tqdm
+import librosa
+import seaborn as sb
 
 import shared.tfexample_utils as tfexample_utils
 
@@ -74,7 +75,6 @@ def play_audio_with_augmentation(file: str, *_):
         audio = augmentation.randomly_apply_augmentations(sample_rate=sample_rate)({"audio": audio})["audio"]
         audio = np.array(audio, dtype=np.int16)
 
-
         simpleaudio.play_buffer(audio, 1, 2,
                                 sample_rate=sample_rate).wait_done()
 
@@ -85,19 +85,40 @@ def visualize(file: str, *_):
     if not file_path.is_file():
         raise InvalidFileError(f"{file} is not a valid file")
 
+    N_PLOTS = 5
     dataset = tf.data.TFRecordDataset([file])
-    for i, serialized_example in enumerate(dataset.take(5), 1):
+    plt.figure(figsize=(10, 20))
+    for i, serialized_example in enumerate(dataset.take(N_PLOTS)):
         example = tf.train.Example()
         example.ParseFromString(serialized_example.numpy())
 
+        sample_rate = tfexample_utils.get_sample_rate(example)
         audio = np.array(tfexample_utils.get_audio(example), dtype=np.int16)
         text = tfexample_utils.get_text(example)
 
-        plt.subplot(5, 1, i)
+        # Plot raw signal
+        plt.subplot(5, 2, 1 + 2 * i)
         plt.title(f"{text}")
         x = np.arange(audio.size)
         y = audio
         plt.plot(x, y)
+        plt.subplot(5, 2, 2 + 2 * i)
+        # Plot MFCC
+        plt.title(f"{text}")
+        float_audio = audio.astype(np.float64) / 32768.0
+        feature = librosa.feature.mfcc(float_audio, sr=sample_rate, n_mfcc=40,
+                                       n_fft=1024,
+                                       hop_length=256,
+                                       win_length=1024,
+                                       n_mels=80)
+
+        print("min Feature", feature.min())
+        print("max Feature", feature.max())
+        print("mean Feature", feature.max())
+        print("std Feature", feature.std())
+
+        sb.heatmap(feature)
+
 
     plt.tight_layout()
     plt.show()

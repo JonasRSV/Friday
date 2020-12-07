@@ -2,8 +2,16 @@
 import tensorflow as tf
 
 
-def normalize(signal: tf.Tensor):
+def normalize_audio(signal: tf.Tensor):
     return tf.cast(signal, tf.float32) / 32768.0
+
+
+def normalize_mfcc(mfcc: tf.Tensor) -> tf.Tensor:
+    # These values are from manually inspecting spectrograms using the friday_inspect.py
+    # We do this to try to standardize our data a bit, NN's work better with data
+    # centered around 0 with not too high std.
+    MFCC_MEAN, MFCC_STD = tf.constant(125.0), tf.constant(150.0)
+    return (mfcc - MFCC_MEAN) / MFCC_STD
 
 
 def mfcc_feature(signal: tf.Tensor, coefficients: int,
@@ -52,5 +60,5 @@ def mfcc_feature(signal: tf.Tensor, coefficients: int,
     log_mel_spectrograms = tf.math.log(mel_spectrograms + 1e-6)
 
     # Extract MFCC's
-    return tf.signal.mfccs_from_log_mel_spectrograms(
-        log_mel_spectrograms)[..., :coefficients]
+    return normalize_mfcc(tf.signal.mfccs_from_log_mel_spectrograms(
+        log_mel_spectrograms)[..., :coefficients])

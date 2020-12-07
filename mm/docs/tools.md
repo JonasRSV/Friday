@@ -25,6 +25,14 @@ python3 tools/friday_inspect.py \
  --mode=play_augmented_audio
 ```
 
+Plot audio signal
+```bash
+python3 tools/friday_inspect.py \
+ --path=${FRIDAY_SESSION?}/EXAMPLE_FILE_HERE \
+ --mode=visualize
+
+```
+
 To show just meta information use
 
 ```bash 

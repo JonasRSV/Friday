@@ -190,7 +190,7 @@ def make_model_fn(summary_output_dir: str,
             audio_signal = tf.expand_dims(audio_signal, 0)
 
         # Normalize audio to [-1, 1]
-        signal = audio.normalize(audio_signal)
+        signal = audio.normalize_audio(audio_signal)
 
         if mode != tf.estimator.ModeKeys.PREDICT:
             tf.summary.audio(name="audio",
