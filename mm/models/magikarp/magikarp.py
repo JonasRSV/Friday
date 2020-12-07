@@ -75,8 +75,6 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
                 indexes = tf.random.shuffle(tf.range(0, dyn_batch_size))
                 record["audio"] = audio.normalize_audio(record["audio"])
 
-                print("audio", record["audio"], "indexes", indexes)
-
                 x1, x2 = record["audio"], tf.gather(record["audio"], indexes)
                 y1, y2 = tf.one_hot(record["label"],
                                     depth=num_labels), tf.one_hot(tf.gather(record["label"], indexes),
@@ -293,8 +291,7 @@ def main():
 
     # https://arxiv.org/pdf/1710.09412.pdf
     parser.add_argument("--use_mixup",
-                        type=bool,
-                        default=False,
+                        action="store_true",
                         help="Use mixup in training")
 
     args = parser.parse_args()
