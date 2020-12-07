@@ -97,28 +97,40 @@ def visualize(file: str, *_):
         text = tfexample_utils.get_text(example)
 
         # Plot raw signal
-        plt.subplot(5, 2, 1 + 2 * i)
+        plt.subplot(5, 3, 1 + 3 * i)
         plt.title(f"{text}")
         x = np.arange(audio.size)
         y = audio
         plt.plot(x, y)
-        plt.subplot(5, 2, 2 + 2 * i)
+        plt.subplot(5, 3, 2 + 3 * i)
         # Plot MFCC
         plt.title(f"{text}")
         float_audio = audio.astype(np.float64) / 32768.0
-        feature = librosa.feature.mfcc(float_audio, sr=sample_rate, n_mfcc=40,
+        feature = librosa.feature.mfcc(float_audio, sr=sample_rate,
+                                       n_mfcc=40,
                                        n_fft=1024,
-                                       hop_length=256,
+                                       hop_length=512,
                                        win_length=1024,
                                        n_mels=80)
 
+        # feature = librosa.feature.mfcc(float_audio, sr=sample_rate, n_mfcc=40)
+
+
+        sb.heatmap(feature)
+        plt.subplot(5, 3, 3 + 3 * i)
+        plt.title(f"{text}")
+        feature = librosa.feature.melspectrogram(float_audio, sr=sample_rate)#,
+                                                 #n_fft=1024,
+                                                 #hop_length=512,
+                                                 #win_length=1024,
+                                                 #n_mels=256)
         print("min Feature", feature.min())
         print("max Feature", feature.max())
         print("mean Feature", feature.max())
         print("std Feature", feature.std())
-
         sb.heatmap(feature)
 
+        # Plot spectrogram
 
     plt.tight_layout()
     plt.show()
