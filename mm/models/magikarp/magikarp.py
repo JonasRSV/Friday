@@ -65,7 +65,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         dataset = dataset.batch(batch_size=batch_size)
 
         # https://arxiv.org/pdf/1710.09412.pdf
-        if use_mixup:
+        if mode == tf.estimator.ModeKeys.TRAIN and use_mixup:
             distribution = tfp.distributions.Beta(2.0, 2.0)
 
             def apply_mixup(record: dict):
@@ -336,7 +336,7 @@ def main():
                                      parallel_reads=args.parallel_reads,
                                      batch_size=args.batch_size,
                                      sample_rate=args.sample_rate,
-                                     use_mixup=False),
+                                     use_mixup=args.use_mixup),
             throttle_secs=5,
         )
 
