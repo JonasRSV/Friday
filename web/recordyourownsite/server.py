@@ -2,6 +2,7 @@ from flask import Flask
 from flask import render_template
 from flask import request, Response
 import random
+import time
 
 ROOT = "recordings"
 BASE = "abcdefghijklmnopqrstuvxyz1234567890"
@@ -54,9 +55,12 @@ def home():
 
 @app.route('/recording', methods=["POST"])
 def recv_audio_file():
+    timestamp = time.time()
     keyword = request.form['keyword'].replace(" ", "_")
     data = request.files['data']
     data.save(f"{ROOT}/{keyword}-{get_uuid()}.wav")
+
+    print(f"reciving audio file: {time.time() - timestamp}")
     return Response(status=200)
 
 
