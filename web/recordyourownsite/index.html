@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>recordyourownsite</title>
+    <link rel="stylesheet" href="static/index.css" type="text/css" media="all">
+  </head>
+  <body>    		
+    <div class="grid-container">
+      <div class="tile-11"></div>
+      <div class="tile-12"></div>
+      <div class="tile-13"></div>
+      <div class="tile-14"></div>
+      <div class="tile-21"></div>
+      <div class="tile-22">
+        <h1 class="word-container" id="keyword">{{keyword}}</h1>
+      </div>
+      <div class="tile-23"></div>
+      <div class="tile-24"></div>
+      <div class="tile-31"></div>
+      <div class="tile-32">
+        <button onmousedown="startRecording()" onmouseup="stopRecording()" class="record">Record</button>
+        <button onclick="sendRecording()"  class="send">Send</button>
+      </div>
+      <div class="tile-33"> </div>
+      <div class="tile-34"></div>
+      <div class="tile-41"></div>
+      <div class="tile-42"> <audio controls autoplay></audio> </div>
+      <div class="tile-43"></div>
+      <div class="tile-44"></div>
+    </div>
+  </body>
+
+  <script type="text/javascript" src="static/recorder.js"> </script>
+
+<script type="text/javascript">
+
+  var onFail = function(e) {
+    console.log('Rejected!', e);
+  };
+
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+
+var onSuccess = function(s) {
+  var context = new AudioContext();
+  var mediaStreamSource = context.createMediaStreamSource(s);
+  recorder = new Recorder(mediaStreamSource);
+  recorder.record();
+}
+
+window.URL = window.URL || window.webkitURL;
+navigator.getUserMedia  = navigator.getUserMedia 
+  || navigator.webkitGetUserMedia 
+  || navigator.mozGetUserMedia 
+  || navigator.msGetUserMedia;
+
+var recorder;
+var audio = document.querySelector('audio');
+
+function startRecording() {
+  if (navigator.getUserMedia) {
+    navigator.getUserMedia({audio: true}, onSuccess, onFail);
+  } else {
+    console.log('navigator.getUserMedia not present');
+  }
+}
+
+function stopRecording() {
+  recorder.stop();
+  recorder.exportWAV(function(s) {
+    audio.src = window.URL.createObjectURL(s);
+  });
+}
+
+function getNextWord() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET","/next-word");    
+    xhr.send();
+
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState == 4 && xhr.status == 200) {
+        console.log("Successfully got next word!")
+        document.getElementById("keyword").textContent = xhr.response;
+      }
+    }
+}
+
+function sendRecording() {
+  var xhr = new XMLHttpRequest();
+
+  recorder.exportWAV(function(s) {
+    word = document.getElementById("keyword").textContent;
+
+    var fd = new FormData();
+    fd.append("keyword", word);
+    fd.append("data", s);
+
+    xhr.open("POST","/recording");    
+    xhr.send(fd);
+
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState == 4 && xhr.status == 200) {
+        console.log("Successfully sent file!")
+        getNextWord();
+      }
+    }
+  });
+}
+  </script>
+</html>

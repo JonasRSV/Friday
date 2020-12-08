@@ -5,3 +5,6 @@
 bin
 mm/data
 release
+web/recordyourownsite/__pycache__/
+web/recordyourownsite/recordings/*.wav
+

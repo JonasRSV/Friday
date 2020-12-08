@@ -19,7 +19,10 @@ Contents
 
 ## Contribute
 
-Assistant specific code is under friday/ - Models are found under mm/ (model making)
+- on-device assistant specific code is under friday/ 
+- model making is found under mm/ 
+- art (such as banner|logo|..) is found under art/
+- websites are under web/
 
 ## Installation 
 
