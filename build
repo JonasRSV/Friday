@@ -41,7 +41,7 @@ build_pi_binary () {
   echo "${fg_magenta}Building armv7 binary (PI)${fg_reset}"
 
   NAME="friday-armv7-unknown-linux-gnueabinhf"
-  docker build -t "${NAME?}" . -f platforms/armv7-unknown-linux-gnueabinhf.Dockerfile
+  docker build -t "${NAME?}" . -f platforms.Dockerfiles/armv7-unknown-linux-gnueabinhf.Dockerfile
 
   pushd friday
   cross build --release --target armv7-unknown-linux-gnueabihf
@@ -59,7 +59,7 @@ build_linux_binary () {
   echo "${fg_magenta}Building x86 linux binary ${fg_reset}"
 
   NAME="friday-x86_64-unknown-linux-gnu"
-  docker build -t "${NAME?}" . -f platforms/x86_64-unknown-linux-gnu.Dockerfile
+  docker build -t "${NAME?}" . -f platforms.Dockerfiles/x86_64-unknown-linux-gnu.Dockerfile
 
   pushd friday
   cross build --release --target x86_64-unknown-linux-gnu
