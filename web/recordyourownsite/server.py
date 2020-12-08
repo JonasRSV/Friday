@@ -28,7 +28,7 @@ WORDS = [
     "slå på",
     "sätt larm",
     "sätt tidigt larm",
-    "sätt sent larm"
+    "sätt sent larm",
     "stoppa larm",
     "sätt timer",
     "hejdå",
