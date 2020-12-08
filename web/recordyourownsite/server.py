@@ -15,6 +15,12 @@ WORDS = [
     "status",
     "tänd lampan",
     "släck lampan",
+    "blått ljus",
+    "rött ljus",
+    "grönt ljus",
+    "rosa ljus",
+    "gult ljus",
+    "vitt ljus",
 ]
 
 
