@@ -19,11 +19,16 @@
       <div class="tile-24"></div>
       <div class="tile-31"></div>
       <div class="tile-32">
-        <button id='record' onmousedown="startRecording()" 
-          onmouseup="stopRecording()" class="record">Record</button>
+        <button id='record' 
+          onmousedown="startRecording()" 
+          onmouseup="stopRecording()" 
+          ontouchstart="startRecording()" 
+          ontouchend="stopRecording()" class="record">Record</button>
       </div>
       <div class="tile-33"> 
-        <button id='send' onclick="sendRecording()"  class="send">Send</button>
+        <button id='send' 
+          ontouchstart="sendRecording()" 
+          onclick="sendRecording()"  class="send">Send</button>
       </div>
       <div class="tile-34"></div>
       <div class="tile-41"></div>
