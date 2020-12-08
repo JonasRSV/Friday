@@ -104,18 +104,19 @@ function sendRecording() {
     xhr.open("POST","/recording");    
     xhr.send(fd);
 
+    document.getElementById("send").classList.toggle("active-send", true);
+    document.getElementById("send").textContent = "Thank You";
+
     xhr.onreadystatechange = function() {
       if(xhr.readyState == 4 && xhr.status == 200) {
         clipCounter += 1;
         console.log("Successfully sent file!")
-        document.getElementById("send").classList.toggle("active-send", true);
-        document.getElementById("send").textContent = "Thank You";
         getNextWord();
 
         setTimeout(() => {
           document.getElementById("send").textContent = "send";
           document.getElementById("send").classList.toggle("active-send", false);
-        }, 2000)
+        }, 500)
 
       }
     }
