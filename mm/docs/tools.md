@@ -111,6 +111,6 @@ INPUT_FILE=...
 OUTPUT_FILE=...
 
 python3 tools/manually_filter_records.py\
- --input_file=${FRIDAY_SESSION?}/${INPUT_FILE} \
- --output_file=${FRIDAY_SESSION?}/${OUTPUT_FILE}
+ --input_file=${INPUT_FILE?} \
+ --output_file=${OUTPUT_FILE?}
 ```
