@@ -19,7 +19,10 @@ html, body {
   grid-area: tile-32; 
   text-align: center;
 }
-.tile-33 { grid-area: tile-33; }
+.tile-33 { 
+  grid-area: tile-33;
+  text-align: center;
+}
 .tile-34 { grid-area: tile-34; }
 .tile-41 { grid-area: tile-41; }
 .tile-42 { 
@@ -34,17 +37,84 @@ html, body {
   grid-template-areas: 
   "tile-11 tile-12 tile-13 tile-14"
   "tile-21 tile-22 tile-22 tile-24"
-  "tile-31 tile-32 tile-32 tile-34"
-  "tile-41 tile-42 tile-42 tile-44";
+  "tile-31 tile-32 tile-33 tile-34"
+  "tile-42 tile-42 tile-42 tile-42";
   width: 100%;
   height: 100%;
   margin: 0 auto;
 
-  grid-template-rows: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 0.1fr 1fr 1fr 1fr;
   grid-template-columns: 1fr 1fr 1fr 1fr;
 
 }
 
 .word-container {
   text-align: center;
+}
+
+.active-recording {
+  animation: button-recording 1s linear infinite;
+}
+
+.active-send {
+  animation: button-send 1s linear infinite;
+}
+
+@keyframes button-recording {
+  0% {
+    transform: scale(1.0);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+@keyframes button-send {
+  0% { 
+    transform: scale(1.0);
+    background-color: inherit;
+  }
+
+  50% {
+    transform: scale(1.5);
+    background-color: red;
+  }
+
+  100% { 
+    transform: scale(1.0);
+    background-color: inherit;
+  }
+}
+
+.record {
+  font-size: 2vw;
+}
+
+.send {
+  font-size: 2vw;
+}
+
+@media only screen 
+and (min-device-width : 0) 
+and (max-device-width : 500px) {
+  .record {
+    font-size: 5vw;
+  }
+
+  .send {
+    font-size: 5vw;
+  }
+
+  .grid-container {
+    grid-template-areas: 
+    "tile-11 tile-12 tile-13 tile-14"
+    "tile-22 tile-22 tile-22 tile-22"
+    "tile-32 tile-32 tile-33 tile-33"
+    "tile-42 tile-42 tile-42 tile-42";
+  }
 }
