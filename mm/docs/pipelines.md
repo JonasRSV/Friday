@@ -84,6 +84,17 @@ python3 pipelines/google_speech_commands.py \
   --sample_rate=8000
 ```
 
+### RecordYourOwnWebsite
+
+To convert samples produced by [RecordYourOwnWebsite](https://github.com/JonasRSV/Friday/tree/main/web/recordyourownsite) use the following:
+
+```bash
+python3 pipelines/record_your_own_website.py \
+ --source=${FRIDAY_ROOT?}/web/recordyourownsite/recordings\
+ --sink=$PWD/data/unverified\
+ --sample_rate=8000
+```
+
 
 ### Common Pipelines
 

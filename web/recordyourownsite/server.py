@@ -9,8 +9,8 @@ BASE = "abcdefghijklmnopqrstuvxyz1234567890"
 WORDS = [
     "tänd ljuset",
     "släck ljuset",
-    "god natt",
-    "god morgon",
+    "godnatt",
+    "godmorgon",
     "friday",
     "status",
     "tänd lampan",
@@ -21,6 +21,18 @@ WORDS = [
     "rosa ljus",
     "gult ljus",
     "vitt ljus",
+    "vad är klockan",
+    "vilken tid är det",
+    "stäng av",
+    "sätt på",
+    "slå på",
+    "sätt larm",
+    "sätt tidigt larm",
+    "sätt sent larm"
+    "stoppa larm",
+    "sätt timer",
+    "hejdå",
+    "läggdags"
 ]
 
 

@@ -14,9 +14,11 @@ def manually_filter_on_audio(input_file: str, output_file: str):
             serialized_example = serialized_example.numpy()
             example = tf.train.Example.FromString(serialized_example)
 
+            text = tfexample_utils.get_text(example)
             audio = np.array(tfexample_utils.get_audio(example), dtype=np.int16)
             sample_rate = tfexample_utils.get_sample_rate(example)
 
+            print("Text: ", text)
             simpleaudio.play_buffer(audio, num_channels=1, bytes_per_sample=2, sample_rate=sample_rate)
 
             if input("d=drop") == "d":

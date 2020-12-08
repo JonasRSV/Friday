@@ -8,3 +8,5 @@ release
 web/recordyourownsite/__pycache__/
 web/recordyourownsite/recordings/*.wav
 
+**/hidden
+**/.recordings
