@@ -9,7 +9,7 @@
     <div class="grid-container">
       <div class="tile-11"></div>
       <div class="tile-12"></div>
-      <div class="tile-13"></div>
+      <div id="clip-counter" class="tile-13">Sent: 0</div>
       <div class="tile-14"></div>
       <div class="tile-21"></div>
       <div class="tile-22">
@@ -19,10 +19,12 @@
       <div class="tile-24"></div>
       <div class="tile-31"></div>
       <div class="tile-32">
-        <button onmousedown="startRecording()" onmouseup="stopRecording()" class="record">Record</button>
-        <button onclick="sendRecording()"  class="send">Send</button>
+        <button id='record' onmousedown="startRecording()" 
+          onmouseup="stopRecording()" class="record">Record</button>
       </div>
-      <div class="tile-33"> </div>
+      <div class="tile-33"> 
+        <button id='send' onclick="sendRecording()"  class="send">Send</button>
+      </div>
       <div class="tile-34"></div>
       <div class="tile-41"></div>
       <div class="tile-42"> <audio controls autoplay></audio> </div>
@@ -56,16 +58,19 @@ navigator.getUserMedia  = navigator.getUserMedia
 
 var recorder;
 var audio = document.querySelector('audio');
+var clipCounter = 0;
 
 function startRecording() {
   if (navigator.getUserMedia) {
     navigator.getUserMedia({audio: true}, onSuccess, onFail);
+    document.getElementById("record").classList.toggle("active-recording", true);
   } else {
     console.log('navigator.getUserMedia not present');
   }
 }
 
 function stopRecording() {
+  document.getElementById("record").classList.toggle("active-recording", false);
   recorder.stop();
   recorder.exportWAV(function(s) {
     audio.src = window.URL.createObjectURL(s);
@@ -81,6 +86,7 @@ function getNextWord() {
       if(xhr.readyState == 4 && xhr.status == 200) {
         console.log("Successfully got next word!")
         document.getElementById("keyword").textContent = xhr.response;
+        document.getElementById("clip-counter").textContent = "Sent: " + clipCounter;
       }
     }
 }
@@ -100,8 +106,17 @@ function sendRecording() {
 
     xhr.onreadystatechange = function() {
       if(xhr.readyState == 4 && xhr.status == 200) {
+        clipCounter += 1;
         console.log("Successfully sent file!")
+        document.getElementById("send").classList.toggle("active-send", true);
+        document.getElementById("send").textContent = "Thank You";
         getNextWord();
+
+        setTimeout(() => {
+          document.getElementById("send").textContent = "send";
+          document.getElementById("send").classList.toggle("active-send", false);
+        }, 2000)
+
       }
     }
   });
