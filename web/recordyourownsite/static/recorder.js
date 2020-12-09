@@ -22,6 +22,7 @@
                 command: 'record',
                 buffer: [
                     e.inputBuffer.getChannelData(0),
+                    e.inputBuffer.getChannelData(1),
                 ]
             });
         }
@@ -59,12 +60,12 @@
             })
         }
 
-        this.exportMonoWAV = function(cb, type) {
+        this.exportWAV = function(cb, type) {
             currCallback = cb || config.callback;
             type = type || config.type || 'audio/wav';
             if (!currCallback) throw new Error('Callback not set');
             worker.postMessage({
-                command: 'exportMonoWAV',
+                command: 'exportWAV',
                 type: type
             });
         }

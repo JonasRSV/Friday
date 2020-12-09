@@ -17,9 +17,9 @@ class AudioController {
 
         this.context = new (window.AudioContext || window.webkitAudioContext)();
         if (this.context.createJavaScriptNode) {
-            	this.audioNode = this.context.createJavaScriptNode(1024, 1, 1);
+            	this.audioNode = this.context.createJavaScriptNode(1024, 2, 2);
         } else if (this.context.createScriptProcessor) {
-            	this.audioNode = this.context.createScriptProcessor(1024, 1, 1);
+            	this.audioNode = this.context.createScriptProcessor(1024, 2, 2);
         } else {
 		document.getElementById("info-tile").textContent = "Webaudio is not supported";
             	throw 'WebAudio not supported!';
@@ -78,7 +78,7 @@ class AudioController {
         this.startRecording();
         setTimeout(() => {
           this.stopRecording()
-          this.recorder.exportMonoWAV(this.playRecording);
+          this.recorder.exportWAV(this.playRecording);
 
         }, 2000);
 
@@ -87,7 +87,7 @@ class AudioController {
     sendRecording = () => {
         var xhr = new XMLHttpRequest();
 
-        this.recorder.exportMonoWAV((s) => {
+        this.recorder.exportWAV((s) => {
             var word = document.getElementById("keyword").textContent;
 
             var fd = new FormData();
