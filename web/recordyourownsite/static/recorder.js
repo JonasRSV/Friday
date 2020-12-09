@@ -51,10 +51,12 @@
             });
         }
 
-        this.getBuffer = function(cb) {
+        this.getBuffers = function(cb) {
+          console.log("Getting em buffars!");
             currCallback = cb || config.callback;
+          console.log("callback ", currCallback);
             worker.postMessage({
-                command: 'getBuffer'
+                command: 'getBuffers'
             })
         }
 
@@ -69,6 +71,7 @@
         }
 
         worker.onmessage = function(e) {
+          console.log("master got message", e);
             var blob = e.data;
             currCallback(blob);
         }

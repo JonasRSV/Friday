@@ -74,6 +74,7 @@ function exportMonoWAV(type){
 }
 
 function getBuffers() {
+  console.log("Getting em buffers");
   var buffers = [];
   buffers.push( mergeBuffers(recBuffersL, recLength) );
   buffers.push( mergeBuffers(recBuffersR, recLength) );
