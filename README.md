@@ -1,6 +1,6 @@
 ![logo](art/friday-logo.png)
 
-Friday is a free and open-source no-wake-word voice assistant. Friday and its [website](https://markusaj13.github.io/Monday/?page=home&lang=english) is currently under development
+Friday is a free and open-source no-wake-word voice assistant. Friday is currently under development
 
 Contents
 - [Roadmap](#roadmap)
