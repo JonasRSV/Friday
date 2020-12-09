@@ -63,15 +63,10 @@ class AudioController {
       document.getElementById("clip-counter").textContent = "Stopped Recording";
     }
 
-    playRecording = (buffers) => {
-      var newSource = this.context.createBufferSource();
-      var newBuffer = this.context.createBuffer( 2, buffers[0].length, this.context.sampleRate );
-      newBuffer.getChannelData(0).set(buffers[0]);
-      newBuffer.getChannelData(1).set(buffers[1]);
-      newSource.buffer = newBuffer;
-
-      newSource.connect( this.context.destination );
-      newSource.start(0);
+    playRecording = (blob) => {
+      const url = URL.createObjectURL(blob)
+      var audio = new Audio(url);
+      audio.play();
     }
 
     runRecording = () => {
@@ -79,10 +74,10 @@ class AudioController {
         setTimeout(() => {
           this.stopRecording()
           document.getElementById("clip-counter").textContent = "Getting buffers to playback";
-          this.recorder.getBuffers(this.playRecording);
+          //this.recorder.getBuffers(this.playRecording);
 
           //console.log("Exporting!", this.recorder);
-          //this.recorder.exportWAV(this.playRecording);
+          this.recorder.exportWAV(this.playRecording);
 
         }, 2000);
 
