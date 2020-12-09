@@ -35,7 +35,7 @@ html, body {
 .grid-container {
   display: grid;
   grid-template-areas: 
-  "tile-11 tile-12 tile-13 tile-14"
+  "tile-11 tile-13 tile-13 tile-14"
   "tile-21 tile-22 tile-22 tile-24"
   "tile-31 tile-32 tile-33 tile-34"
   "tile-42 tile-42 tile-42 tile-42";
@@ -79,7 +79,7 @@ and (max-device-width : 500px) {
 
   .grid-container {
     grid-template-areas: 
-    "tile-11 tile-12 tile-13 tile-14"
+    "tile-13 tile-13 tile-13 tile-13"
     "tile-22 tile-22 tile-22 tile-22"
     "tile-32 tile-32 tile-33 tile-33"
     "tile-42 tile-42 tile-42 tile-42";

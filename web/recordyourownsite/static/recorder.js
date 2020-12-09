@@ -1,11 +1,11 @@
 (function(window) {
 
     var WORKER_PATH = 'static/recordWorker.js';
-    var Recorder = function(source, cfg) {
+    var Recorder = function(source, node, cfg) {
         var config = cfg || {};
         var bufferLen = config.bufferLen || 4096;
         this.context = source.context;
-        this.node = this.context.createScriptProcessor(bufferLen, 2, 2);
+        this.node = node;
         var worker = new Worker(config.workerPath || WORKER_PATH);
         worker.postMessage({
             command: 'init',
@@ -22,7 +22,6 @@
                 command: 'record',
                 buffer: [
                     e.inputBuffer.getChannelData(0),
-                    e.inputBuffer.getChannelData(1)
                 ]
             });
         }
@@ -60,12 +59,12 @@
             })
         }
 
-        this.exportWAV = function(cb, type) {
+        this.exportMonoWAV = function(cb, type) {
             currCallback = cb || config.callback;
             type = type || config.type || 'audio/wav';
             if (!currCallback) throw new Error('Callback not set');
             worker.postMessage({
-                command: 'exportWAV',
+                command: 'exportMonoWAV',
                 type: type
             });
         }
@@ -75,9 +74,6 @@
             var blob = e.data;
             currCallback(blob);
         }
-
-        source.connect(this.node);
-        this.node.connect(this.context.destination); //this should not be necessary
     };
 
     Recorder.forceDownload = function(blob, filename) {

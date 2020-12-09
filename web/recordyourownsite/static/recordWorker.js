@@ -51,7 +51,7 @@ function init(config){
 
 function record(inputBuffer){
   recBuffersL.push(inputBuffer[0]);
-  recBuffersR.push(inputBuffer[1]);
+  recBuffersR.push(0);
   recLength += inputBuffer[0].length;
 }
 
@@ -74,7 +74,6 @@ function exportMonoWAV(type){
 }
 
 function getBuffers() {
-  console.log("Getting em buffers");
   var buffers = [];
   buffers.push( mergeBuffers(recBuffersL, recLength) );
   buffers.push( mergeBuffers(recBuffersR, recLength) );

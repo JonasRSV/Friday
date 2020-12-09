@@ -1,4 +1,4 @@
-document.getElementById("clip-counter").textContent = "Loaded Website and ran JS!";
+document.getElementById("info-tile").textContent = "Loaded Website.. if you see this something went terribly wrong!";
 window.URL = window.URL || window.webkitURL;
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -6,20 +6,22 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 class AudioController {
 
     constructor() {
+	this.current_audio_blob = null;
+
         this.context = null;
         this.recorder = null;
         this.playerSource = null;
         this.mediaStreamSource = null;
 
-        document.getElementById("clip-counter").textContent = "Trying to get media!";
+        document.getElementById("info-tile").textContent = "Trying to get media!";
 
         this.context = new (window.AudioContext || window.webkitAudioContext)();
         if (this.context.createJavaScriptNode) {
-            	this.audioNode = this.context.createJavaScriptNode(4096, 1, 1);
+            	this.audioNode = this.context.createJavaScriptNode(1024, 1, 1);
         } else if (this.context.createScriptProcessor) {
-            	this.audioNode = this.context.createScriptProcessor(4096, 1, 1);
+            	this.audioNode = this.context.createScriptProcessor(1024, 1, 1);
         } else {
-		document.getElementById("clip-counter").textContent = "Webaudio is not supported";
+		document.getElementById("info-tile").textContent = "Webaudio is not supported";
             	throw 'WebAudio not supported!';
         }
 
@@ -33,22 +35,23 @@ class AudioController {
     }
 
     onSuccessfullyGettingMedia = (s) => {
-        document.getElementById("clip-counter").textContent = "Got UserMedia!";
+        document.getElementById("info-tile").textContent = "Got UserMedia!";
         this.mediaStreamSource = this.context.createMediaStreamSource(s);
 	this.mediaStreamSource.connect(this.audioNode)
-        this.recorder = new Recorder(this.mediaStreamSource);
+        this.recorder = new Recorder(this.mediaStreamSource, this.audioNode);
     }
 
     onFailedGettingMedia = (e) => {
-	document.getElementById("clip-counter").textContent = "Failed to get media";
+	document.getElementById("info-tile").textContent = "Failed to get media";
         console.log('Failed to get media!', e);
         console.log('This site wont work :(', e);
     }
 
     startRecording = () => {
+	this.context.resume();
 
 
-	document.getElementById("clip-counter").textContent = "Clearing Previous";
+	document.getElementById("info-tile").textContent = "Clearing Previous";
         // Clear any previous sound
         this.recorder.clear();
         // Start recording new sound
@@ -58,26 +61,24 @@ class AudioController {
 
     stopRecording = () => {
       document.getElementById("record").classList.toggle("active-recording", false);
-      document.getElementById("clip-counter").textContent = "Stopping Recording";
+      document.getElementById("info-tile").textContent = "Stopping Recording";
       this.recorder.stop();
-      document.getElementById("clip-counter").textContent = "Stopped Recording";
+      document.getElementById("info-tile").textContent = "Stopped Recording";
     }
 
     playRecording = (blob) => {
+      this.current_audio_blob = blob;
       const url = URL.createObjectURL(blob)
       var audio = new Audio(url);
       audio.play();
+      document.getElementById("info-tile").textContent = "Played audio of size " + blob.size + " If you're on phone you might have to click the title to get playback";
     }
 
     runRecording = () => {
         this.startRecording();
         setTimeout(() => {
           this.stopRecording()
-          document.getElementById("clip-counter").textContent = "Getting buffers to playback";
-          //this.recorder.getBuffers(this.playRecording);
-
-          //console.log("Exporting!", this.recorder);
-          this.recorder.exportWAV(this.playRecording);
+          this.recorder.exportMonoWAV(this.playRecording);
 
         }, 2000);
 
@@ -86,7 +87,7 @@ class AudioController {
     sendRecording = () => {
         var xhr = new XMLHttpRequest();
 
-        this.recorder.exportWAV((s) => {
+        this.recorder.exportMonoWAV((s) => {
             var word = document.getElementById("keyword").textContent;
 
             var fd = new FormData();
@@ -120,7 +121,7 @@ class AudioController {
 
 
 
-document.getElementById("clip-counter").textContent = "Made controller!";
+document.getElementById("info-tile").textContent = "Made controller!";
 controller = new AudioController()
 
 
@@ -133,7 +134,7 @@ function getNextWord() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             console.log("Successfully got next word!")
             document.getElementById("keyword").textContent = xhr.response;
-            document.getElementById("clip-counter").textContent = "Sent: " + controller.clipCounter;
+            document.getElementById("info-tile").textContent = "Sent: " + controller.clipCounter;
         }
     }
 }
@@ -142,8 +143,15 @@ function getNextWord() {
 
 document.getElementById("record").onclick = () => {
 	controller.runRecording();
-	document.getElementById("clip-counter").textContent = "Managed to run recording";
+	document.getElementById("info-tile").textContent = "Managed to start recording";
 }
 
 document.getElementById("send").onclick = controller.sendRecording;
+
+document.getElementById("keyword").onclick = () => {
+   const url = URL.createObjectURL(controller.current_audio_blob)
+   var audio = new Audio(url);
+   audio.play();
+   document.getElementById("info-tile").textContent = "Played audio of size " + controller.current_audio_blob.size;
+}
 
