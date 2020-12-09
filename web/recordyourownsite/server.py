@@ -69,5 +69,5 @@ def next_word():
     return Response(random.choice(WORDS), status=200, content_type="text/plain")
 
 
-#app.run(host="0.0.0.0", port="8000")
-app.run(host="127.0.0.1", port="8000", debug=True)
+app.run(host="0.0.0.0", port="8000")
+#app.run(host="127.0.0.1", port="8000", debug=True)
