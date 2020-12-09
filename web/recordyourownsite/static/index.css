@@ -53,43 +53,10 @@ html, body {
 }
 
 .active-recording {
+  background-color: green;
   animation: button-recording 1s linear infinite;
 }
 
-.active-send {
-  animation: button-send 1s linear infinite;
-}
-
-@keyframes button-recording {
-  0% {
-    transform: scale(1.0);
-  }
-
-  50% {
-    transform: scale(1.2);
-  }
-
-  100% {
-    transform: scale(1.0);
-  }
-}
-
-@keyframes button-send {
-  0% { 
-    transform: scale(1.0);
-    background-color: inherit;
-  }
-
-  50% {
-    transform: scale(1.5);
-    background-color: red;
-  }
-
-  100% { 
-    transform: scale(1.0);
-    background-color: inherit;
-  }
-}
 
 .record {
   font-size: 2vw;
