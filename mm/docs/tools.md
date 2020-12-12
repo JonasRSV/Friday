@@ -114,3 +114,13 @@ python3 tools/manually_filter_records.py\
  --input_file=${INPUT_FILE?} \
  --output_file=${OUTPUT_FILE?}
 ```
+
+### Convert Text of a collection of record
+
+```bash
+python3 tools/convert_text.py\
+  --input_directory=data/personal_recordings\
+  --output_directory=data/tmp\
+  --convert_from="god natt"\
+  --convert_to="godnatt"
+```
