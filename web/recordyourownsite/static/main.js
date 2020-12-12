@@ -226,15 +226,15 @@ document.getElementById("keyword").onclick = () => {
     document.getElementById("info-tile").textContent = "Played audio of size " + controller.current_audio_blob.size;
 }
 
-//document.onkeydown = (ev) => {
-    //if (!isRecording && !isSending) {
-        //if (ev.keyCode == 32) {
-            //controller.runRecording();
-        //}
-        //if (ev.keyCode == 13) {
-            //controller.sendRecording();
-        //}
-    //}
-//}
+document.onkeydown = (ev) => {
+    if (!isRecording && !isSending) {
+        if (ev.keyCode == 32) {
+            controller.runRecording();
+        }
+        if (ev.keyCode == 13) {
+            controller.sendRecording();
+        }
+    }
+}
 
 
