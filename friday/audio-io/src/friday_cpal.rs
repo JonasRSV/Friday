@@ -11,7 +11,7 @@ use crate::RecordingConfig;
 
 pub struct CPALIStream {
     config: RecordingConfig,
-    stream: cpal::Stream,
+    _stream: cpal::Stream,
     buffer: Arc<Mutex<CircularQueue<i16>>>
 
 }
@@ -33,16 +33,23 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>)
     }
 
 fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError> {
-    for host in cpal::available_hosts().iter() {
-        println!("Found Host {}", host.name());
-    }
-    for device in cpal::default_host().input_devices().unwrap() {
-        println!("Found {}", device.name().unwrap());
-    }
+    //for host in cpal::available_hosts().iter() {
+        //println!("Found Host {}", host.name());
+    //}
+    //for device in cpal::default_host().input_devices().unwrap() {
+        //println!("Found {}", device.name().unwrap());
+    //}
 
-    for device in cpal::default_host().devices().unwrap() {
-        println!("Found device {}", device.name().unwrap());
-    }
+    //for device in cpal::default_host().devices().unwrap() {
+        //println!("Found device {}", device.name().unwrap());
+    //}
+    // TODO: Make a smart choice of device here
+    // For some platforms the default device is not a good choice
+    // E.g raspberry PI
+    // The current work-around is that I manually set the default device on the pi
+    // to make this code work - but would be better if this code could
+    // recognize what device has recording capabilities and then use it
+
 
     return match cpal::default_host().default_input_device() {
         Some(device) => Ok(device),
@@ -99,7 +106,7 @@ impl Recorder for CPALIStream {
                                 |_| {
                                     Ok(Box::new(CPALIStream{
                                         config: conf.clone(),
-                                        stream,
+                                        _stream: stream,
                                         buffer: read_buffer}))
                                 })
 
@@ -107,8 +114,6 @@ impl Recorder for CPALIStream {
                 });
     }
 }
-
-struct OStream;
 
 
 #[cfg(test)]
@@ -121,7 +126,6 @@ mod tests {
     fn cpal_some_printing() {
         let r = RecordingConfig {
             sample_rate: 8000,
-            buffer_size: 2000,
             model_frame_size: 16000
         };
 
@@ -145,14 +149,12 @@ mod tests {
 
 
 
-        drop(istream.stream);
     }
 
     #[test]
     fn normal_workload() {
         let r = RecordingConfig {
             sample_rate: 8000,
-            buffer_size: 2000,
             model_frame_size: 16000
         };
 
@@ -169,14 +171,12 @@ mod tests {
 
         }
 
-        drop(istream.stream);
     }
 
     #[test]
     fn record_audio_files() {
         let r = RecordingConfig {
             sample_rate: 8000,
-            buffer_size: 2000,
             model_frame_size: 16000
         };
 
@@ -213,6 +213,5 @@ mod tests {
 
         }
 
-        drop(istream.stream);
     }
 }

@@ -2,7 +2,6 @@
 #[derive(Clone)]
 pub struct RecordingConfig {
     pub sample_rate: u32,
-    pub buffer_size: u32,
     pub model_frame_size: usize
 }
 

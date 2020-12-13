@@ -1,5 +1,5 @@
 use std::{collections::HashMap, env};
-use std::net::{IpAddr, Ipv4Addr};
+use std::net::IpAddr;
 use std::path::{PathBuf, Path};
 use std::fs;
 use friday_error;
@@ -56,7 +56,7 @@ impl Hue {
             candidates.first().map_or_else(
                 || frierr!("Found no bridge available :("),
                 |bridge_ip| {
-                    let mut bridge_username : String = String::new();
+                    let bridge_username : String;
                     loop {
                         let candidate_user = huelib::bridge::register_user(bridge_ip.clone(), HUE_USER);
 
@@ -165,6 +165,7 @@ impl Hue {
 
     pub fn new() -> Result<Hue, FridayError> {
         return Hue::get_hue_login().map_or_else(
+
             |err| err.push("Failed to create Hue Vendor").into(),
             |credentials| Hue::get_command_config().map_or_else(
                 |err| err.push("Failed to get command config").into(),

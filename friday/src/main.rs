@@ -29,7 +29,6 @@ fn main() {
 
     let config = audio_io::RecordingConfig {
         sample_rate: 8000,
-        buffer_size: 2000,
         model_frame_size: model.expected_frame_size()
     };
 
