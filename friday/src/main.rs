@@ -32,8 +32,10 @@ fn main() {
         model_frame_size: model.expected_frame_size()
     };
 
+
     let istream = audio_io::friday_cpal::CPALIStream::record(
         &config).expect("Failed to start audio recording");
+
 
     serve_friday(&mut speak, &mut model, &vendors, istream);
 
