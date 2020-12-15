@@ -12,6 +12,21 @@ macro_rules! frierr {
     }
 }
 
+pub fn propagate<S, T>(message: S) -> impl Fn(FridayError) -> Result<T, FridayError>
+    where S: AsRef<str> {
+        let m = String::from(message.as_ref());
+        return move |err| {
+                err.push(m.clone());
+                return Err(err);
+            }
+
+}
+
+pub fn merge(a : &mut FridayError, b : &FridayError) -> FridayError {
+    a.trace.extend(b.trace.clone());
+    return a.clone();
+}
+
 impl FridayError {
     pub fn new<S>(message: S) -> FridayError 
         where S: AsRef<str> {
@@ -33,17 +48,6 @@ impl FridayError {
             clone.trace.push_back(String::from(message.as_ref()));
             return clone;
     }
-
-    pub fn propagate<T>(message: &str, r: Result<T, FridayError>) -> Result<T, FridayError> {
-        match r {
-            Ok(r) => Ok(r),
-            Err(mut err) => {
-                err.trace.push_back(String::from(message));
-                return Err(err);
-            }
-        }
-
-    }
 }
 
 impl Debug for FridayError {
@@ -53,7 +57,7 @@ impl Debug for FridayError {
         f.write_str("--- Friday Error --- \n").unwrap();
         f.write_str("\n").unwrap();
         f.write_str("\n").unwrap();
-        for entry in self.trace.iter().rev() {
+        for entry in self.trace.iter() {
 
             f.write_str(&entry).unwrap();
             f.write_str("\n\n").unwrap();

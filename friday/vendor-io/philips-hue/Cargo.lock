@@ -178,6 +178,16 @@ name = "friday-error"
 version = "0.1.0"
 
 [[package]]
+name = "friday-storage"
+version = "0.1.0"
+dependencies = [
+ "friday-error",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
 name = "huelib"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -287,6 +297,7 @@ name = "philips-hue"
 version = "0.1.0"
 dependencies = [
  "friday-error",
+ "friday-storage",
  "huelib",
  "serde",
  "serde_derive",

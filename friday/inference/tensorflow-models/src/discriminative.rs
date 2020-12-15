@@ -1,5 +1,4 @@
 use crate::model as m;
-use crate::config as c;
 use std::ffi::CString;
 use float_ord::FloatOrd;
 use inference;
@@ -7,6 +6,18 @@ use friday_error;
 use friday_error::frierr;
 use friday_error::FridayError;
 
+use friday_storage;
+
+use std::path::{PathBuf, Path};
+use std::collections::HashMap;
+use serde_derive::Deserialize;
+
+#[derive(Deserialize)]
+pub struct Config {
+    export_dir: PathBuf,
+    sensitivity: f32,
+    class_map: HashMap<String, i32>
+}
 
 pub struct Discriminative {
     model: m::Model,
@@ -17,17 +28,56 @@ pub struct Discriminative {
 
 }
 
+fn class_map_to_class_vec(map: HashMap<String, i32>) -> Vec<String> {
+    // TODO is there a better way to convert it
+    // We just want to take a map
+    // "hi: 0
+    // "why": 1
+    // "who": 2
+    // ...
+    // and convert into
+    // ["hi", "why", "who"]
+    // Such that the order is preserved
+
+    let mut class_map_mappings_vec: Vec<(String, i32)> = map
+        .iter()
+        .map(|k| (k.0.clone(), k.1.clone()))
+        .collect();
+
+    class_map_mappings_vec.sort_by_key(|k| k.1);
+
+    // Finally we have the class_map
+    return class_map_mappings_vec.iter().map(|k| k.0.clone()).collect();
+}
+
 impl Discriminative {
 
     pub fn new() -> Result<Discriminative, FridayError>  {
-        match c::Discriminative::new() {
-            Ok(config) => Discriminative::model_from_config(config),
-            Err(e) => Err(e)
-        }
+        return friday_storage::config::get_config("discriminative.json").map_or_else(
+            friday_error::propagate("Failed to create discriminative model"),
+            Discriminative::model_from_config 
+        );
+    }
+    fn model_from_config(config: Config) ->
+        Result<Discriminative, FridayError> {
+            let maybe_input = CString::new("input");
+            let maybe_output = CString::new("output");
+            let class_map : Vec<String> = class_map_to_class_vec(config.class_map.clone());
+
+
+            return m::Model::new(config.export_dir.as_path())
+                .map_or_else(
+                    || frierr!("Failed to create model"),
+                    |model|  Discriminative::make_discriminative(
+                        class_map, 
+                        config.sensitivity,
+                        model,
+                        maybe_input.unwrap(),
+                        maybe_output.unwrap()));
     }
 
-    fn make_discriminative(
-        config: c::Discriminative,
+    fn make_discriminative(class_map: Vec<String>,
+        sensitivity: f32,
         m: m::Model, 
         input_cstring: CString,
         output_cstring: CString) -> Result<Discriminative, FridayError> {
@@ -43,43 +93,25 @@ impl Discriminative {
                 || frierr!("Failed to read dimension of output tensor"),
                 |dim| {
 
-                    if dim.clone() as usize != config.class_map.len() {
+                    if dim.clone() as usize != class_map.len() {
                         return frierr!("Class map size ({}) \
                         not matching output dimension of tensor ({})", 
-                        config.class_map.len(), dim);
+                        class_map.len(), dim);
 
                     } 
                     return Ok(Discriminative {
                         model: m,
                         input: input_tensor,
                         output: output_tensor,
-                        class_map: config.class_map.clone(),
-                        sensitivity: config.sensitivity as f32
+                        class_map: class_map.clone(),
+                        sensitivity
                     });
 
                 })
     }
 
 
-    fn model_from_config(config: c::Discriminative) ->
-        Result<Discriminative, FridayError> {
 
-            return m::Model::new(config.export_dir.as_path())
-                .map_or_else(
-                    || frierr!("Failed to create model"),
-                    |model| {
-                        CString::new("input").map_or_else(
-                            |_| frierr!("Failed to create cstring from 'input'"),
-                            |input| {
-                                CString::new("output").map_or_else(
-                                    |_| frierr!("Failed to create cstring from 'input'"),
-                                    |output| Discriminative::make_discriminative(config, model, input, output)
-                                )
-                            }
-                        )
-                    }
-                );
-    }
 }
 
 impl inference::Model for Discriminative {
@@ -130,19 +162,19 @@ mod tests {
     #[test]
     fn discriminative_model() {
 
-        let config = c::Discriminative {
+        let config = Config {
             export_dir: PathBuf::from("test-resources/1603634879"),
-            class_map: vec![
-                String::from("Silence"), 
-                String::from("?"), 
-                String::from("?"), 
-                String::from("?"),
-                String::from("?"), 
-                String::from("?"), 
-                String::from("?"),
-                String::from("?"), 
-                String::from("?"), 
-                String::from("?")],
+            class_map: [
+                (String::from("Silence"), 0), 
+                (String::from("a"), 1),
+                (String::from("b"), 2),
+                (String::from("c"), 3),
+                (String::from("d"), 4),
+                (String::from("e"), 5),
+                (String::from("f"), 6),
+                (String::from("g"), 7),
+                (String::from("h"), 8),
+                (String::from("i"), 9)].iter().cloned().collect(),
                 sensitivity: 0.0
         };
 

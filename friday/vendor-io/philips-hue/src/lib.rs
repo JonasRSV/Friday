@@ -1,12 +1,11 @@
-use std::{collections::HashMap, env};
+use std::collections::HashMap;
 use std::net::IpAddr;
-use std::path::{PathBuf, Path};
-use std::fs;
+
 use friday_error;
 use friday_error::frierr;
 use friday_error::FridayError;
+use friday_storage;
 
-use serde_json;
 use serde_derive::{Deserialize, Serialize};
 
 use vendor_io::Vendor;
@@ -49,7 +48,7 @@ struct HueCommandConfig {
 impl Hue {
     // TODO add callback to this to support UI functionality at some point - or let the UI handle
     // this part.
-    fn find_bridge_and_create_user() -> Result<HueLogin, FridayError> {
+    fn find_bridge() -> Result<HueLogin, FridayError> {
         huelib::bridge::discover().map_or_else(
             |err| frierr!("Failed to discover bride - Reason: {}", err),
             |candidates: Vec<IpAddr>| 
@@ -70,7 +69,6 @@ impl Hue {
 
                     }
 
-                    println!("Successfully Created a User! :)");
                     return Ok(HueLogin {
                         ip: bridge_ip.to_string(),
                         user: bridge_username
@@ -79,96 +77,35 @@ impl Hue {
         )
     }
 
-    fn save_login_to_file(login: &HueLogin, path: &Path) -> Result<(), FridayError> {
-        return serde_json::to_string(login).map_or_else(
-            |err| frierr!("Failed to serialize login to string {}", err),
-            |string| fs::write(path, string).map_or_else(
-                |err| frierr!("Failed to write to file {} - Reason: {}", path.to_str().unwrap(), err),
-                |_| Ok(println!("Created credentials at {}", path.to_str().unwrap()))
-            ));
-    }
-
-    fn load_login_from_file(file: &Path) -> Result<HueLogin, FridayError> {
-        return fs::read_to_string(file).map_or_else(
-            |err| frierr!("Failed to read file {} - Reason: {}", file.to_str().unwrap(), err),
-            |content| serde_json::from_str(&content).map_or_else(
-                |err| frierr!("Failed to parse hue login file {}: Reason - {}", file.to_str().unwrap(), err),
-                |login| Ok(login)));
-    }
 
     fn get_hue_login() -> Result<HueLogin, FridayError> {
-        return env::var("FRIDAY_CONFIG").map_or_else(
-            |_| frierr!("The environment variable FRIDAY_CONFIG needs to point \
-            to a configuration directory. \nPlease set the FRIDAY_CONFIG environment variable.\
-            \n\n\
-            For example: \n\
-            FRIDAY_CONFIG=./configs"),
-            |config_path| {
-                let path = PathBuf::from(config_path.clone());
-                if ! path.is_dir() {
-                    return frierr!("{} is not a valid directory", config_path);
-                }
+        return match friday_storage::config::get_config(HUE_CREDENTIAL_FILE) {
+            Ok(login) => Ok(login),
+            Err(mut load_err) => Hue::find_bridge().map_or_else(
+                |bridge_err| friday_error::merge(&mut load_err, &bridge_err).into(),
+                |hue_login| {
+                    let write_res = friday_storage::config::write_config(&hue_login, HUE_CREDENTIAL_FILE);
 
+                    if write_res.is_err() {
+                        eprintln!("Failed to store hueLogin - Reason: {:?} continuing anyway..", 
+                            write_res.err().unwrap());
+                    }
 
-                let mut path_to_file = path.clone();
-                path_to_file.push(HUE_CREDENTIAL_FILE);
-
-                if path_to_file.is_file() {
-                    return Hue::load_login_from_file(&path_to_file);
-                } else {
-                    println!("{}/{} does not exist -- I will try to create it", 
-                        config_path, HUE_CREDENTIAL_FILE);
-
-                    return Hue::find_bridge_and_create_user().map_or_else(
-                        |err| err.push("Failed to create philips hue config").into(),
-                        |login| Hue::save_login_to_file(&login, path_to_file.as_path()).map_or_else(
-                            |err| err.push("Failed to save login to file").into(),
-                            |_| Ok(login)));
-                }
-            })
-    }
-
-    fn load_command_config_from_file(file: &Path) -> Result<HueCommandConfig, FridayError> {
-        return fs::read_to_string(file).map_or_else(
-            |err| frierr!("Failed to read file {} - Reason: {}", file.to_str().unwrap(), err),
-            |content| serde_json::from_str(&content).map_or_else(
-                |err| frierr!("Failed to parse hue login file {}: Reason - {}", 
-                    file.to_str().unwrap(), 
-                    err),
-                    |login| Ok(login)));
+                    return Ok(hue_login);
+                })
+        };
     }
 
     fn get_command_config() -> Result<HueCommandConfig, FridayError> {
-        return env::var("FRIDAY_CONFIG").map_or_else(
-            |_| frierr!("The environment variable FRIDAY_CONFIG needs to point \
-            to a configuration directory. \nPlease set the FRIDAY_CONFIG environment variable.\
-            \n\n\
-            For example: \n\
-            FRIDAY_CONFIG=./configs"),
-            |config_path| {
-                let path = PathBuf::from(config_path.clone());
-                if ! path.is_dir() {
-                    return frierr!("{} is not a valid directory", config_path)
-                }
-
-
-                let mut path_to_file = path.clone();
-                path_to_file.push(HUE_CONFIG_FILE);
-
-                if path_to_file.is_file() {
-                    return Hue::load_command_config_from_file(&path_to_file);
-                }
-
-                return frierr!("{} is not a valid file", path_to_file.to_str().unwrap());
-            })
+        return friday_storage::config::get_config(HUE_CONFIG_FILE);
     }
+
 
     pub fn new() -> Result<Hue, FridayError> {
         return Hue::get_hue_login().map_or_else(
-
-            |err| err.push("Failed to create Hue Vendor").into(),
+            friday_error::propagate("Failed to create hue vendor"),
             |credentials| Hue::get_command_config().map_or_else(
-                |err| err.push("Failed to get command config").into(),
+                friday_error::propagate("Failed to get command config"),
                 |commands| Ok(Hue{
                     bridge: huelib::Bridge::new(IpAddr::V4(credentials.ip.parse().unwrap()), credentials.user),
                     commands
@@ -195,6 +132,9 @@ impl Vendor for Hue {
                     if result.is_err() {
                         err = err.push(format!("Error occurred while setting lamp: {}", 
                                 command.id.clone()));
+                        err = err.push(format!("{}", result.err().unwrap()));
+                        err = err.push("Things to try:\n \
+                        1. Your hue credential file might have become invalid - try removing it");
                     }
                 }
 
@@ -214,13 +154,16 @@ impl Vendor for Hue {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
     #[test]
     fn get_login() {
+        env::set_var("FRIDAY_CONFIG", "./test-resources");
         Hue::get_hue_login().expect("Failed to get login");
     }
 
     #[test]
     fn command_config() {
+        env::set_var("FRIDAY_CONFIG", "./test-resources");
         Hue::get_command_config().expect("Failed to get command config");
     }
 }
