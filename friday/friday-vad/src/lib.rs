@@ -28,7 +28,7 @@ impl EnergyBasedDetector {
 impl SpeakDetector for EnergyBasedDetector {
     fn detect(&mut self, audio: &Vec<i16>) -> bool {
         let energy = EnergyBasedDetector::energy(audio);
-        println!("Energy threshold {} -- Energy {}", self.energy_threshold, energy);
+        //println!("Energy threshold {} -- Energy {}", self.energy_threshold, energy);
         return energy > self.energy_threshold;
     }
 }

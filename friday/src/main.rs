@@ -26,7 +26,7 @@ fn main() {
         .expect("Failed to load model");
 
     let mut vad = friday_vad::EnergyBasedDetector::new(
-        /*threshold=*/500.0
+        /*threshold=*/350.0
     );
 
     let config = friday_audio::RecordingConfig {
