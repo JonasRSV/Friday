@@ -62,12 +62,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "argparse"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f8ebf5827e4ac4fd5946560e6a99776ea73b596d80898f357007317a7141e47"
-
-[[package]]
 name = "ascii"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -102,17 +96,6 @@ dependencies = [
  "hermit-abi",
  "libc",
  "winapi",
-]
-
-[[package]]
-name = "audio-io"
-version = "0.1.0"
-dependencies = [
- "alsa",
- "circular-queue",
- "cpal",
- "friday-error",
- "wav",
 ]
 
 [[package]]
@@ -619,19 +602,33 @@ dependencies = [
 name = "friday"
 version = "0.1.0"
 dependencies = [
- "argparse",
- "audio-io",
  "ctrlc",
+ "friday-audio",
+ "friday-inference",
+ "friday-vad",
+ "friday-vendor",
  "friday-web",
- "inference",
  "philips-hue",
- "speaker-detection",
  "tensorflow-models",
- "vendor-io",
+]
+
+[[package]]
+name = "friday-audio"
+version = "0.1.0"
+dependencies = [
+ "alsa",
+ "circular-queue",
+ "cpal",
+ "friday-error",
+ "wav",
 ]
 
 [[package]]
 name = "friday-error"
+version = "0.1.0"
+
+[[package]]
+name = "friday-inference"
 version = "0.1.0"
 
 [[package]]
@@ -642,6 +639,17 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+]
+
+[[package]]
+name = "friday-vad"
+version = "0.1.0"
+
+[[package]]
+name = "friday-vendor"
+version = "0.1.0"
+dependencies = [
+ "friday-error",
 ]
 
 [[package]]
@@ -728,10 +736,6 @@ dependencies = [
  "unicode-bidi",
  "unicode-normalization",
 ]
-
-[[package]]
-name = "inference"
-version = "0.1.0"
 
 [[package]]
 name = "instant"
@@ -1097,11 +1101,11 @@ version = "0.1.0"
 dependencies = [
  "friday-error",
  "friday-storage",
+ "friday-vendor",
  "huelib",
  "serde",
  "serde_derive",
  "serde_json",
- "vendor-io",
 ]
 
 [[package]]
@@ -1385,10 +1389,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7acad6f34eb9e8a259d3283d1e8c1d34d7415943d4895f65cc73813c7396fc85"
 
 [[package]]
-name = "speaker-detection"
-version = "0.1.0"
-
-[[package]]
 name = "spin"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1505,8 +1505,8 @@ version = "0.1.0"
 dependencies = [
  "float-ord",
  "friday-error",
+ "friday-inference",
  "friday-storage",
- "inference",
  "libc",
  "serde",
  "serde_derive",
@@ -1765,13 +1765,6 @@ name = "vec_map"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
-
-[[package]]
-name = "vendor-io"
-version = "0.1.0"
-dependencies = [
- "friday-error",
-]
 
 [[package]]
 name = "version_check"

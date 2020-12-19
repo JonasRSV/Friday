@@ -1,5 +1,5 @@
 [package]
-name = "speaker-detection"
+name = "friday-inference"
 version = "0.1.0"
 authors = ["Jonas Valfridsson <jonas@valfridsson.net>"]
 edition = "2018"

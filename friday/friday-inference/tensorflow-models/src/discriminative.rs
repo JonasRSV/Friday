@@ -1,7 +1,7 @@
 use crate::model as m;
 use std::ffi::CString;
 use float_ord::FloatOrd;
-use inference;
+use friday_inference;
 use friday_error;
 use friday_error::frierr;
 use friday_error::FridayError;
@@ -114,8 +114,8 @@ impl Discriminative {
 
 }
 
-impl inference::Model for Discriminative {
-    fn predict(&mut self, v :&Vec<i16>) -> inference::Prediction {
+impl friday_inference::Model for Discriminative {
+    fn predict(&mut self, v :&Vec<i16>) -> friday_inference::Prediction {
         //println!("Predicting..!");
         self.input.set_data(&v);
         self.model.run(&mut self.input, &mut self.output);
@@ -131,17 +131,17 @@ impl inference::Model for Discriminative {
         println!("P({}) = {}", self.class_map[pred], probabilities[pred]);
 
         if pred == 0 {
-            return inference::Prediction::Silence;
+            return friday_inference::Prediction::Silence;
         }
 
         if probabilities[pred] > self.sensitivity {
-            return inference::Prediction::Result {
+            return friday_inference::Prediction::Result {
                 class: self.class_map[pred].clone(),
                 index: pred as u32
             }
         }
 
-        return inference::Prediction::Inconclusive;
+        return friday_inference::Prediction::Inconclusive;
 
     }
 
@@ -157,7 +157,7 @@ impl inference::Model for Discriminative {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use inference::Model;
+    use friday_inference::Model;
     use std::path::PathBuf;
     #[test]
     fn discriminative_model() {
@@ -181,16 +181,16 @@ mod tests {
         let mut model = Discriminative::model_from_config(config).expect("Failed to load Config");
         let v: Vec<i16> = vec![1; 16000];
 
-        let pred: inference::Prediction = model.predict(&v);
+        let pred: friday_inference::Prediction = model.predict(&v);
 
         match pred {
-            inference::Prediction::Result {
+            friday_inference::Prediction::Result {
                 class,
                 index: _
             } => assert_eq!(class, String::from("Silence")),
 
-            inference::Prediction::Silence => eprintln!("Got Silence"),
-            inference::Prediction::Inconclusive => eprintln!("Got Inconclusive")
+            friday_inference::Prediction::Silence => eprintln!("Got Silence"),
+            friday_inference::Prediction::Inconclusive => eprintln!("Got Inconclusive")
 
         }
 

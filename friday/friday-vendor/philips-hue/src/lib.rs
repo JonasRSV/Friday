@@ -8,8 +8,8 @@ use friday_storage;
 
 use serde_derive::{Deserialize, Serialize};
 
-use vendor_io::Vendor;
-use vendor_io::DispatchResponse;
+use friday_vendor::Vendor;
+use friday_vendor::DispatchResponse;
 use huelib;
 
 pub struct Hue {

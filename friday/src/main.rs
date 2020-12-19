@@ -1,41 +1,41 @@
 use ctrlc;
-use vendor_io;
 use philips_hue;
-use vendor_io::DispatchResponse;
-use audio_io;
-use audio_io::recorder::Recorder;
-use inference;
+use friday_vendor;
+use friday_vendor::DispatchResponse;
+use friday_vendor::Vendor;
+use friday_audio;
+use friday_audio::recorder::Recorder;
+use friday_vad;
+use friday_vad::SpeakDetector;
+use friday_inference;
+use friday_inference::Model;
 use tensorflow_models;
-use speaker_detection;
-use speaker_detection::SpeakDetector;
-use inference::Model;
-use vendor_io::Vendor;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use friday_web::server::Server;
 
 
 fn main() {
-    let vendors: Vec<Box<dyn vendor_io::Vendor>> = vec![
+    let vendors: Vec<Box<dyn friday_vendor::Vendor>> = vec![
         Box::new(philips_hue::Hue::new().expect("Failed to create Philips Hue Vendor")),
-        Box::new(vendor_io::DummyVendor::new()),
+        Box::new(friday_vendor::DummyVendor::new()),
     ];
 
 
     let mut model = tensorflow_models::discriminative::Discriminative::new()
         .expect("Failed to load model");
 
-    let mut speak = speaker_detection::EnergyBasedDetector::new(
-        /*threshold=*/400.0
+    let mut vad = friday_vad::EnergyBasedDetector::new(
+        /*threshold=*/500.0
     );
 
-    let config = audio_io::RecordingConfig {
+    let config = friday_audio::RecordingConfig {
         sample_rate: 8000,
         model_frame_size: model.expected_frame_size()
     };
 
 
-    let istream = audio_io::friday_cpal::CPALIStream::record(
+    let istream = friday_audio::friday_cpal::CPALIStream::record(
         &config).expect("Failed to start audio recording");
 
 
@@ -43,8 +43,9 @@ fn main() {
     let handles = server.listen("0.0.0.0:8000").expect("Failed to start webserver");
 
 
-    serve_friday(&mut speak, &mut model, &vendors, istream);
+    serve_friday(&mut vad, &mut model, &vendors, istream);
 
+    println!("Shutting Down Webserver.. Might take a few seconds");
     // Tell webserver theads to stop serving
     server.running.swap(false, Ordering::Relaxed);
     for thread in handles {
@@ -57,7 +58,7 @@ fn main() {
 }
 
 
-fn serve_friday<M, S, V, R>(speak: &mut S, model: &mut M, vendors: &Vec<Box<V>>, istream: Box<R>) 
+fn serve_friday<M, S, V, R>(vad: &mut S, model: &mut M, vendors: &Vec<Box<V>>, istream: Box<R>) 
     where M: Model,
           S: SpeakDetector,
           V: Vendor + ?Sized,
@@ -76,9 +77,9 @@ fn serve_friday<M, S, V, R>(speak: &mut S, model: &mut M, vendors: &Vec<Box<V>>,
                   std::thread::sleep(std::time::Duration::from_millis(250));
                   match istream.read() {
                       Some(audio) => {
-                          if speak.detect(&audio) {
+                          if vad.detect(&audio) {
                               match model.predict(&audio) {
-                                  inference::Prediction::Result{
+                                  friday_inference::Prediction::Result{
                                       class,
                                       index: _
                                   } => {
@@ -95,8 +96,8 @@ fn serve_friday<M, S, V, R>(speak: &mut S, model: &mut M, vendors: &Vec<Box<V>>,
                                       // TODO: maybe just empty the buffer instead of sleeping?
                                       std::thread::sleep(std::time::Duration::from_millis(2000));
                                   },
-                                      inference::Prediction::Silence => (),
-                                      inference::Prediction::Inconclusive => ()
+                                      friday_inference::Prediction::Silence => (),
+                                      friday_inference::Prediction::Inconclusive => ()
                               };
                           }
                       },

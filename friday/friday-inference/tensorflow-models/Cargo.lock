@@ -11,6 +11,10 @@ name = "friday-error"
 version = "0.1.0"
 
 [[package]]
+name = "friday-inference"
+version = "0.1.0"
+
+[[package]]
 name = "friday-storage"
 version = "0.1.0"
 dependencies = [
@@ -19,10 +23,6 @@ dependencies = [
  "serde_derive",
  "serde_json",
 ]
-
-[[package]]
-name = "inference"
-version = "0.1.0"
 
 [[package]]
 name = "itoa"
@@ -105,8 +105,8 @@ version = "0.1.0"
 dependencies = [
  "float-ord",
  "friday-error",
+ "friday-inference",
  "friday-storage",
- "inference",
  "libc",
  "serde",
  "serde_derive",

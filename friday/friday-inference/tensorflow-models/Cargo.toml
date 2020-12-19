@@ -10,7 +10,7 @@ edition = "2018"
 libc = "0.2"
 float-ord = "0.2.0"
 tensorflow-rust-sys = { path="tensorflow-rust-sys" } 
-inference = { path="../" } 
+friday-inference = { path="../" } 
 friday-error = { path="../../friday-error" } 
 friday-storage = { path="../../friday-storage" } 
 serde_json = "1.0"

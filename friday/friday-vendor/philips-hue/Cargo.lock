@@ -188,6 +188,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "friday-vendor"
+version = "0.1.0"
+dependencies = [
+ "friday-error",
+]
+
+[[package]]
 name = "huelib"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -298,11 +305,11 @@ version = "0.1.0"
 dependencies = [
  "friday-error",
  "friday-storage",
+ "friday-vendor",
  "huelib",
  "serde",
  "serde_derive",
  "serde_json",
- "vendor-io",
 ]
 
 [[package]]
@@ -708,13 +715,6 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
-]
-
-[[package]]
-name = "vendor-io"
-version = "0.1.0"
-dependencies = [
- "friday-error",
 ]
 
 [[package]]
