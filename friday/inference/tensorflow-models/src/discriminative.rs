@@ -8,7 +8,7 @@ use friday_error::FridayError;
 
 use friday_storage;
 
-use std::path::{PathBuf, Path};
+use std::path::PathBuf;
 use std::collections::HashMap;
 use serde_derive::Deserialize;
 

@@ -12,6 +12,7 @@ use inference::Model;
 use vendor_io::Vendor;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use friday_web::server::Server;
 
 
 fn main() {
@@ -19,6 +20,7 @@ fn main() {
         Box::new(philips_hue::Hue::new().expect("Failed to create Philips Hue Vendor")),
         Box::new(vendor_io::DummyVendor::new()),
     ];
+
 
     let mut model = tensorflow_models::discriminative::Discriminative::new()
         .expect("Failed to load model");
@@ -37,7 +39,19 @@ fn main() {
         &config).expect("Failed to start audio recording");
 
 
+    let mut server = Server::new();
+    let handles = server.listen("0.0.0.0:8000").expect("Failed to start webserver");
+
+
     serve_friday(&mut speak, &mut model, &vendors, istream);
+
+    // Tell webserver theads to stop serving
+    server.running.swap(false, Ordering::Relaxed);
+    for thread in handles {
+        // Join threads gracefully.. hopefully :)
+        thread.join().expect("failed to join webserver thread");
+    }
+
 
     println!("Exiting..");
 }

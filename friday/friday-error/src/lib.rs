@@ -8,7 +8,11 @@ pub struct FridayError{
 #[macro_export]
 macro_rules! frierr {
     ($str:expr $(,$arg: expr)*) => {
-        FridayError::new(format!($str $(,$arg)*)).into();
+        FridayError::new(format!("{}:{}:{} {}", 
+                std::file!(), 
+                std::line!(), 
+                std::column!(), 
+                format!($str $(,$arg)*))).into();
     }
 }
 
