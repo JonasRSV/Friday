@@ -73,10 +73,7 @@ build_linux_binary () {
   echo "${fg_green}Build successful! Binary should be in the local bin directory! :) ${fg_reset}"
 }
 
-
-while test $# -gt 0; do
-  case "$1" in
-    -h|--help)
+print_help() {
       echo ""
       echo ""
       echo "${fg_green}  ******** Friday build script ******** ${fg_black}"
@@ -86,25 +83,35 @@ while test $# -gt 0; do
       echo "${fg_magenta}-pi --armv7-unknown-linux-gnueabinhf${fg_white},   E.g Raspberry Pi (2, 3..)s"
       echo "${fg_magenta}-li --friday-x86_64-unknown-linux-gnu${fg_white},  Common Desktops and laptops (running linux)"
       exit 0
-      ;;
-    --armv7-unknown-linux-gnueabinhf)
-      shift
-      build_pi_binary
-      ;;
-    -pi)
-      shift
-      build_pi_binary
-      ;;
-    --friday-x86_64-unknown-linux-gnu)
-      shift
-      build_linux_binary
-      ;;
-    -li)
-      shift
-      build_linux_binary
-      ;;
-    *)
-      break
-      ;;
-  esac
-done
+}
+
+
+#while test $# -gt 0; do
+case "$1" in
+  -h|--help)
+    print_help
+    break
+    ;;
+  --armv7-unknown-linux-gnueabinhf)
+    build_pi_binary
+    exit 0
+    ;;
+  -pi)
+    build_pi_binary
+    exit 0
+    ;;
+  --friday-x86_64-unknown-linux-gnu)
+    build_linux_binary
+    exit 0
+    ;;
+  -li)
+    build_linux_binary
+    exit 0
+    ;;
+  *)
+    print_help
+    break
+    ;;
+esac
+#done
+print_help
