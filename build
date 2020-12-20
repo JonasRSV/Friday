@@ -81,7 +81,7 @@ print_help() {
       echo "${fg_white} options:"
       echo "-h, --help  show brief help"
       echo "${fg_magenta}-pi --armv7-unknown-linux-gnueabinhf${fg_white},   E.g Raspberry Pi (2, 3..)s"
-      echo "${fg_magenta}-li --friday-x86_64-unknown-linux-gnu${fg_white},  Common Desktops and laptops (running linux)"
+      echo "${fg_magenta}-li --x86_64-unknown-linux-gnu${fg_white},  Common Desktops and laptops (running linux)"
       exit 0
 }
 
