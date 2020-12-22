@@ -22,23 +22,27 @@ fn main() {
     ];
 
 
+    // Tensorflow model that identifies the keyword present in speech
     let mut model = tensorflow_models::discriminative::Discriminative::new()
         .expect("Failed to load model");
 
+    // Cheap voice activity detection - if this one triggers we then trigger
+    // the tensorflow model
     let mut vad = friday_vad::EnergyBasedDetector::new(
         /*threshold=*/350.0
     );
 
-    let config = friday_audio::RecordingConfig {
+    let recording_config = friday_audio::RecordingConfig {
         sample_rate: 8000,
         model_frame_size: model.expected_frame_size()
     };
 
-
+    // Input audio stream 
     let istream = friday_audio::friday_cpal::CPALIStream::record(
-        &config).expect("Failed to start audio recording");
+        &recording_config).expect("Failed to start audio recording");
 
 
+    // Webserver that serves the GUI and also all of fridays endpoints
     let mut server = Server::new().expect("Failed to create webserver");
 
     // TODO: Here we register web-vendors for the modules
@@ -51,6 +55,7 @@ fn main() {
     let handles = server.listen("0.0.0.0:8000").expect("Failed to start webserver");
 
 
+    // Server friday using the main thread
     serve_friday(&mut vad, &mut model, &vendors, istream);
 
     println!("Shutting Down Webserver.. Might take a few seconds");
