@@ -40,6 +40,14 @@ fn main() {
 
 
     let mut server = Server::new().expect("Failed to create webserver");
+
+    // TODO: Here we register web-vendors for the modules
+    server.register(
+        vec![]
+    ).expect("Failed to register vendors");
+
+    // Starts the server - this is non-blocking
+    // Currently this starts two threads 
     let handles = server.listen("0.0.0.0:8000").expect("Failed to start webserver");
 
 
