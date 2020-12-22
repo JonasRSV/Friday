@@ -2,7 +2,7 @@
 
 pub mod core;
 pub mod server;
-pub mod static_vendor;
+pub mod webgui;
 
-mod tiny_http_impl;
-mod integration_tests;
+mod tiny_http_as_friday_request;
+mod tests;

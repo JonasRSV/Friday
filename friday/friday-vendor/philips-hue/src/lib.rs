@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::net::IpAddr;
 
-use friday_error;
 use friday_error::frierr;
+use friday_error::propagate;
 use friday_error::FridayError;
 use friday_storage;
 
@@ -103,9 +103,9 @@ impl Hue {
 
     pub fn new() -> Result<Hue, FridayError> {
         return Hue::get_hue_login().map_or_else(
-            friday_error::propagate("Failed to create hue vendor"),
+            propagate!("Failed to create hue vendor"),
             |credentials| Hue::get_command_config().map_or_else(
-                friday_error::propagate("Failed to get command config"),
+                propagate!("Failed to get command config"),
                 |commands| Ok(Hue{
                     bridge: huelib::Bridge::new(IpAddr::V4(credentials.ip.parse().unwrap()), credentials.user),
                     commands

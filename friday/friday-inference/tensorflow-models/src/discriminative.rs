@@ -2,8 +2,8 @@ use crate::model as m;
 use std::ffi::CString;
 use float_ord::FloatOrd;
 use friday_inference;
-use friday_error;
 use friday_error::frierr;
+use friday_error::propagate;
 use friday_error::FridayError;
 
 use friday_storage;
@@ -54,7 +54,7 @@ impl Discriminative {
 
     pub fn new() -> Result<Discriminative, FridayError>  {
         return friday_storage::config::get_config("discriminative.json").map_or_else(
-            friday_error::propagate("Failed to create discriminative model"),
+            propagate!("Failed to create discriminative model"),
             Discriminative::model_from_config 
         );
     }

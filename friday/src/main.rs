@@ -39,7 +39,7 @@ fn main() {
         &config).expect("Failed to start audio recording");
 
 
-    let mut server = Server::new();
+    let mut server = Server::new().expect("Failed to create webserver");
     let handles = server.listen("0.0.0.0:8000").expect("Failed to start webserver");
 
 

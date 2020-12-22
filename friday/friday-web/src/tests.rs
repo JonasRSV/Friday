@@ -7,6 +7,7 @@ mod tests {
     use friday_error::frierr;
     use std::sync::Arc;
     use std::sync::Mutex;
+    use std::env;
 
     struct MockVendor {}
     impl Vendor for MockVendor {
@@ -59,7 +60,8 @@ mod tests {
 
     #[test]
     fn try_lookup() {
-        let mut server = Server::new();
+        env::set_var("STATIC", "static");
+        let mut server = Server::new().expect("Failed to create server");
 
         let failed_register = server.register(
             vec![Arc::new(Mutex::new(MockVendor{})),
@@ -128,8 +130,9 @@ mod tests {
     }
 
     #[test]
-    fn simple_increment_number_mock_server() {
-        let mut server = Server::new();
+    fn increment_number_mock_server() {
+        env::set_var("STATIC", "static");
+        let mut server = Server::new().expect("Failed to create server");
         server.register(
             vec![Arc::new(Mutex::new(IncrementNumberVendor{number: 0}))]
         ).expect("Failed to register vedors");

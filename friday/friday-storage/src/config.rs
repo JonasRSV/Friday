@@ -1,8 +1,8 @@
 use serde;
 use serde_json;
 use std::env;
-use friday_error;
 use friday_error::frierr;
+use friday_error::propagate;
 use friday_error::FridayError;
 use std::path::PathBuf;
 use std::fs;
@@ -31,7 +31,7 @@ pub fn get_config<T, S>(name: S) -> Result<T, FridayError>
 where T: serde::de::DeserializeOwned,
       S: AsRef<str> {
           return get_config_directory().map_or_else(
-              friday_error::propagate("Failed to get config directory when reading config"),
+              propagate!("Failed to get config directory when reading config"),
               |config_path| {
                   let mut path_to_file = config_path.clone();
                   path_to_file.push(name.as_ref());
@@ -50,7 +50,7 @@ where T: serde::Serialize,
           return serde_json::to_string_pretty(o).map_or_else(
               |err| frierr!("Failed to serialize into json - Reason {}", err),
               |json| get_config_directory().map_or_else(
-                  friday_error::propagate("Failed to get config directory when writing config"),
+                  propagate!("Failed to get config directory when writing config"),
                   |config_path| {
                       let mut path_to_file = config_path.clone();
                       path_to_file.push(name.as_ref());

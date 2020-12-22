@@ -16,14 +16,18 @@ macro_rules! frierr {
     }
 }
 
-pub fn propagate<S, T>(message: S) -> impl Fn(FridayError) -> Result<T, FridayError>
-    where S: AsRef<str> {
-        let m = String::from(message.as_ref());
-        return move |err| {
-                err.push(m.clone());
-                return Err(err);
-            }
-
+#[macro_export]
+macro_rules! propagate {
+    ($str:expr $(,$arg: expr)*) => {
+        move |mut err: FridayError|  {
+            err = err.push(String::from(format!("{}:{}:{} {}", 
+                std::file!(), 
+                std::line!(), 
+                std::column!(), 
+                format!($str $(,$arg)*))));
+            return Err(err);
+        }
+    }
 }
 
 pub fn merge(a : &mut FridayError, b : &FridayError) -> FridayError {
@@ -61,10 +65,12 @@ impl Debug for FridayError {
         f.write_str("--- Friday Error --- \n").unwrap();
         f.write_str("\n").unwrap();
         f.write_str("\n").unwrap();
-        for entry in self.trace.iter() {
+        for (i, entry) in self.trace.iter().rev().enumerate() {
 
+            f.write_str(&i.to_string()).unwrap();
+            f.write_str("   ").unwrap();
             f.write_str(&entry).unwrap();
-            f.write_str("\n\n").unwrap();
+            f.write_str("\n").unwrap();
         }
 
         f.write_str("\n").unwrap();
@@ -86,8 +92,12 @@ mod tests {
 
     #[test]
     fn frierr_macro() {
-        let f: FridayError = frierr!("Hello {} {} {}", "What", "Are you", "Doing");
-        println!("{:?}", f.trace);
+        let mut f: FridayError = frierr!("Hello {} {} {}", "What", "Are you", "Doing");
+        let r: Result<(), FridayError> = propagate!("hello friend")(f);
+        match r {
+            Err(e) => println!(" err {:?}", e),
+            _ => println!(" ok ")
+        }
         assert_eq!(2 + 2, 4);
     }
 }

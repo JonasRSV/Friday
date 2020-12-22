@@ -3,11 +3,12 @@ use tiny_http;
 use std::str::FromStr;
 use friday_error::FridayError;
 use friday_error::frierr;
+use friday_error::propagate;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use crate::static_vendor::Static;
+use crate::webgui::WebGui;
 
 use crate::core::{FridayRequest, Vendor,  Response};
 
@@ -16,21 +17,22 @@ use crate::core::{FridayRequest, Vendor,  Response};
 #[derive(Clone)]
 pub struct Server {
     vendors: Vec<Arc<Mutex<dyn Vendor + Send>>>,
-    static_vendor: Arc<Mutex<dyn Vendor + Send>>,
+    webgui: Arc<Mutex<WebGui>>,
 
     pub running: Arc<AtomicBool>
 }
 
 
 impl Server {
-    pub fn new() -> Server {
-        return Server{
-            vendors: Vec::new(),
-            static_vendor: Arc::new(Mutex::new(Static{
-                root: String::from("static")
-            })),
-            running: Arc::new(AtomicBool::new(true))
-        };
+    pub fn new() -> Result<Server, FridayError> {
+        return WebGui::new().map_or_else(
+            propagate!("Unable to get 'WebGui' vendor"),
+            |s| Ok( Server {
+                vendors: Vec::new(),
+                webgui: Arc::new(Mutex::new(s)),
+                running: Arc::new(AtomicBool::new(true))
+
+            }));
     }
 
     fn status_500(r: tiny_http::Request) {
@@ -117,7 +119,7 @@ impl Server {
                                     }
                                 }
                             )
-                        );
+                            );
                     }
 
                     return Ok(server_handles);
@@ -125,6 +127,10 @@ impl Server {
         }
 
     fn handle_request(r: tiny_http::Request, self_reference: &Box<Server>) {
+        let method = r.method().clone();
+        let address = r.remote_addr().clone();
+        let url = String::from(r.url());
+
         match self_reference.lookup(&r) {
             Ok(locked_vendor) => 
                 match locked_vendor.lock() {
@@ -135,7 +141,7 @@ impl Server {
                     }
                 },
             Err(err) => {
-                println!("Failed to find vendor for this request - Reason: {:?}", err);
+                println!("400 {} {} {} - Reason: {:?}", method, address, url, err);
                 Server::status_400(r);
             }
         };
@@ -160,7 +166,8 @@ impl Server {
                             Err(err) => println!("Failed to send text response - Reason: {}", err)
                         },
                         Response::FILE{status, file, content_type} => 
-                            tiny_http::Header::from_str(format!("Content-Type: {}", content_type).as_str()).map_or_else(
+                            tiny_http::Header::from_str(format!("Content-Type: {}", content_type).as_str()
+                                ).map_or_else(
                                 |_| println!("Failed to send file response because header construction failed"),
                                 |header| 
                                 match r.respond(tiny_http::Response::from_file(file)
@@ -174,7 +181,7 @@ impl Server {
                 }
             }, 
             Err(err) => {
-                println!("Vendor failed - Reason: {:?}", err);
+                println!("Web Vendor failed - Reason: {:?}", err);
                 Server::status_500(r);
             }
         }
@@ -203,24 +210,25 @@ impl Server {
                     }
                 }
 
-                // If no vendor matches the URL it must be a special vendor.. or unknown
-                // In the future we won't need special vendors..
-                // e.g if the EndPoint path String allows for special syntax to indicate that you
-                // own a scope.. and that the lookup code can accomodate for this.
-                // But adding this is a low priority so will go with this until it becomes one.
+
+                // If we do not find a vendor for it - it must be a special vendor.. or bad url
+
+                // Here we do some simple URL parsing..
                 let mut path_it = path.split("/");
 
-                // Drop empty before static.. so splitting "/static/.." gives ["", "static",..]
+                // Drop empty before root.. so splitting "/static/.." gives ["", "static",..]
                 path_it.next();
 
-                return match path_it.next() {
-                    None => frierr!("Found no matching handler for {}", path),
-                    Some(sub_path) => match sub_path {
-                        "static" => return Ok(self.static_vendor.clone()),
-                        _ => frierr!("Found no matching handler for {} - {}", sub_path, path)
+                match path_it.next() {
+                        None => Ok(self.webgui.clone()), // Return homepage for ''
+                        Some(sub_path) => match sub_path {
+                            "static" => Ok(self.webgui.clone()),
+                            "" => Ok(self.webgui.clone()), // Return homepage for '/'
+                            _ => frierr!("Found no matching handler for {} - {}", sub_path, path)
                     }
                 }
-            })
+
+                });
     }
 }
 
