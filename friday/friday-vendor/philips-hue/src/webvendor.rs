@@ -66,14 +66,14 @@ impl WebHue {
                 Err(err) => frierr!("Error occurred while querying for all lights: {}", err),
                 Ok(lights) => serde_json::to_string(
                     &lights
-                        .into_iter()
-                        // Huelib Lights does not support serialization so we wrap them in a
-                        // serializeable type
-                        .map(serializeable_lights::Light::from) 
-                        .collect::<Vec<serializeable_lights::Light>>()
-                    ).map_or_else(
-                        |err| frierr!("Failed to serialize lights to json response - Reason {}", err),
-                        |content| Ok(friday_web::core::Response::JSON {status: 200, content }))
+                    .into_iter()
+                    // Huelib Lights does not support serialization so we wrap them in a
+                    // serializeable type
+                    .map(serializeable_lights::Light::from) 
+                    .collect::<Vec<serializeable_lights::Light>>()
+                ).map_or_else(
+                |err| frierr!("Failed to serialize lights to json response - Reason {}", err),
+                |content| Ok(friday_web::core::Response::JSON {status: 200, content }))
 
             }
 
@@ -89,8 +89,8 @@ impl WebHue {
                 None => Ok(friday_web::core::Response::TEXT {
                     status: 405, 
                     content: "Please login first".to_owned()}),
-                // We're logged in! 
-                Some(ref bridge) => WebHue::create_lights_response_with_bridge(bridge)
+                    // We're logged in! 
+                    Some(ref bridge) => WebHue::create_lights_response_with_bridge(bridge)
             },
             Err(err) => frierr!("Failed to aquire lock to check for login - Reason: {}", err)
         }
