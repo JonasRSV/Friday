@@ -3,11 +3,11 @@ use friday_error::FridayError;
 pub enum DispatchResponse {
     Success,
     NoMatch,
-    Err{err: FridayError}
 }
 
 pub trait Vendor {
-    fn dispatch(&self, action : &String) -> DispatchResponse;
+    fn name(&self) -> String;
+    fn dispatch(&self, action : &String) -> Result<DispatchResponse, FridayError>;
 }
 
 pub struct DummyVendor;
@@ -19,10 +19,11 @@ impl DummyVendor {
 }
 
 impl Vendor for DummyVendor {
-    fn dispatch(&self, action : &String) -> DispatchResponse {
+    fn name(&self) -> String { "Dummy".to_owned() }
+    fn dispatch(&self, action : &String) -> Result<DispatchResponse, FridayError> {
         println!("Dummy received {}", action);
 
-        return DispatchResponse::Success;
+        return Ok(DispatchResponse::Success);
     }
 }
 
@@ -34,10 +35,9 @@ mod tests {
     fn it_works() {
         let dummy = DummyVendor::new();
         let message = String::from("hello");
-        match dummy.dispatch(&message) {
+        match dummy.dispatch(&message).unwrap() {
             DispatchResponse::Success => println!("Success!"),
             DispatchResponse::NoMatch => eprintln!("No match"),
-            DispatchResponse::Err{err} => eprintln!("err {}", err),
         }
     }
 }

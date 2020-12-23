@@ -162,15 +162,29 @@ impl Server {
         match v.handle(&mut r) {
             Ok(response) =>  {
                 match response {
-                    Response::Empty{status: _} => todo!(),
-                    Response::JSON{status:_, content:_} => todo!(),
+                    Response::Empty{status} => 
+                        match r.respond(tiny_http::Response::from_string("")
+                                        .with_status_code(status)) {
+                            Ok(_) => println!("{} {} {} {}", status, method, address, url),
+                            Err(err) => println!("Failed to send empty response - Reason: {}", err)
+                    },
+                    Response::JSON{status, content} => 
+                             tiny_http::Header::from_str("Content-Type:  application/json").map_or_else(
+                                |_| println!("Failed to send json response because header construction failed"),
+                                |header| 
+                        match r.respond(tiny_http::Response::from_string(content)
+                            .with_status_code(status)
+                            .with_header(header)) {
+                                Ok(_) => println!("{} {} {} {}", status, method, address, url),
+                                Err(err) => println!("Failed to send json response - Reason: {}", err)
+                    }),
                     Response::TEXT{status, content} => 
                         match r.respond(tiny_http::Response::from_string(content)
                             .with_status_code(status)) {
                             Ok(_) => println!("{} {} {} {}", status, method, address, url),
                             Err(err) => println!("Failed to send text response - Reason: {}", err)
-                        },
-                        Response::FILE{status, file, content_type} => 
+                    },
+                    Response::FILE{status, file, content_type} => 
                             tiny_http::Header::from_str(format!("Content-Type: {}", content_type).as_str()
                                 ).map_or_else(
                                 |_| println!("Failed to send file response because header construction failed"),
@@ -182,7 +196,7 @@ impl Server {
                                     Err(err) => println!("Failed to send file response - Reason: {}", err)
                                 }
 
-                            )
+                    )
                 }
             }, 
             Err(err) => {

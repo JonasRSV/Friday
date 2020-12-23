@@ -1,3 +1,4 @@
+use friday_error::FridayError;
 
 #[derive(Debug, Clone)]
 pub enum Prediction {
@@ -11,7 +12,7 @@ pub enum Prediction {
 }
 
 pub trait Model {
-    fn predict(&mut self, v :&Vec<i16>) -> Prediction;
+    fn predict(&mut self, v :&Vec<i16>) -> Result<Prediction, FridayError>;
     fn expected_frame_size(&self) -> usize;
 }
 
@@ -31,8 +32,8 @@ impl DummyModel {
 }
 
 impl Model for DummyModel {
-    fn predict(&mut self, _ :&Vec<i16>) -> Prediction {
-        return self.ret.clone();
+    fn predict(&mut self, _ :&Vec<i16>) -> Result<Prediction, FridayError> {
+        return Ok(self.ret.clone());
     }
 
     fn expected_frame_size(&self) -> usize {

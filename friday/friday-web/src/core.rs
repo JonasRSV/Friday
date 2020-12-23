@@ -8,7 +8,7 @@ pub enum Response {
     FILE {status: i32, file: File, content_type: String }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Method {
     Get,
     Post,

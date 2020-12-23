@@ -2,12 +2,12 @@
   "hue_config": {
     "tänd ljuset": [{
       "id": "4",
-      "dispatch": "On"
+      "state": { "on": true }
     }],
 
     "släck ljuset": [{
       "id": "4",
-      "dispatch": "Off"
+      "state": { "on": true}
     }]
   }
 }

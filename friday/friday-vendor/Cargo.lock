@@ -5,7 +5,7 @@ name = "friday-error"
 version = "0.1.0"
 
 [[package]]
-name = "vendor-io"
+name = "friday-vendor"
 version = "0.1.0"
 dependencies = [
  "friday-error",

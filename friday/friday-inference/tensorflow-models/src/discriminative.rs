@@ -1,16 +1,23 @@
 use crate::model as m;
 use std::ffi::CString;
 use float_ord::FloatOrd;
+
 use friday_inference;
+
 use friday_error::frierr;
 use friday_error::propagate;
 use friday_error::FridayError;
 
 use friday_storage;
+use friday_web;
 
 use std::path::PathBuf;
 use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
+
 use serde_derive::Deserialize;
+use serde_json;
+
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -23,8 +30,8 @@ pub struct Discriminative {
     model: m::Model,
     input: m::Tensor,
     output: m::Tensor,
-    class_map: Vec<String>,
-    sensitivity: f32
+    class_map: Arc<RwLock<Vec<String>>>,
+    sensitivity: Arc<RwLock<f32>>
 
 }
 
@@ -103,8 +110,10 @@ impl Discriminative {
                         model: m,
                         input: input_tensor,
                         output: output_tensor,
-                        class_map: class_map.clone(),
-                        sensitivity
+                        // Storing this behind a lock because the WebDiscriminativemight read it
+                        // in another thread.
+                        class_map: Arc::new(RwLock::new(class_map.clone())), 
+                        sensitivity: Arc::new(RwLock::new(sensitivity))
                     });
 
                 })
@@ -115,33 +124,44 @@ impl Discriminative {
 }
 
 impl friday_inference::Model for Discriminative {
-    fn predict(&mut self, v :&Vec<i16>) -> friday_inference::Prediction {
-        //println!("Predicting..!");
-        self.input.set_data(&v);
-        self.model.run(&mut self.input, &mut self.output);
-        let probabilities = self.output.get_data::<f32>();
+    fn predict(&mut self, v :&Vec<i16>) -> Result<friday_inference::Prediction, FridayError> {
 
-        let pred = probabilities
-            .iter()
-            .enumerate()
-            .max_by_key(|k| FloatOrd(k.1.clone()))
-            .map(|k| k.0)
-            .expect("failed to get max").clone();
+        match self.class_map.read() {
+            Ok(class_map) => match self.sensitivity.read() {
+                Ok(sensitivity) => {
+                    self.input.set_data(&v);
+                    self.model.run(&mut self.input, &mut self.output);
+                    let probabilities = self.output.get_data::<f32>();
 
-        println!("P({}) = {}", self.class_map[pred], probabilities[pred]);
+                    let pred = probabilities
+                        .iter()
+                        .enumerate()
+                        .max_by_key(|k| FloatOrd(k.1.clone()))
+                        .map(|k| k.0)
+                        .expect("failed to get max").clone();
 
-        if pred == 0 {
-            return friday_inference::Prediction::Silence;
+                    println!("P({}) = {}", class_map[pred], probabilities[pred]);
+
+                    if pred == 0 {
+                        return Ok(friday_inference::Prediction::Silence);
+                    }
+
+                    if probabilities[pred] > sensitivity.clone() {
+                        return Ok(friday_inference::Prediction::Result {
+                            class: class_map[pred].clone(),
+                            index: pred as u32
+                        })
+                    }
+
+                    return Ok(friday_inference::Prediction::Inconclusive);
+
+                },
+                Err(err) => frierr!("Failed to read RWLocked sensitivity - Reason: {}", err)
+
+            },
+            Err(err) => frierr!("Failed to read RWLocked class_map - Reason: {}", err)
+
         }
-
-        if probabilities[pred] > self.sensitivity {
-            return friday_inference::Prediction::Result {
-                class: self.class_map[pred].clone(),
-                index: pred as u32
-            }
-        }
-
-        return friday_inference::Prediction::Inconclusive;
 
     }
 
@@ -154,11 +174,91 @@ impl friday_inference::Model for Discriminative {
     }
 }
 
+pub struct WebDiscriminative{
+    endpoints: Vec<friday_web::endpoint::Endpoint>,
+
+    // These are shared with the Discriminative
+    class_map: Arc<RwLock<Vec<String>>>,
+    sensitivity: Arc<RwLock<f32>>
+}
+
+impl WebDiscriminative{
+    pub fn new(d: &Discriminative) -> WebDiscriminative{
+        WebDiscriminative{
+            endpoints: vec![
+                friday_web::endpoint::Endpoint{ 
+                    name: "classes".to_owned(),
+                    methods: vec![friday_web::core::Method::Get],
+                    path: friday_web::path::Path::safe_new(
+                        "/friday-inference/tensorflow-models/discriminative/classes")
+                },
+                friday_web::endpoint::Endpoint{ 
+                    name: "sensitivity".to_owned(),
+                    methods: vec![friday_web::core::Method::Get],
+                    path: friday_web::path::Path::safe_new(
+                        "/friday-inference/tensorflow-models/discriminative/sensitivity")
+                }
+            ],
+            class_map: d.class_map.clone(),
+            sensitivity: d.sensitivity.clone()
+        }
+    }
+
+    fn class_map_response(&self) -> Result<friday_web::core::Response, FridayError> {
+        match self.class_map.read() {
+            Ok(class_map) => serde_json::to_string(&class_map.clone()).map_or_else(
+                |err| frierr!(
+                    "Failed to serialize class_map - {:?} - to json - Reason: {}", 
+                    class_map, 
+                    err),
+                    |content|  Ok(friday_web::core::Response::JSON {
+                        status: 200, content 
+                    })),
+
+            Err(err) => frierr!("Failed to read RWLocked class_map - Reason: {}", err)
+        }
+    }
+
+    fn sensitivity_response(&self) -> Result<friday_web::core::Response, FridayError> {
+        match self.sensitivity.read() {
+            Ok(sensitivity) => serde_json::to_string(&sensitivity.clone()).map_or_else(
+                |err| frierr!(
+                    "Failed to serialize sensitivity - {:?} - to json - Reason: {}", 
+                    sensitivity, 
+                    err),
+                    |content|  Ok(friday_web::core::Response::JSON {
+                        status: 200, content 
+                    })),
+
+            Err(err) => frierr!("Failed to read RWLocked sensitivity - Reason: {}", err)
+        }
+    }
+
+}
+
+impl friday_web::vendor::Vendor for WebDiscriminative{
+    fn name(&self) -> String { return "friday-inference/tensorflow-models/discriminative".to_owned() }
+    fn endpoints(&self) -> Vec<friday_web::endpoint::Endpoint> { return self.endpoints.clone(); }
+
+    fn handle(&mut self, r: &mut dyn friday_web::core::FridayRequest) -> Result<friday_web::core::Response, FridayError> {
+        friday_web::get_name(r, &self.endpoints).map_or_else(
+            propagate!("Failed to get 'Discriminiative' endpoint for {}", r.url()),
+            |name| match name.as_str() {
+                "classes" => self.class_map_response(),
+                "sensitivity" => self.sensitivity_response(),
+                _ => frierr!("Unknown endpoint name {}", name)
+            })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use friday_inference::Model;
     use std::path::PathBuf;
+    use std::sync::Mutex;
+    use ureq;
+
     #[test]
     fn discriminative_model() {
 
@@ -181,7 +281,7 @@ mod tests {
         let mut model = Discriminative::model_from_config(config).expect("Failed to load Config");
         let v: Vec<i16> = vec![1; 16000];
 
-        let pred: friday_inference::Prediction = model.predict(&v);
+        let pred: friday_inference::Prediction = model.predict(&v).expect("Failed to predict");
 
         match pred {
             friday_inference::Prediction::Result {
@@ -193,6 +293,60 @@ mod tests {
             friday_inference::Prediction::Inconclusive => eprintln!("Got Inconclusive")
 
         }
+    }
+    use std::env;
 
+    #[test]
+    fn discriminative_web() {
+        env::set_var("FRIDAY_WEB_GUI", ".");
+
+        let config = Config {
+            export_dir: PathBuf::from("test-resources/1603634879"),
+            class_map: [
+                (String::from("Silence"), 0), 
+                (String::from("a"), 1),
+                (String::from("b"), 2),
+                (String::from("c"), 3),
+                (String::from("d"), 4),
+                (String::from("e"), 5),
+                (String::from("f"), 6),
+                (String::from("g"), 7),
+                (String::from("h"), 8),
+                (String::from("i"), 9)].iter().cloned().collect(),
+                sensitivity: 0.0
+        };
+
+        let model = Discriminative::model_from_config(config).expect("Failed to load Config");
+
+        let web = WebDiscriminative::new(&model);
+
+        let mut server = friday_web::server::Server::new().expect("Failed to create web friday server");
+        server.register(vec![
+            Arc::new(Mutex::new(web))
+        ]).expect("Failed to register discriminative web vendor");
+        let handles = server.listen("0.0.0.0:8000").expect("Failed to start server");
+
+        std::thread::sleep(std::time::Duration::from_millis(2000));
+        let resp = ureq::get(
+            "http://0.0.0.0:8000/friday-inference/tensorflow-models/discriminative/classes").call();
+        let class_map : Vec<String> = resp.into_json_deserialize::<Vec<String>>()
+            .expect("Failed to parse json response");
+
+        println!("Got class_map response: {:?}", class_map);
+        assert_eq!(class_map, model.class_map.read().unwrap().clone());
+
+        let resp = ureq::get(
+            "http://0.0.0.0:8000/friday-inference/tensorflow-models/discriminative/sensitivity").call();
+        let sensitivity : f32 = resp.into_json_deserialize::<f32>()
+            .expect("Failed to parse json response");
+
+        println!("Got sensitivity response: {:?}", sensitivity);
+        assert_eq!(sensitivity, model.sensitivity.read().unwrap().clone());
+
+
+        server.running.swap(false, std::sync::atomic::Ordering::Relaxed);
+        for handle in handles {
+            handle.join().expect("Failed to join thread");
+        }
     }
 }
