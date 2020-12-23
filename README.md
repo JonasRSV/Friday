@@ -10,7 +10,7 @@ Contents
 
 * [x] Philips Hue 
 * [x] GUI
-* [] Custom Scripts
+* [ ] Custom Scripts
 
 ## Contribute
 
