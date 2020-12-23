@@ -3,19 +3,14 @@
 Friday is a free and open-source no-wake-word voice assistant. Friday is currently under development
 
 Contents
-- [Roadmap](#roadmap)
 - [Contribute](#contribute)
 - [Installation](#Installation)
 
+## Features
 
-
-## Roadmap
-
-* [x] Implement v1 Keyword spotting Engine
-* [x] Implement Philips Hue vendor to control lights
-* [ ] Add user manual and docs
-* [ ] Implement v2 Keyword spotting Engine
-* [ ] Add easy-to-use interfaces
+* [x] Philips Hue 
+* [x] GUI
+* [] Custom Scripts
 
 ## Contribute
 
