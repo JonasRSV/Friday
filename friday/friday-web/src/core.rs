@@ -22,11 +22,6 @@ pub enum Method {
     Unknown
 }
 
-pub struct EndPoint {
-    pub methods: Vec<Method>,
-    pub path: String
-}
-
 pub enum Data {
     Empty,
     JSON {json: String},
@@ -40,8 +35,3 @@ pub trait FridayRequest {
     fn url(&self) -> String;
 }
 
-pub trait Vendor {
-    fn name(&self) -> String;
-    fn endpoints(&self) -> Vec<EndPoint>;
-    fn handle(&mut self, r: &mut dyn FridayRequest) -> Result<Response, FridayError>;
-}

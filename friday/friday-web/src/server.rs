@@ -8,17 +8,18 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use crate::webgui::WebGui;
 
-use crate::core::{FridayRequest, Vendor,  Response};
+use crate::webgui::WebGui;
+use crate::path;
+
+use crate::core::{FridayRequest, Response};
+use crate::vendor::Vendor;
 
 
 
 #[derive(Clone)]
 pub struct Server {
     vendors: Vec<Arc<Mutex<dyn Vendor + Send>>>,
-    webgui: Arc<Mutex<WebGui>>,
-
     pub running: Arc<AtomicBool>
 }
 
@@ -28,8 +29,7 @@ impl Server {
         return WebGui::new().map_or_else(
             propagate!("Unable to get 'WebGui' vendor"),
             |s| Ok( Server {
-                vendors: Vec::new(),
-                webgui: Arc::new(Mutex::new(s)),
+                vendors: vec![Arc::new(Mutex::new(s))],
                 running: Arc::new(AtomicBool::new(true))
 
             }));
@@ -53,8 +53,11 @@ impl Server {
         }
     }
 
-    pub fn register(&mut self, vendors: Vec<Arc<Mutex<dyn Vendor + Send>>>) -> Result<(), FridayError> { 
+    pub fn register(&mut self, mut vendors: Vec<Arc<Mutex<dyn Vendor + Send>>>) -> Result<(), FridayError> { 
         // TODO do checks that we dont have conflicting endpoints
+
+        // Add self to make sure we're not colliding to anything already there
+        vendors.extend(self.vendors.clone());
 
         // Naive Validation of endpoints
         // Will probably never have more than 10 so this is should not be a problem
@@ -67,10 +70,12 @@ impl Server {
 
                     for i_endpoint in vi_endpoints.iter() {
                         for j_endpoint in vj_endpoints.iter() {
-                            if i_endpoint.path == j_endpoint.path {
-                                return frierr!("{} and {} shares the path {}",
+                            if path::Path::overlap(&i_endpoint.path, &j_endpoint.path) {
+                                return frierr!("{} and {} overlaps on - {} and {} -",
                                     vi.lock().expect("Failed to aquire lock").name(), 
-                                    vj.lock().expect("Failed to aquire lock").name(), i_endpoint.path);
+                                    vj.lock().expect("Failed to aquire lock").name(), 
+                                    i_endpoint.path,
+                                    j_endpoint.path);
                             }
                         }
                     }
@@ -193,42 +198,26 @@ impl Server {
         let request_method = r.method();
         return url::Url::parse(&r.url()).map_or_else(
             |err| frierr!("Failed to parse http URL {} - Reason: {}", r.url(), err),
-            |url| {
-                // TODO add logic for handling url args here at some point if needed.
-                let path = url.path();
+            |url| path::Path::new(url.path()).map_or_else(
+                    propagate!("Failed to create path from a valid path"),
+                    |path| {
+                        for vendor in self.vendors.iter() {
 
-                for vendor in self.vendors.iter() {
-
-                    // TODO deal with lock failures
-                    let endpoints = vendor.lock().expect("Failed to aquire lock in lookup").endpoints();
-                    for endpoint in endpoints.iter() {
-                        for method in endpoint.methods.clone() {
-                            if request_method == method && path == endpoint.path {
-                                return Ok(vendor.clone());
+                            // TODO deal with lock failures
+                            let endpoints = vendor.lock().expect("Failed to aquire lock in lookup").endpoints();
+                            for endpoint in endpoints.iter() {
+                                for method in endpoint.methods.clone() {
+                                    if request_method == method && path::Path::overlap(&path, &endpoint.path) {
+                                        return Ok(vendor.clone());
+                                    }
+                                }
                             }
                         }
-                    }
-                }
+                        frierr!("Found no matching handler for {} ", path)
+
+                    }));
 
 
-                // If we do not find a vendor for it - it must be a special vendor.. or bad url
-
-                // Here we do some simple URL parsing..
-                let mut path_it = path.split("/");
-
-                // Drop empty before root.. so splitting "/static/.." gives ["", "static",..]
-                path_it.next();
-
-                match path_it.next() {
-                        None => Ok(self.webgui.clone()), // Return homepage for ''
-                        Some(sub_path) => match sub_path {
-                            "static" => Ok(self.webgui.clone()),
-                            "" => Ok(self.webgui.clone()), // Return homepage for '/'
-                            _ => frierr!("Found no matching handler for {} - {}", sub_path, path)
-                    }
-                }
-
-                });
     }
 }
 

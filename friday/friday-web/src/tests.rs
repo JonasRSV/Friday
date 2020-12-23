@@ -3,6 +3,9 @@
 mod tests {
     use crate::server::*;
     use crate::core::*;
+    use crate::path::*;
+    use crate::vendor::*;
+    use crate::endpoint::*;
     use friday_error::FridayError;
     use friday_error::frierr;
     use std::sync::Arc;
@@ -12,15 +15,17 @@ mod tests {
     struct MockVendor {}
     impl Vendor for MockVendor {
         fn name(&self) -> String { return String::from("MockVendor"); }
-        fn endpoints(&self) -> Vec<EndPoint> {
+        fn endpoints(&self) -> Vec<Endpoint> {
             return vec![
-                EndPoint{
+                Endpoint{
+                    name: "".to_owned(),
                     methods: vec![Method::Get, Method::Post],
-                    path: String::from("/")
+                    path: Path::safe_new("/")
                 },
-                EndPoint{
+                Endpoint{
+                    name: "".to_owned(),
                     methods: vec![Method::Get],
-                    path: String::from("/home")
+                    path: Path::safe_new("/home")
                 }
             ]
         }
@@ -32,11 +37,12 @@ mod tests {
     struct CollidingVendor {}
     impl Vendor for CollidingVendor {
         fn name(&self) -> String { return String::from("CollidingVendor"); }
-        fn endpoints(&self) -> Vec<EndPoint> {
+        fn endpoints(&self) -> Vec<Endpoint> {
             return vec![
-                EndPoint{
+                Endpoint{
+                    name: "".to_owned(),
                     methods: vec![Method::Get, Method::Post],
-                    path: String::from("/home")
+                    path: Path::safe_new("/home")
                 },
             ]
         }
@@ -60,7 +66,7 @@ mod tests {
 
     #[test]
     fn try_lookup() {
-        env::set_var("STATIC", "static");
+        env::set_var("FRIDAY_WEB_GUI", ".");
         let mut server = Server::new().expect("Failed to create server");
 
         let failed_register = server.register(
@@ -91,11 +97,12 @@ mod tests {
     struct IncrementNumberVendor { number: i32 }
     impl Vendor for IncrementNumberVendor {
         fn name(&self) -> String { return String::from("IncrementNumberVendor"); }
-        fn endpoints(&self) -> Vec<EndPoint> {
+        fn endpoints(&self) -> Vec<Endpoint> {
             return vec![
-                EndPoint{
+                Endpoint{
+                    name: "".to_owned(),
                     methods: vec![Method::Get, Method::Post],
-                    path: String::from("/")
+                    path: Path::safe_new("/increment")
                 },
             ]
         }
@@ -116,7 +123,7 @@ mod tests {
             println!("Request data is: {}", request_data_message);
 
             return match url.path() {
-                "/" => {
+                "/increment" => {
                     self.number += 1;
                     return Ok(
                         Response::TEXT{
@@ -131,7 +138,7 @@ mod tests {
 
     #[test]
     fn increment_number_mock_server() {
-        env::set_var("STATIC", "static");
+        env::set_var("FRIDAY_WEB_GUI", ".");
         let mut server = Server::new().expect("Failed to create server");
         server.register(
             vec![Arc::new(Mutex::new(IncrementNumberVendor{number: 0}))]
@@ -139,11 +146,11 @@ mod tests {
 
 
         let r = MockRequest {
-            url: String::from("http://recordyourownsites.se/"),
+            url: String::from("http://recordyourownsites.se/increment"),
             method: Method::Get
         };
 
-        let vedors = server.lookup(&r).expect("No vedors found");
+        let vedors = server.lookup(&r).expect("No vendors found");
         assert_eq!(vedors.lock().expect("Unable to aquire mutex").name(), String::from("IncrementNumberVendor"));
 
         let handles = server.listen("0.0.0.0:8000").expect("Failed to launch server");

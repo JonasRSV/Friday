@@ -3,6 +3,10 @@
 pub mod core;
 pub mod server;
 pub mod webgui;
+pub mod path;
+pub mod endpoint;
+pub mod vendor;
 
-mod tiny_http_as_friday_request;
+mod impl_tiny_http;
 mod tests;
+
