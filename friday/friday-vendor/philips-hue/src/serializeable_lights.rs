@@ -8,7 +8,7 @@ use crate::core::State;
 /// derive Serialize on its Lights struct
 /// So I am using this to be able to serialize and de-serialize
 /// lights to send them over the web
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Light {
     id: String,
     name: String,

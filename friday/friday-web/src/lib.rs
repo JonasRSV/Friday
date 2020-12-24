@@ -27,3 +27,7 @@ pub fn get_name(
             |name| Ok(name.to_owned())
             ))
 }
+
+pub fn not_acceptable<S: AsRef<str>>(message: S) -> Result<core::Response, FridayError> {
+    Ok(core::Response::TEXT { status: 406, content: String::from(message.as_ref()) })
+}

@@ -1,3 +1,4 @@
+mod tests;
 
 use friday_vendor;
 use friday_vendor::DispatchResponse;

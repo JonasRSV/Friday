@@ -13,7 +13,7 @@ pub struct HueLogin {
     pub user: String
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct State {
     pub on: Option<bool>,
     pub brightness: Option<u8>,
@@ -21,13 +21,27 @@ pub struct State {
     pub saturation: Option<u8>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct HueUpdate {
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct LightUpdate {
     pub id: String,
     pub state: State
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HueCommandConfig {
-    pub hue_config: HashMap<String, Vec<HueUpdate>>
+    pub lights: HashMap<String, Vec<LightUpdate>>
+}
+
+impl From<huelib::resource::Light> for LightUpdate {
+    fn from(light: huelib::resource::Light) -> Self {
+        LightUpdate {
+            id: light.id,
+            state: State {
+                on: light.state.on,
+                brightness: light.state.brightness,
+                saturation: light.state.saturation,
+                hue: light.state.hue
+            },
+        }
+    }
 }

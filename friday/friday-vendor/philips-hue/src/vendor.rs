@@ -1,6 +1,6 @@
 use crate::core::{
     HueCommandConfig, 
-    HueUpdate,
+    LightUpdate,
     HueLogin, 
     HUE_LOGIN_TIMEOUT,
     HUE_USER, 
@@ -31,7 +31,7 @@ pub struct Hue {
     // I have the bridge behind a lock because I am not sure if it
     // is thread-safe.. could maybe have two instances of it.. but this will be fine
     pub bridge: Arc<Mutex<Option<huelib::Bridge>>>,
-    pub commands: Arc<RwLock<HueCommandConfig>>,
+    pub config: Arc<RwLock<HueCommandConfig>>,
 }
 
 impl Hue {
@@ -121,12 +121,12 @@ impl Hue {
     pub fn new() -> Result<Hue, FridayError> {
         Hue::get_command_config().map_or_else(
             propagate!("Failed to create hue vendor"),
-            |commands| {
-                let command_ref = &commands;
+            |config| {
+                let config_ref = &config;
                 Hue::get_hue_login().map_or_else(
                     |_| Ok(Hue {
                         bridge: Arc::new(Mutex::new(None)),
-                        commands: Arc::new(RwLock::new(command_ref.clone()))
+                        config: Arc::new(RwLock::new(config_ref.clone()))
                     }),
                     |login| Ok(Hue {
                         bridge: Arc::new(
@@ -138,7 +138,7 @@ impl Hue {
                                         )
                                     )
                                 ),
-                                commands: Arc::new(RwLock::new(command_ref.clone()))
+                                config: Arc::new(RwLock::new(config_ref.clone()))
                     }))
 
             })
@@ -146,7 +146,8 @@ impl Hue {
     }
 }
 
-fn execute_updates(bridge: &huelib::Bridge, updates :&Vec<HueUpdate>) -> Result<DispatchResponse, FridayError> {
+pub fn execute_light_updates(bridge: &huelib::Bridge, updates :&Vec<LightUpdate>) 
+    -> Result<(), FridayError> {
     let mut err = FridayError::new("Things to try:\n \
                  0. Your hue credential file might have become invalid - try removing it");
 
@@ -188,7 +189,7 @@ fn execute_updates(bridge: &huelib::Bridge, updates :&Vec<HueUpdate>) -> Result<
         return Err(err);
     }
 
-    return Ok(DispatchResponse::Success);
+    return Ok(());
 }
 
 impl Vendor for Hue {
@@ -203,11 +204,12 @@ impl Vendor for Hue {
                 2. Create appropriate configuration file and restart friday\n\
                 "),
                 Some(ref bridge) => 
-                    match self.commands.read() {
-                        Err(err) => frierr!("Unable to aquire commands - Reason: {}", err),
-                        Ok(commands) => commands.hue_config.get(action).map_or_else(
+                    match self.config.read() {
+                        Err(err) => frierr!("Unable to aquire config - Reason: {}", err),
+                        Ok(config) => config.lights.get(action).map_or_else(
                             || Ok(DispatchResponse::NoMatch), // Did not find command
-                            |updates| execute_updates(bridge, updates))
+                            |updates| execute_light_updates(bridge, updates)
+                                        .map(|_| DispatchResponse::Success))
 
                     }
             }
@@ -232,10 +234,10 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_command() {
+    fn dispatch_light_command() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
         let vendor = Hue::new().expect("Failed to create hue vendor");
         vendor.dispatch(&"tänd ljuset".to_owned()).expect("Failed to dispatch");
-        println!("hi");
+        println!("hello");
     }
 }

@@ -1,5 +1,5 @@
 {
-  "hue_config": {
+  "lights": {
     "tänd ljuset": [{
       "id": "4",
       "state": { "on": true }
