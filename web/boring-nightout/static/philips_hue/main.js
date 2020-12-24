@@ -96,6 +96,7 @@ class PhilipsHueUI {
     var entry_name = entries[0][0]
 
     // Apparently this is how you clone stuff in JS
+    console.log(this.command_state[entry_name[0]])
     var action = JSON.parse(JSON.stringify(this.command_state[entry_name][0]))
 
     // Now we duplicate this in the command state so that it is as if it exists
@@ -119,6 +120,10 @@ class PhilipsHueUI {
   removeCommand(ev, command_state, entry, shared_name, action) {
     // Remove from commands
     command_state[shared_name.name] = removeItemOnce(command_state[shared_name.name], action)
+
+    if (command_state[shared_name.name].length == 0) {
+      delete command_state[shared_name.name]
+    }
 
     // Remove from DOM
     entry.parentNode.removeChild(entry)
