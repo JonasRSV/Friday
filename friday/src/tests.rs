@@ -26,7 +26,9 @@ mod tests {
     #[test]
     fn webserver() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
-        env::set_var("FRIDAY_WEB_GUI", ".");
+
+        // Path to UI you want to run this with
+        env::set_var("FRIDAY_WEB_GUI", "../web/boring-nightout");
 
         let mut server = Server::new().expect("Failed to create webserver");
 

@@ -1,0 +1,38 @@
+
+.command-row {
+  color: #CE8CE9;
+  font-size: 4vw;
+}
+
+.command-name:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.command-lamp:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.command-state:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.dropdown-menu.show {
+  display: contents !important;
+}
+
+.add-button {
+  font-size: 5vw;
+}
+
+.add-button:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.command-remove:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
