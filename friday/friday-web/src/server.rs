@@ -16,6 +16,25 @@ use crate::core::{FridayRequest, Response};
 use crate::vendor::Vendor;
 
 
+pub struct ServerHandle {
+    handles: Vec<thread::JoinHandle<()>>,
+    running: Arc<AtomicBool>
+}
+
+impl ServerHandle {
+    pub fn stop(self) {
+        self.running.swap(false, Ordering::Relaxed);
+        for handle in self.handles {
+            handle.join().expect("Failed to join WebServer thread");
+        }
+    }
+
+    pub fn wait(self) {
+        for handle in self.handles {
+            handle.join().expect("Failed to join WebServer thread");
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct Server {
@@ -88,7 +107,7 @@ impl Server {
         return Ok(());
     }
 
-    pub fn listen<S>(&mut self, connection: S) -> Result<Vec<thread::JoinHandle<()>>, FridayError>
+    pub fn listen<S>(&mut self, connection: S) -> Result<ServerHandle, FridayError>
         where S: AsRef<str> {
             eprintln!("Starting Server on {}", connection.as_ref());
 
@@ -127,7 +146,10 @@ impl Server {
                             );
                     }
 
-                    return Ok(server_handles);
+                    return Ok(ServerHandle {
+                        handles: server_handles,
+                        running: self.running.clone()
+                    });
                 });
         }
 

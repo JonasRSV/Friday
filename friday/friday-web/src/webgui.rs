@@ -127,10 +127,8 @@ mod tests {
     fn serve_webgui() {
         env::set_var("FRIDAY_WEB_GUI", ".");
         let mut server = Server::new().expect("Failed to create server");
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to launch server");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to launch server");
 
-        for handle in handles {
-            handle.join().expect("Failed to join thread");
-        }
+        handle.wait();
     }
 }

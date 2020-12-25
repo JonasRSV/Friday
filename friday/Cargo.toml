@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 friday-web = { path ="friday-web" }
+friday-discovery = { path = "friday-discovery" }
 friday-audio = { path = "friday-audio" }
 friday-vad = { path = "friday-vad" }
 friday-vendor = { path = "friday-vendor" }

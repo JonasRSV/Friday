@@ -18,6 +18,8 @@ use tensorflow_models;
 
 use friday_web::server::Server;
 
+//use friday_discovery;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -70,29 +72,31 @@ fn main() {
         Box::new(hue_vendor)
     ];
 
+    let port: u16 = 8000;
 
     // Non-blocking webserver serving the web vendors Currently this starts two threads 
-    let handles = server.listen("0.0.0.0:8000").expect("Failed to start webserver");
+    let web_handle = server.listen(format!("0.0.0.0:{}", port)).expect("Failed to start webserver");
+    // Non-blocking discovery server (Tries to make it easy to discover the assistant)
+    let discovery_handle = friday_discovery::discovery::Discovery::new(port)
+        .expect("Failed to start discovery server")
+        .make_discoverable();
 
     // Cheap voice activity detection - if this one triggers we then trigger
     // the tensorflow model
     let mut vad = friday_vad::EnergyBasedDetector::new(
-        /*threshold=*/350.0
+        /*threshold=*/800.0
     );
 
-    // Server friday using the main thread
+    // Serve friday using the main thread
     serve_friday(&mut vad, &mut model, &vendors, istream);
 
     println!("Shutting Down Webserver.. Might take a few seconds");
-    // Tell webserver theads to stop serving
-    server.running.swap(false, Ordering::Relaxed);
-    for thread in handles {
-        // Join threads gracefully.. hopefully :)
-        thread.join().expect("failed to join webserver thread");
-    }
+    web_handle.stop();
+    println!("Shutting Down Discovery Server.. Might take a few seconds");
+    discovery_handle.stop();
 
 
-    println!("Exiting..");
+    println!("All Done - Bye!");
 }
 
 
@@ -137,6 +141,7 @@ fn serve_friday<M, S, V, R>(vad: &mut S, model: &mut M, vendors: &Vec<Box<V>>, i
                                           // Sleep to clear the replay buffer
                                           // TODO: maybe just empty the buffer instead of sleeping?
                                           std::thread::sleep(std::time::Duration::from_millis(2000));
+
                                       },
                                           friday_inference::Prediction::Silence => (),
                                           friday_inference::Prediction::Inconclusive => ()

@@ -153,11 +153,8 @@ mod tests {
         let vedors = server.lookup(&r).expect("No vendors found");
         assert_eq!(vedors.lock().expect("Unable to aquire mutex").name(), String::from("IncrementNumberVendor"));
 
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to launch server");
-
-        for handle in handles {
-            handle.join().expect("Failed to join thread");
-        }
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to launch server");
+        handle.wait();
     }
 
 }

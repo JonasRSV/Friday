@@ -38,7 +38,8 @@ where T: serde::de::DeserializeOwned,
                   fs::read_to_string(&path_to_file).map_or_else(
                       |err| frierr!("Failed to read {} - Reason: {}", path_to_file.to_str().unwrap(), err),
                       |contents| serde_json::from_str(&contents).map_or_else(
-                          |err| frierr!("Failed to deserialize config - Reason: {}", err),
+                          |err| frierr!("Failed to deserialize config {} - Reason: {}", 
+                              path_to_file.to_str().unwrap(), err),
                           |conf| Ok(conf)
                       ))
               });

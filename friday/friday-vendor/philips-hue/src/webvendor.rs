@@ -347,7 +347,7 @@ mod tests {
             Arc::new(Mutex::new(web_hue_vendor))
         ]).expect("Failed to register hue web vendor");
 
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to start server");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
 
         std::thread::sleep(std::time::Duration::from_millis(1000));
 
@@ -356,11 +356,7 @@ mod tests {
         // Means login success! :)
         assert_eq!(resp.status(), 200);
 
-        server.running.swap(false, std::sync::atomic::Ordering::Relaxed);
-        for handle in handles {
-            handle.join().expect("Failed to join thread");
-        }
-
+        handle.stop();
     }
 
     #[test]
@@ -376,7 +372,7 @@ mod tests {
             Arc::new(Mutex::new(web_hue_vendor))
         ]).expect("Failed to register hue web vendor");
 
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to start server");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
 
         std::thread::sleep(std::time::Duration::from_millis(1000));
 
@@ -385,10 +381,7 @@ mod tests {
         // Means login success! :)
         assert_eq!(resp.status(), 200);
 
-        server.running.swap(false, std::sync::atomic::Ordering::Relaxed);
-        for handle in handles {
-            handle.join().expect("Failed to join thread");
-        }
+        handle.stop();
 
     }
 
@@ -405,7 +398,7 @@ mod tests {
             Arc::new(Mutex::new(web_hue_vendor))
         ]).expect("Failed to register hue web vendor");
 
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to start server");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
 
         std::thread::sleep(std::time::Duration::from_millis(1000));
 
@@ -419,11 +412,7 @@ mod tests {
             .expect("Failed to parse json response").into_iter().map(huelib::resource::Light::from).collect();
         println!("Lights response: {:?}", lights);
 
-
-        server.running.swap(false, std::sync::atomic::Ordering::Relaxed);
-        for handle in handles {
-            handle.join().expect("Failed to join thread");
-        }
+        handle.stop();
     }
 
     #[test]
@@ -439,7 +428,7 @@ mod tests {
             Arc::new(Mutex::new(web_hue_vendor))
         ]).expect("Failed to register hue web vendor");
 
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to start server");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
 
         std::thread::sleep(std::time::Duration::from_millis(1000));
 
@@ -459,10 +448,7 @@ mod tests {
         // Setting lights went fine!
         assert_eq!(resp.status(), 200);
 
-        server.running.swap(false, std::sync::atomic::Ordering::Relaxed);
-        for handle in handles {
-            handle.join().expect("Failed to join thread");
-        }
+        handle.stop();
     }
 
     #[test]
@@ -478,7 +464,7 @@ mod tests {
             Arc::new(Mutex::new(web_hue_vendor))
         ]).expect("Failed to register hue web vendor");
 
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to start server");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
 
         std::thread::sleep(std::time::Duration::from_millis(1000));
 
@@ -493,11 +479,7 @@ mod tests {
 
         println!("commands response: {:?}", commands);
 
-
-        server.running.swap(false, std::sync::atomic::Ordering::Relaxed);
-        for handle in handles {
-            handle.join().expect("Failed to join thread");
-        }
+        handle.stop();
     }
 
     #[test]
@@ -513,7 +495,7 @@ mod tests {
             Arc::new(Mutex::new(web_hue_vendor))
         ]).expect("Failed to register hue web vendor");
 
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to start server");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
 
         std::thread::sleep(std::time::Duration::from_millis(1000));
 
@@ -562,10 +544,7 @@ mod tests {
         // Setting lights went fine!
         assert_eq!(resp.status(), 200);
 
-        server.running.swap(false, std::sync::atomic::Ordering::Relaxed);
-        for handle in handles {
-            handle.join().expect("Failed to join thread");
-        }
+        handle.stop();
     }
 
 }

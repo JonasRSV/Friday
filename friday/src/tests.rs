@@ -57,17 +57,13 @@ mod tests {
 
 
         // Non-blocking webserver serving the web vendors Currently this starts two threads 
-        let handles = server.listen("0.0.0.0:8000").expect("Failed to start webserver");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start webserver");
 
         infinite_interruptable_loop();
 
         println!("Shutting Down Webserver.. Might take a few seconds");
         // Tell webserver theads to stop serving
-        server.running.swap(false, Ordering::Relaxed);
-        for thread in handles {
-            // Join threads gracefully.. hopefully :)
-            thread.join().expect("failed to join webserver thread");
-        }
+        handle.stop();
 
 
         println!("Exiting..");

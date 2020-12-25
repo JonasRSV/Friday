@@ -129,12 +129,14 @@ class CommandFactory {
         onRemoveClick
     ) {
 
-      var shared_name = {
-        "name": name
-      }
-
-
         actions.forEach(action => {
+
+            // The name is shared for the 'name' 'lamp' and 'state' in a row
+            // So that if we modify the 'name' then the 'name' in 'lamp' and 'state'
+            // must also be modified.
+            var shared_name = {
+              "name": name
+            }
 
             var entry = this.template.cloneNode(true);
             entry.id = makeId(10); // To keep IDs unique
