@@ -16,6 +16,9 @@ class Friday:
     def __hash__(self):
         return hash(self.url)
 
+    def __eq__(self, other):
+        return self.url == other.url
+
 
 DB: Mapping[str, Set[Friday]] = {}
 
@@ -23,10 +26,16 @@ DB: Mapping[str, Set[Friday]] = {}
 @app.route('/')
 def home():
 
+    remote_addr = None
+    if "X-Real-IP" in request.headers:
+        remote_addr = request.headers["X-Real-IP"]
+    else:
+        remote_addr = request.remote_addr
+
     items = []
-    if request.remote_addr in DB:
+    if remote_addr in DB:
         items = [(friday.url, friday.name)
-                 for friday in DB[request.remote_addr]]
+                 for friday in DB[remote_addr]]
 
     return render_template('index.html', items=items)
 
@@ -54,8 +63,9 @@ def ping():
     else:
         remote_addr = request.remote_addr
 
+    print("req", req, "db", DB)
     if remote_addr in DB:
-        if "old_url" in req:
+        if "old_url" in req and req["old_url"]:
             DB[remote_addr].remove(Friday(req["name"], req["old_url"]))
 
         DB[remote_addr].add(Friday(req["name"], req["new_url"]))
