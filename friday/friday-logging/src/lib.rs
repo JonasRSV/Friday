@@ -6,7 +6,7 @@ use ansi_term::Color;
 // different things for these depending on some settings?
 //
 pub fn get_timestamp() -> String {
- return humantime::format_rfc3339_seconds(time::SystemTime::now()).to_string();
+    return humantime::format_rfc3339_seconds(time::SystemTime::now()).to_string();
 }
 
 pub fn extract_filename(file_path: &str) -> String {
