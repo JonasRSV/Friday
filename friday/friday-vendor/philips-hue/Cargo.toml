@@ -18,7 +18,7 @@ friday-web = { path="../../friday-web" }
 
 # Rust-analyzer is broken with dev-deps.. for some reason, so having this
 # uncommented while developing give autocompl
-ureq = { version = "1.5.4", features = ["json", "charset"] }
+# ureq = { version = "1.5.4", features = ["json", "charset"] }
 
 # Used to test the web-endpoints, these deps are only compiled when running tests
 [dev-dependencies]

@@ -1,6 +1,6 @@
 {
   "lights": {
-    "tänd ljuset": [
+    "släck ljuset": [
       {
         "id": "4",
         "state": {
@@ -9,9 +9,7 @@
           "hue": null,
           "saturation": null
         }
-      }
-    ],
-    "släck ljuset": [
+      },
       {
         "id": "4",
         "state": {

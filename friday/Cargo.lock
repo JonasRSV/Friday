@@ -1230,7 +1230,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "ureq 1.5.4",
 ]
 
 [[package]]
