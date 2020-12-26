@@ -42,10 +42,27 @@ def ping():
     # This server will be running in dev-mode
     # So all quests is executed serially
     # No danger of race conditions
-    if request.remote_addr in DB:
-        DB[request.remote_addr].add(Friday(req["name"], req["url"]))
+
+    # So if this lies behind nginx the remote_addr will just
+    # be the addr to the nginx reverse proxy
+    # but the nginx if it is nice will include the remote ip as a header
+    # we check for that first
+
+    remote_addr = None
+    if "X-Real-IP" in request.headers:
+        remote_addr = request.headers["X-Real-IP"]
     else:
-        DB[request.remote_addr] = set([Friday(req["name"], req["url"])])
+        remote_addr = request.remote_addr
+
+    if remote_addr in DB:
+        if "old_url" in req:
+            DB[remote_addr].remove(Friday(req["name"], req["old_url"]))
+
+        DB[remote_addr].add(Friday(req["name"], req["new_url"]))
+    else:
+        DB[remote_addr] = set([Friday(req["name"], req["new_url"])])
+
+
 
     return Response(status=200)
 
