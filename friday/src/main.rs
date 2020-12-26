@@ -10,7 +10,7 @@ use friday_audio;
 use friday_audio::recorder::Recorder;
 
 use friday_vad;
-use friday_vad::SpeakDetector;
+use friday_vad::core::SpeakDetector;
 
 use friday_inference;
 use friday_inference::Model;
@@ -18,7 +18,7 @@ use tensorflow_models;
 
 use friday_web::server::Server;
 
-//use friday_discovery;
+use friday_discovery;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -67,7 +67,6 @@ fn main() {
         &recording_config).expect("Failed to start audio recording");
 
 
-
     let vendors: Vec<Box<dyn friday_vendor::Vendor>> = vec![
         Box::new(hue_vendor)
     ];
@@ -75,7 +74,8 @@ fn main() {
     let port: u16 = 8000;
 
     // Non-blocking webserver serving the web vendors Currently this starts two threads 
-    let web_handle = server.listen(format!("0.0.0.0:{}", port)).expect("Failed to start webserver");
+    let web_handle = server.listen(format!("0.0.0.0:{}", port))
+        .expect("Failed to start webserver");
     // Non-blocking discovery server (Tries to make it easy to discover the assistant)
     let discovery_handle = friday_discovery::discovery::Discovery::new(port)
         .expect("Failed to start discovery server")
@@ -83,9 +83,8 @@ fn main() {
 
     // Cheap voice activity detection - if this one triggers we then trigger
     // the tensorflow model
-    let mut vad = friday_vad::EnergyBasedDetector::new(
-        /*threshold=*/800.0
-    );
+    let mut vad = friday_vad::vad_energy::EnergyBasedDetector::new()
+        .expect("Failed to create VAD - EnergyBasedDetector");
 
     // Serve friday using the main thread
     serve_friday(&mut vad, &mut model, &vendors, istream);
