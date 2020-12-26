@@ -153,7 +153,7 @@ impl Discovery {
                     // Polls until next task is available
                     task_manager::Status::Next(duration) => discovery.poll_for(duration),
 
-                    // Exec runs and removes task
+                    // Exec - pops and runs task
                     task_manager::Status::Ready => match manager.exec() {
                         // Task manager says we should exit - so we do
                         core::Status::Exit => core::Status::Exit,
@@ -174,7 +174,7 @@ impl Discovery {
 
                             }
                         },
-                        // the task manager says we should retry this task in duration time
+                        // the task manager says we should retry this task in 'duration' time
                         // so we re-queue it in suggested time 
                         core::Status::Retry(karta, duration) => {
                             manager.add(karta, secs + duration.as_secs());
@@ -183,7 +183,7 @@ impl Discovery {
                     }
                 },
                 // Time getting asks us to retry 'this will not happend at all in
-                // the current implementation' but it it happeds we just continue
+                // the current implementation' but if it happends we just continue
                 core::Status::Retry(_, _) => core::Status::Continue(()),
 
                 // We were unable to get time and got an exit signal
