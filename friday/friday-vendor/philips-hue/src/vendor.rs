@@ -6,10 +6,9 @@ use crate::core::{
     HUE_USER, 
     HUE_CREDENTIAL_FILE, 
     HUE_CONFIG_FILE};
-use friday_error::frierr;
-use friday_error::propagate;
-use friday_error::FridayError;
+use friday_error::{frierr, propagate, FridayError};
 use friday_storage;
+use friday_logging;
 
 use std::net::IpAddr;
 
@@ -65,7 +64,7 @@ impl Hue {
                 This error most likely occurred because noone pressed the bridge in time");
             }
 
-            println!("Please press the button on the bridge to let Friday register as a user...");
+            friday_logging::info!("Please press the button on the bridge to let Friday register as a user...");
             std::thread::sleep(std::time::Duration::from_millis(2000));
         }
 
@@ -89,7 +88,7 @@ impl Hue {
                         HUE_CREDENTIAL_FILE);
 
                     if write_res.is_err() {
-                        eprintln!("Failed to store hueLogin - Reason: {:?} continuing anyway..", 
+                        friday_logging::warning!("Failed to store hueLogin - Reason: {:?} continuing anyway..", 
                             write_res.err().unwrap());
                     }
 
@@ -238,6 +237,6 @@ mod tests {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
         let vendor = Hue::new().expect("Failed to create hue vendor");
         vendor.dispatch(&"tänd ljuset".to_owned()).expect("Failed to dispatch");
-        println!("hello");
+        friday_logging::info!("hello");
     }
 }

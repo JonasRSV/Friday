@@ -1,4 +1,5 @@
 use friday_error::FridayError;
+use friday_logging;
 use crate::recorder::Recorder;
 use crate::RecordingConfig;
 
@@ -18,7 +19,7 @@ impl Recorder for ALSAIStream {
             let io = device.direction;
 
             if let Some(io) = io {
-                println!("device {} io: {:?}", name, io);
+                friday_logging::info!("device {} io: {:?}", name, io);
                 if io != alsa::Direction::Playback {
                     continue;
                 }
@@ -30,7 +31,7 @@ impl Recorder for ALSAIStream {
             };
 
             if has_available_input {
-                println!("Is recording device {}", name);
+                friday_logging::info!("Is recording device {}", name);
             }
         }
 

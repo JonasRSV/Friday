@@ -184,6 +184,7 @@ name = "friday-discovery"
 version = "0.1.0"
 dependencies = [
  "friday-error",
+ "friday-logging",
  "friday-storage",
  "pnet",
  "serde",
@@ -194,6 +195,10 @@ dependencies = [
 
 [[package]]
 name = "friday-error"
+version = "0.1.0"
+
+[[package]]
+name = "friday-logging"
 version = "0.1.0"
 
 [[package]]

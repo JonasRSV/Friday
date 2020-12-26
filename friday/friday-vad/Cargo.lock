@@ -5,6 +5,10 @@ name = "friday-error"
 version = "0.1.0"
 
 [[package]]
+name = "friday-logging"
+version = "0.1.0"
+
+[[package]]
 name = "friday-storage"
 version = "0.1.0"
 dependencies = [
@@ -19,6 +23,7 @@ name = "friday-vad"
 version = "0.1.0"
 dependencies = [
  "friday-error",
+ "friday-logging",
  "friday-storage",
  "serde",
  "serde_derive",

@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod tests {
+    use friday_logging;
 
     fn infinite_interruptable_loop() {
               let running = Arc::new(AtomicBool::new(true));
@@ -28,7 +29,7 @@ mod tests {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
 
         // Path to UI you want to run this with
-        env::set_var("FRIDAY_WEB_GUI", "../web/boring-nightout");
+        env::set_var("FRIDAY_GUI", "../web/boring-nightout");
 
         let mut server = Server::new().expect("Failed to create webserver");
 
@@ -61,11 +62,11 @@ mod tests {
 
         infinite_interruptable_loop();
 
-        println!("Shutting Down Webserver.. Might take a few seconds");
+        friday_logging::info!("Shutting Down Webserver.. Might take a few seconds");
         // Tell webserver theads to stop serving
         handle.stop();
 
 
-        println!("Exiting..");
+        friday_logging::info!("Exiting..");
     }
 }

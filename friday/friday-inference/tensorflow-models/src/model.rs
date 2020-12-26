@@ -3,6 +3,8 @@ use std::path::Path;
 use std::ffi::CString;
 use libc;
 
+use friday_logging;
+
 #[cfg(target_arch="x86_64")] pub type Char = i8;
 #[cfg(target_arch="x86_64")] pub type UInt = u64;
 
@@ -15,7 +17,7 @@ fn is_status_ok(status: *const tensorflow_rust_sys::TF_Status) -> bool {
             let message = CString::from_raw(tensorflow_rust_sys::TF_Message(status) as *mut Char);
             let rust_message = message.to_str().expect("Failed to make string");
 
-            eprintln!("(tensorflow-models): Error {}", rust_message);
+            friday_logging::fatal!("(tensorflow-models): Error {}", rust_message);
 
             return false;
         }
@@ -40,7 +42,7 @@ pub struct Tensor {
 
 impl Tensor {
     pub fn new(model: &Model, op_name: &CString) -> Tensor {
-        println!("Loading tensor {}", op_name.to_str().expect("Failed to convert op_name to string"));
+        friday_logging::info!("Loading tensor {}", op_name.to_str().expect("Failed to convert op_name to string"));
         let op = tensorflow_rust_sys::TF_Output {
             oper: unsafe { tensorflow_rust_sys::TF_GraphOperationByName(model.graph, op_name.as_ptr()) },
             index:  0
@@ -78,7 +80,7 @@ impl Tensor {
             dims.push(unsafe { *c_dims.add(i as usize)  });
         }
 
-        println!("Successfully loaded Tensor");
+        friday_logging::info!("Successfully loaded Tensor");
         return Tensor{
             tensor: std::ptr::null::<tensorflow_rust_sys::TF_Tensor>() as *mut tensorflow_rust_sys::TF_Tensor,
             op,
@@ -189,7 +191,8 @@ impl Model {
     }
 
     pub fn new(export_dir: &Path) -> Option<Model> {
-        println!("(tensorflow-models): Loading {}", export_dir.to_str().expect("Failed to convert path to String"));
+        friday_logging::info!("(tensorflow-models): Loading {}", 
+            export_dir.to_str().expect("Failed to convert path to String"));
         let status = unsafe { tensorflow_rust_sys::TF_NewStatus() };
         let graph = unsafe { tensorflow_rust_sys::TF_NewGraph() };
         let session_options = unsafe { tensorflow_rust_sys::TF_NewSessionOptions() };
@@ -237,7 +240,7 @@ impl Model {
         unsafe { tensorflow_rust_sys::TF_DeleteSessionOptions(session_options) };
 
         if is_status_ok(status) {
-            println!("(tensorflow-models): Successfully loaded model");
+            friday_logging::info!("(tensorflow-models): Successfully loaded model");
             return Some(Model {
                 graph,
                 session,
@@ -307,8 +310,8 @@ mod tests {
 
         let v: Vec<i16> = vec![1; 16000];
 
-        println!("Tensor size {}", v.len());
-        println!("datatype {}", input_tensor.data_type);
+        friday_logging::info!("Tensor size {}", v.len());
+        friday_logging::info!("datatype {}", input_tensor.data_type);
 
         input_tensor.set_data(&v);
         let u: Vec<i16> = input_tensor.get_data();
@@ -316,12 +319,12 @@ mod tests {
 
         model.run(&mut input_tensor, &mut output_tensor);
 
-        println!("output datatype: {}", output_tensor.data_type);
-        println!("{:?}", output_tensor.get_data::<f32>());
+        friday_logging::info!("output datatype: {}", output_tensor.data_type);
+        friday_logging::info!("{:?}", output_tensor.get_data::<f32>());
 
-        println!("Loading went fine!");
+        friday_logging::info!("Loading went fine!");
         model.free_tensorflow_resources();
 
-        println!("Freeing went fine Woo!");
+        friday_logging::info!("Freeing went fine Woo!");
     }
 }

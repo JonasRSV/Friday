@@ -1,5 +1,6 @@
 use friday_error::{FridayError, propagate};
 use friday_storage;
+use friday_logging;
 use std::sync::{Arc, RwLock, Mutex};
 use std::sync::atomic;
 
@@ -82,6 +83,8 @@ impl Discovery {
         // this thread wont stop until sleep is over. If this thread is supposed to sleep for
         // say 10 minutes - it kind of sux to have to wait 10 minutes for the program to exit.
 
+        friday_logging::info!("Discovery - Polling for {} seconds", duration.as_secs());
+
         let poll_until = time::Instant::now() + duration;
         loop {
             // We recieve a signal to stop so we return exit
@@ -106,7 +109,7 @@ impl Discovery {
         loop {
             if !self.running.load(atomic::Ordering::Relaxed) { return core::Status::Exit ; }
             match time::SystemTime::now().duration_since(time::UNIX_EPOCH) {
-                Err(err) => println!("Failed to get duration since epoch - Reason: {}", err),
+                Err(err) => friday_logging::warning!("Failed to get duration since epoch - Reason: {}", err),
                 Ok(duration) => return core::Status::Continue(duration.as_secs())
             }
 
@@ -129,7 +132,7 @@ impl Discovery {
             // this means we can disable this karta but just not providing its config
             // this error will then say that the config was not provided to alert the user of
             // it, but friday will continue as usual and other kartas can be loaded.
-            |err| println!("Failed to create 'KartaSite' Karta - Reason: {:?}", err),
+            |err| friday_logging::warning!("Failed to create 'KartaSite' Karta - Reason: {:?}", err),
             |karta| kartor.push(Arc::new(Mutex::new(karta))));
 
         return kartor;
@@ -166,11 +169,17 @@ impl Discovery {
                                 core::Status::Continue(())
                             }
                             Err(err) => {
-                                println!("Failed to aquire lock for a 'Karta' - Reason: {} - Will retry in future",
+                                friday_logging::fatal!("Failed to aquire lock for a 'Karta'\
+                                    - Reason: {}",
                                     err);
-                                // try again in 10 sec
-                                manager.add(karta.clone(), secs + 10);
-                                core::Status::Continue(())
+
+                                // TODO: Currently we don't recover from poison error
+                                // should add logic for creating a new lock if this happends
+                                // this however should never happend.. but logic for that might
+                                // be nice anyhow. There is that law about anything that can go
+                                // wrong will go wrong..
+                            
+                                core::Status::Exit
 
                             }
                         },

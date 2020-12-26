@@ -85,14 +85,16 @@ impl Manager {
         match maybe_task {
             Some(task) => match task.karta.lock() {
                 Err(err) => {
-                    println!("Failed to aquire lock for task.. - Reason: {}", err);
-                    core::Status::Retry(task.karta.clone(), time::Duration::from_secs(5))
+                    friday_logging::fatal!("Failed to aquire lock for task.. - Reason: {}", err);
+
+                    // TODO: We do not recover from poison errors at this time
+                    core::Status::Exit
                 },
                 Ok(mut karta) => match karta.clue() {
                     Ok(_) => core::Status::Continue(task.karta.clone()),
                     Err(err) => {
                         // TODO: Maybe remove this..? If it is too verbose
-                        println!("\n---------------------------\n\
+                        friday_logging::error!("\n---------------------------\n\
                                 Discovery Error {:?} \n on clue from {}\
                                 \n---------------------------\n", 
                                 err, 

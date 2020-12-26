@@ -20,6 +20,8 @@ use friday_web::server::Server;
 
 use friday_discovery;
 
+use friday_logging;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -89,13 +91,13 @@ fn main() {
     // Serve friday using the main thread
     serve_friday(&mut vad, &mut model, &vendors, istream);
 
-    println!("Shutting Down Webserver.. Might take a few seconds");
+    friday_logging::info!("Shutting Down Webserver.. Might take a few seconds");
     web_handle.stop();
-    println!("Shutting Down Discovery Server.. Might take a few seconds");
+    friday_logging::info!("Shutting Down Discovery Server.. Might take a few seconds");
     discovery_handle.stop();
 
 
-    println!("All Done - Bye!");
+    friday_logging::info!("All Done - Bye!");
 }
 
 
@@ -113,7 +115,7 @@ fn serve_friday<M, S, V, R>(vad: &mut S, model: &mut M, vendors: &Vec<Box<V>>, i
               }).expect("Error setting Ctrl-C handler");
 
               // Run forever-loop
-              println!("Listening..");
+              friday_logging::info!("Listening..");
               while running.load(Ordering::SeqCst) {
                   std::thread::sleep(std::time::Duration::from_millis(250));
                   match istream.read() {
@@ -131,7 +133,8 @@ fn serve_friday<M, S, V, R>(vad: &mut S, model: &mut M, vendors: &Vec<Box<V>>, i
                                                       DispatchResponse::Success => (),
                                                       DispatchResponse::NoMatch => ()
                                                   },
-                                                  Err(err) => eprintln!("Failed to dispatch {} - Reason: {:?}", 
+                                                  Err(err) => friday_logging::error!(
+                                                      "Failed to dispatch {} - Reason: {:?}", 
                                                       vendor.name(),
                                                       err)
                                               }
@@ -145,11 +148,11 @@ fn serve_friday<M, S, V, R>(vad: &mut S, model: &mut M, vendors: &Vec<Box<V>>, i
                                           friday_inference::Prediction::Silence => (),
                                           friday_inference::Prediction::Inconclusive => ()
                                   },
-                                  Err(err) => eprintln!("Failed to do inference - Reason: {:?}", err)
+                                  Err(err) => friday_logging::error!("Failed to do inference - Reason: {:?}", err)
                               };
                           }
                       },
-                      None => eprintln!("(main) Failed to read audio")
+                      None => friday_logging::error!("(main) Failed to read audio")
                   }
               }
           }

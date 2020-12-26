@@ -2,6 +2,7 @@ use crate::core::SpeakDetector;
 use serde_derive::{Deserialize, Serialize};
 
 use friday_storage;
+use friday_logging;
 use friday_error::{FridayError, propagate};
 
 #[derive(Deserialize, Serialize)]
@@ -45,7 +46,8 @@ impl SpeakDetector for EnergyBasedDetector {
         let energy = EnergyBasedDetector::energy(audio);
 
         if self.verbose {
-            println!("Energy threshold {} -- Energy {}", self.energy_threshold, energy);
+            friday_logging::debug!("Energy threshold {} -- Energy {}", 
+                self.energy_threshold, energy);
         }
 
         return energy > self.energy_threshold;

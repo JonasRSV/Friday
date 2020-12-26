@@ -6,11 +6,10 @@ use crate::core::{
 
 use crate::vendor;
 use crate::vendor::Hue;
-use friday_error::FridayError;
-use friday_error::propagate;
-use friday_error::frierr;
+use friday_error::{frierr, propagate, FridayError};
 use friday_web;
 use friday_storage;
+use friday_logging;
 
 use huelib;
 
@@ -232,7 +231,8 @@ impl WebHue {
                         // risk of not updating for this session due to disk error...
                         // TODO: Think about what the best UX for this is
                         Err(err) => {
-                            eprintln!("Failed to store new commands to disk - Reason: {:?}", err);
+                            friday_logging::warning!("Failed to store new commands to disk - Reason: {:?}", 
+                                err);
 
                             Ok(
                                 friday_web::core::Response::TEXT {
@@ -337,7 +337,7 @@ mod tests {
     #[test]
     fn get_login_via_web() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
 
         let hue_vendor = Hue::new().expect("Failed to create hue vendor");
         let web_hue_vendor = WebHue::new(&hue_vendor);
@@ -362,7 +362,7 @@ mod tests {
     #[test]
     fn create_login_via_web() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
 
         let hue_vendor = Hue::new().expect("Failed to create hue vendor");
         let web_hue_vendor = WebHue::new(&hue_vendor);
@@ -388,7 +388,7 @@ mod tests {
     #[test]
     fn get_lights_via_web() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
 
         let hue_vendor = Hue::new().expect("Failed to create hue vendor");
         let web_hue_vendor = WebHue::new(&hue_vendor);
@@ -410,7 +410,7 @@ mod tests {
         let lights : Vec<huelib::resource::Light> = 
             resp.into_json_deserialize::<Vec<serializeable_lights::Light>>()
             .expect("Failed to parse json response").into_iter().map(huelib::resource::Light::from).collect();
-        println!("Lights response: {:?}", lights);
+        friday_logging::info!("Lights response: {:?}", lights);
 
         handle.stop();
     }
@@ -418,7 +418,7 @@ mod tests {
     #[test]
     fn set_lights_via_web() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
 
         let hue_vendor = Hue::new().expect("Failed to create hue vendor");
         let web_hue_vendor = WebHue::new(&hue_vendor);
@@ -454,7 +454,7 @@ mod tests {
     #[test]
     fn get_commands_via_web() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
 
         let hue_vendor = Hue::new().expect("Failed to create hue vendor");
         let web_hue_vendor = WebHue::new(&hue_vendor);
@@ -477,7 +477,7 @@ mod tests {
             resp.into_json_deserialize::<HashMap<String, Vec<LightUpdate>>>()
             .expect("Failed to parse json response");
 
-        println!("commands response: {:?}", commands);
+        friday_logging::info!("commands response: {:?}", commands);
 
         handle.stop();
     }
@@ -485,7 +485,7 @@ mod tests {
     #[test]
     fn set_commands_via_web() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
 
         let hue_vendor = Hue::new().expect("Failed to create hue vendor");
         let web_hue_vendor = WebHue::new(&hue_vendor);

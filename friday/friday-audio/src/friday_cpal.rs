@@ -3,10 +3,13 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::{Arc, Mutex, MutexGuard};
 use circular_queue::CircularQueue;
 use friday_error;
-use friday_error::frierr;
-use friday_error::FridayError;
+use friday_error::{frierr, propagate, FridayError};
+use friday_logging;
 use crate::recorder::Recorder;
 use crate::RecordingConfig;
+
+use std::thread;
+use std::time;
 
 
 pub struct CPALIStream {
@@ -27,21 +30,28 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>)
 
         match buffer.lock() {
             Ok(mut guard) => insert(input, &mut guard),
-            Err(_) => eprintln!("(audioio) - Failed to aquire lock for writing audio data")
+            Err(err) => {
+                friday_logging::fatal!("(audioio) - Failed to aquire lock for writing audio data\
+                - Reason: {}", err);
+
+                // To not spam the living #!#! out of the audio device mutex if we get a poison
+                // error
+                thread::sleep(time::Duration::from_secs(1));
+            }
         }
 
     }
 
 fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError> {
     //for host in cpal::available_hosts().iter() {
-        //println!("Found Host {}", host.name());
+        //friday_logging::info!("Found Host {}", host.name());
     //}
     //for device in cpal::default_host().input_devices().unwrap() {
-        //println!("Found {}", device.name().unwrap());
+        //friday_logging::info!("Found {}", device.name().unwrap());
     //}
 
     //for device in cpal::default_host().devices().unwrap() {
-        //println!("Found device {}", device.name().unwrap());
+        //friday_logging::info!("Found device {}", device.name().unwrap());
     //}
     // TODO: Make a smart choice of device here
     // For some platforms the default device is not a good choice
@@ -67,8 +77,14 @@ impl Recorder for CPALIStream {
                 data.resize(self.config.model_frame_size, 0);
                 return Some(data);
             }
-            Err(_) => {
-                eprint!("Failed to aquire lock for reading audio data");
+            Err(err) => {
+                friday_logging::fatal!("Failed to aquire lock for reading audio data -
+                    Reason: {}", err);
+
+                // To not spam the living #!#! out of the audio device mutex if we get a poison
+                // error
+                thread::sleep(time::Duration::from_secs(1));
+
                 None
             }
         }
@@ -77,9 +93,10 @@ impl Recorder for CPALIStream {
     fn record(conf: &RecordingConfig) -> Result<Box<CPALIStream>, FridayError> {
         return get_recording_device(conf)
             .map_or_else(
-                |err| err.push("Could not setup any recording device...").into(),
+                propagate!("Could not setup any recording device..."),
                 |device| {
-                    println!("Using device {}", device.name().unwrap());
+
+                    friday_logging::info!("Using device {}", device.name().unwrap());
 
                     let config = cpal::StreamConfig {
                         channels: 1,
@@ -96,7 +113,14 @@ impl Recorder for CPALIStream {
                     return device.build_input_stream(
                         &config.into(),
                         move |data, _: &_| write_to_buffer::<i16>(data, &write_buffer),
-                        |err| println!("Recording error - {}", err)
+                        |err| {
+                            friday_logging::fatal!("Recording error - {}", err);
+                            // To not spam the living #!#! out of the audio device if an error
+                            // occurs - e.g someone janks out the audio device from the
+                            // computer
+                            thread::sleep(time::Duration::from_secs(1));
+
+                        }
                     ).map_or_else(
                     |err| frierr!("Failed to create input stream: {}", err),
                     |stream| {
@@ -135,16 +159,15 @@ mod tests {
 
         std::thread::sleep(std::time::Duration::from_secs(1));
         match istream.read() {
-            Some(v) => println!("{:?}", v[0..1000].iter()),
-            _ => println!("Failed to read")
+            Some(v) => friday_logging::info!("{:?}", v[0..1000].iter()),
+            _ => friday_logging::info!("Failed to read")
         }
 
         std::thread::sleep(std::time::Duration::from_secs(2));
-        println!();
 
         match istream.read() {
-            Some(v) => println!("{:?}", v[0..1000].iter()),
-            _ => println!("Failed to read")
+            Some(v) => friday_logging::info!("{:?}", v[0..1000].iter()),
+            _ => friday_logging::info!("Failed to read")
         }
 
 
@@ -165,8 +188,8 @@ mod tests {
         for _ in 0..50 {
             std::thread::sleep(std::time::Duration::from_millis(250));
             match istream.read() {
-                Some(_) => println!("Read Ok!"),
-                _ => println!("Failed to read")
+                Some(_) => friday_logging::info!("Read Ok!"),
+                _ => friday_logging::info!("Failed to read")
             }
 
         }
@@ -188,7 +211,7 @@ mod tests {
             std::thread::sleep(std::time::Duration::from_millis(2000));
             match istream.read() {
                 Some(data) => {
-                    println!("Read Ok!");
+                    friday_logging::info!("Read Ok!");
                     let out = File::create(
                         Path::new(&format!("test-{}.wav", index)));
 
@@ -196,19 +219,19 @@ mod tests {
                         Ok(mut fw) => {
                             let header = wav::Header::new(1, 1, r.sample_rate, 16);
                             match wav::write(header, wav::BitDepth::Sixteen(data), &mut fw) {
-                                Ok(_) => println!("Successfully wrote to wav file!"),
-                                Err(e) => println!("Failed to write to wav file - Reason: {}", e)
+                                Ok(_) => friday_logging::info!("Successfully wrote to wav file!"),
+                                Err(e) => friday_logging::info!("Failed to write to wav file - Reason: {}", e)
                             }
 
                         },
-                        Err(e) => println!("Failed to create out file - Reason: {}", e)
+                        Err(e) => friday_logging::info!("Failed to create out file - Reason: {}", e)
                     }
 
 
 
 
                 },
-                _ => println!("Failed to read")
+                _ => friday_logging::info!("Failed to read")
             }
 
         }

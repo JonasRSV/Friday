@@ -19,8 +19,8 @@ pub struct WebGui {
 
 impl WebGui {
     pub fn new() -> Result<WebGui, FridayError> {
-        return environment::get_environment("FRIDAY_WEB_GUI").map_or_else(
-            propagate!("Failed to get WEB_GUI directory"),
+        return environment::get_environment("FRIDAY_GUI").map_or_else(
+            propagate!("Failed to get GUI directory"),
             |dir| Ok(WebGui {
                 root: dir,
                 endpoints: vec![
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn serve_webgui() {
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
         let mut server = Server::new().expect("Failed to create server");
         let handle = server.listen("0.0.0.0:8000").expect("Failed to launch server");
 

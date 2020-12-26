@@ -11,6 +11,7 @@ libc = "0.2"
 float-ord = "0.2.0"
 tensorflow-rust-sys = { path="tensorflow-rust-sys" } 
 friday-inference = { path="../" } 
+friday-logging = { path="../../friday-logging" } 
 friday-error = { path="../../friday-error" } 
 friday-storage = { path="../../friday-storage" } 
 friday-web = { path="../../friday-web" } 

@@ -1,9 +1,8 @@
 use url;
 use tiny_http;
 use std::str::FromStr;
-use friday_error::FridayError;
-use friday_error::frierr;
-use friday_error::propagate;
+use friday_error::{FridayError, frierr, propagate};
+use friday_logging;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -59,7 +58,7 @@ impl Server {
             tiny_http::Response::from_string("Something went wrong..")
             .with_status_code(500)) {
             Ok(()) => (),
-            Err(err) => println!("Failed to send 500 response to client - Reason: {}", err)
+            Err(err) => friday_logging::warning!("Failed to send 500 response to client - Reason: {}", err)
         }
     }
 
@@ -68,7 +67,7 @@ impl Server {
             tiny_http::Response::from_string("Did not find that endpoint..")
             .with_status_code(400)) {
             Ok(()) => (),
-            Err(err) => println!("Failed to send 400 response to client - Reason: {}", err)
+            Err(err) => friday_logging::warning!("Failed to send 400 response to client - Reason: {}", err)
         }
     }
 
@@ -109,7 +108,7 @@ impl Server {
 
     pub fn listen<S>(&mut self, connection: S) -> Result<ServerHandle, FridayError>
         where S: AsRef<str> {
-            eprintln!("Starting Server on {}", connection.as_ref());
+            friday_logging::info!("Starting Server on {}", connection.as_ref());
 
             return tiny_http::Server::http(connection.as_ref()).map_or_else(
                 |err| frierr!("Failed to start Server {} - Reason: {}", connection.as_ref(), err),
@@ -134,7 +133,8 @@ impl Server {
                                                     &server_ref),
                                                 None => ()
                                             },
-                                            Err(err) => println!("Error while receiving request - Reason: {}", 
+                                            Err(err) => friday_logging::warning!(
+                                                "Error while receiving request - Reason: {}", 
                                                 err)
                                         }
 
@@ -163,12 +163,17 @@ impl Server {
                 match locked_vendor.lock() {
                     Ok(mut vendor) => self_reference.dispatch_vendor(&mut (*vendor), r),
                     Err(err) => {
-                        println!("Failed to aquire mutex lock - Reason: {}", err);
+                        friday_logging::fatal!("Failed to aquire mutex lock - Reason: {}", err);
+
+                        // To avoid any spamming - We do not deal well with mutex poisoning
+                        // and it should never happend
+                        thread::sleep(std::time::Duration::from_millis(500));
+
                         Server::status_500(r);
                     }
                 },
             Err(err) => {
-                println!("400 {} {} {} - Reason: {:?}", method, address, url, err);
+                friday_logging::warning!("400 {} {} {} - Reason: {:?}", method, address, url, err);
                 Server::status_400(r);
             }
         };
@@ -187,42 +192,47 @@ impl Server {
                     Response::Empty{status} => 
                         match r.respond(tiny_http::Response::from_string("")
                                         .with_status_code(status)) {
-                            Ok(_) => println!("{} {} {} {}", status, method, address, url),
-                            Err(err) => println!("Failed to send empty response - Reason: {}", err)
+                            Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                            Err(err) => friday_logging::warning!("Failed to send empty response - Reason: {}", err)
                     },
                     Response::JSON{status, content} => 
                              tiny_http::Header::from_str("Content-Type:  application/json").map_or_else(
-                                |_| println!("Failed to send json response because header construction failed"),
+                                |_| friday_logging::warning!(
+                                    "Failed to send json response because header construction failed"),
                                 |header| 
                         match r.respond(tiny_http::Response::from_string(content)
                             .with_status_code(status)
                             .with_header(header)) {
-                                Ok(_) => println!("{} {} {} {}", status, method, address, url),
-                                Err(err) => println!("Failed to send json response - Reason: {}", err)
+                                Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                                Err(err) => friday_logging::warning!(
+                                    "Failed to send json response - Reason: {}", err)
                     }),
                     Response::TEXT{status, content} => 
                         match r.respond(tiny_http::Response::from_string(content)
                             .with_status_code(status)) {
-                            Ok(_) => println!("{} {} {} {}", status, method, address, url),
-                            Err(err) => println!("Failed to send text response - Reason: {}", err)
+                            Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                            Err(err) => friday_logging::warning!(
+                                "Failed to send text response - Reason: {}", err)
                     },
                     Response::FILE{status, file, content_type} => 
                             tiny_http::Header::from_str(format!("Content-Type: {}", content_type).as_str()
                                 ).map_or_else(
-                                |_| println!("Failed to send file response because header construction failed"),
+                                |_| friday_logging::warning!(
+                                    "Failed to send file response because header construction failed"),
                                 |header| 
                                 match r.respond(tiny_http::Response::from_file(file)
                                     .with_status_code(status)
                                     .with_header(header)) {
-                                    Ok(_) => println!("{} {} {} {}", status, method, address, url),
-                                    Err(err) => println!("Failed to send file response - Reason: {}", err)
+                                    Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                                    Err(err) => friday_logging::warning!(
+                                        "Failed to send file response - Reason: {}", err)
                                 }
 
                     )
                 }
             }, 
             Err(err) => {
-                println!("Web Vendor failed - Reason: {:?}", err);
+                friday_logging::warning!("Web Vendor failed - Reason: {:?}", err);
                 Server::status_500(r);
             }
         }

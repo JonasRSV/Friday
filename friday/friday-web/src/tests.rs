@@ -1,6 +1,7 @@
 
 #[cfg(test)]
 mod tests {
+
     use crate::server::*;
     use crate::core::*;
     use crate::path::*;
@@ -8,6 +9,7 @@ mod tests {
     use crate::endpoint::*;
     use friday_error::FridayError;
     use friday_error::frierr;
+    use friday_logging;
     use std::sync::Arc;
     use std::sync::Mutex;
     use std::env;
@@ -66,7 +68,7 @@ mod tests {
 
     #[test]
     fn try_lookup() {
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
         let mut server = Server::new().expect("Failed to create server");
 
         let failed_register = server.register(
@@ -120,7 +122,7 @@ mod tests {
 
                 });
 
-            println!("Request data is: {}", request_data_message);
+            friday_logging::info!("Request data is: {}", request_data_message);
 
             return match url.path() {
                 "/increment" => {

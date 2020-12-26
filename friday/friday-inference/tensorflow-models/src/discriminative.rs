@@ -4,9 +4,8 @@ use float_ord::FloatOrd;
 
 use friday_inference;
 
-use friday_error::frierr;
-use friday_error::propagate;
-use friday_error::FridayError;
+use friday_error::{frierr, propagate, FridayError};
+use friday_logging;
 
 use friday_storage;
 use friday_web;
@@ -140,7 +139,7 @@ impl friday_inference::Model for Discriminative {
                         .map(|k| k.0)
                         .expect("failed to get max").clone();
 
-                    println!("P({}) = {}", class_map[pred], probabilities[pred]);
+                    friday_logging::info!("P({}) = {}", class_map[pred], probabilities[pred]);
 
                     if pred == 0 {
                         return Ok(friday_inference::Prediction::Silence);
@@ -289,8 +288,8 @@ mod tests {
                 index: _
             } => assert_eq!(class, String::from("Silence")),
 
-            friday_inference::Prediction::Silence => eprintln!("Got Silence"),
-            friday_inference::Prediction::Inconclusive => eprintln!("Got Inconclusive")
+            friday_inference::Prediction::Silence => friday_logging::info!("Got Silence"),
+            friday_inference::Prediction::Inconclusive => friday_logging::info!("Got Inconclusive")
 
         }
     }
@@ -298,7 +297,7 @@ mod tests {
 
     #[test]
     fn discriminative_web() {
-        env::set_var("FRIDAY_WEB_GUI", ".");
+        env::set_var("FRIDAY_GUI", ".");
 
         let config = Config {
             export_dir: PathBuf::from("test-resources/1603634879"),
@@ -332,7 +331,7 @@ mod tests {
         let class_map : Vec<String> = resp.into_json_deserialize::<Vec<String>>()
             .expect("Failed to parse json response");
 
-        println!("Got class_map response: {:?}", class_map);
+        friday_logging::info!("Got class_map response: {:?}", class_map);
         assert_eq!(class_map, model.class_map.read().unwrap().clone());
 
         let resp = ureq::get(
@@ -340,7 +339,7 @@ mod tests {
         let sensitivity : f32 = resp.into_json_deserialize::<f32>()
             .expect("Failed to parse json response");
 
-        println!("Got sensitivity response: {:?}", sensitivity);
+        friday_logging::info!("Got sensitivity response: {:?}", sensitivity);
         assert_eq!(sensitivity, model.sensitivity.read().unwrap().clone());
 
 

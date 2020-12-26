@@ -1,6 +1,7 @@
 use crate::core;
 use std::time;
 use friday_storage;
+use friday_logging;
 use std::sync::{RwLock, Arc};
 use friday_error::{FridayError, propagate, frierr};
 use ureq;
@@ -119,7 +120,7 @@ impl KartaSite {
                         self.update_local_ip(new_ip.clone());
 
                         // Little logging to show that we successfully sent discovery to site
-                        println!(
+                        friday_logging::info!(
                             "Discovery: {} status {}", 
                             self.config.site_url, 
                             response.status());
@@ -191,6 +192,6 @@ mod tests {
 
     #[test]
     fn get_local_ip() {
-        println!("{}", KartaSite::get_local_ip().expect("Failed to get local URL"));
+        friday_logging::info!("{}", KartaSite::get_local_ip().expect("Failed to get local URL"));
     }
 }

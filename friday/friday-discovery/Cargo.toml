@@ -12,5 +12,6 @@ serde = "1.0"
 serde_derive = "1.0"
 friday-error = { path="../friday-error" } 
 friday-storage = { path="../friday-storage" } 
+friday-logging = { path="../friday-logging" }
 ureq = { version = "1.5.4", features = ["json", "charset"] }
 pnet = "0.27.2"
