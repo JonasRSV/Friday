@@ -1,5 +1,6 @@
 mod core;
-mod ping_site;
+mod task_manager;
+mod karta_site;
 pub mod discovery;
 
 #[cfg(test)]

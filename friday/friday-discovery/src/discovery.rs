@@ -5,66 +5,15 @@ use std::sync::atomic;
 
 use std::thread;
 
-use std::collections::BinaryHeap;
 
 use serde_derive::{Deserialize, Serialize};
-use crate::ping_site::PingSite;
-use crate::core::LightHouse;
-use std::cmp::Ordering;
+
+use crate::core;
+use crate::core::Karta;
+use crate::karta_site::KartaSite;
+use crate::task_manager;
 
 use std::time;
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct DiscoveryConfig {
-    name: String
-}
-
-#[derive(Clone)]
-struct Task {
-    time: u64,
-    lighthouse: Arc<Mutex<dyn LightHouse>>,
-}
-
-impl Ord for Task {
-    fn cmp(&self, other: &Self) -> Ordering {
-        // We have not here to make our heap into a min-heap instead of a max-heap
-        match self.time.cmp(&other.time) {
-            Ordering::Greater => Ordering::Less,
-            Ordering::Less => Ordering::Greater,
-            Ordering::Equal => Ordering::Equal
-        }
-    }
-}
-
-impl PartialOrd for Task {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Task {
-    fn eq(&self, other: &Self) -> bool {
-        self.time == other.time
-    }
-}
-
-impl Eq for Task { }
-
-fn system_seconds_or_exit(running: Arc<atomic::AtomicBool>) -> Option<u64> {
-    loop {
-        if !running.load(atomic::Ordering::Relaxed) { return None; }
-
-        match time::SystemTime::now().duration_since(time::UNIX_EPOCH) {
-            Err(err) => println!("Failed to get duration since epoch - Reason: {}", err),
-            Ok(duration) => return Some(duration.as_secs())
-        }
-
-
-
-        thread::sleep(time::Duration::from_secs(2));
-    }
-
-}
 
 pub struct DiscoveryHandle {
     handle: thread::JoinHandle<()>,
@@ -82,6 +31,11 @@ impl DiscoveryHandle {
     pub fn wait(self) {
         self.handle.join().expect("Failed to join Discovery thread");
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct DiscoveryConfig {
+    name: String
 }
 
 #[derive(Clone)]
@@ -104,15 +58,16 @@ impl Discovery {
             }))
     }
 
+    /// Starts a thread that leaves clue to make it easier for users to find Friday.
     pub fn make_discoverable(&self) -> DiscoveryHandle {
         let self_reference = Box::new(self.clone());
 
         // Set running to true
         self.running.swap(true, atomic::Ordering::Relaxed);
 
-        // Start light houses
+        // Start serving clues using the maps 'Kartor' 
         let handle = thread::spawn( move || { 
-            Discovery::run_lighthouses(self_reference);
+            Discovery::start(self_reference);
         });
 
         return DiscoveryHandle {
@@ -121,82 +76,124 @@ impl Discovery {
         };
     }
 
-    fn execute_task(running: Arc<atomic::AtomicBool>, task: Task) -> Option<Task> {
-        let time_between_blip = match task.lighthouse.lock() {
-            Err(err) => {
-                println!("Failed to aquire lock for task.. - Reason: {} \nContinuing..",
-                    err);
-                // Try again in 5 seconds..
-                5
-            },
-            Ok(mut lighthouse) => 
-                match lighthouse.blip() {
-                    Ok(_) => lighthouse.time_between_blip().as_secs(),
-                    Err(err) => {
-                        // TODO: Maybe remove this..? If it is too verbose
-                        println!("\n---------------------------\n\
-                            Discovery Error {:?} \n on blip of {}\
-                            \n---------------------------\n", 
-                            err, 
-                            lighthouse.name());
+    fn poll_for(&self, duration: time::Duration) -> core::Status<()> {
+        // This lets the thread 'sleep' using polling so that the discovery is exitable
+        // otherwise if the main thread sends signal to stop.. if we're using just 'sleep'
+        // this thread wont stop until sleep is over. If this thread is supposed to sleep for
+        // say 10 minutes - it kind of sux to have to wait 10 minutes for the program to exit.
 
-                        // Try again in 5 seconds..
-                        5
-                    }            
-                }
-        };
+        let poll_until = time::Instant::now() + duration;
+        loop {
+            // We recieve a signal to stop so we return exit
+            if !self.running.load(atomic::Ordering::Relaxed) { return core::Status::Exit; }
 
-        return match system_seconds_or_exit(running) {
-            Some(time) => Some(Task {
-                time: time + time_between_blip,
-                lighthouse: task.lighthouse
-            }),
-            None => None
-        }
-    }
+            thread::sleep(time::Duration::from_secs(2));
 
-    fn run_lighthouses(discovery: Box<Discovery>) {
-        let mut lighthouses: Vec<Arc<Mutex<dyn LightHouse>>> = Vec::new();
-
-        PingSite::new(discovery.name.clone(), discovery.port).map_or_else(
-            |err| println!("Failed to create 'PingSite' Lighthouse - Reason: {:?}", err),
-            |ping_site| lighthouses.push(Arc::new(Mutex::new(ping_site))));
-
-        let mut priority_queue = BinaryHeap::<Task>::new();
-
-        for lighthouse in lighthouses.iter() {
-            match system_seconds_or_exit(discovery.running.clone()) {
-                Some(time) => priority_queue.push(
-                    Task{
-                        time,
-                        lighthouse: lighthouse.clone()
-                    }),
-                None => return ()
+            if time::Instant::now() > poll_until {
+                break
             }
         }
 
+        // If we did not recieve a signal to stop we just return continue
+        core::Status::Continue(())
+
+    }
+
+    /// Returns timestamp in seconds of time since EPOCH
+    /// or returns Exit signal if a user signals us to exit before we're able to aquire that time
+    pub fn get_seconds_timestamp(&self) -> core::Status<u64> {
+
         loop {
-            match system_seconds_or_exit(discovery.running.clone()) {
-                Some(secs) => {
-                    match priority_queue.pop() {
-                        Some(task) => {
-                            let task_time = task.time;
-                            if secs < task_time {
-                                // Sleep until first task is ready
-                                println!("Discovery Sleeping for {} seconds", task_time - secs);
-                                thread::sleep(time::Duration::from_secs(task_time - secs));
-                            }
+            if !self.running.load(atomic::Ordering::Relaxed) { return core::Status::Exit ; }
+            match time::SystemTime::now().duration_since(time::UNIX_EPOCH) {
+                Err(err) => println!("Failed to get duration since epoch - Reason: {}", err),
+                Ok(duration) => return core::Status::Continue(duration.as_secs())
+            }
 
-                            match Discovery::execute_task(discovery.running.clone(), task) {
-                                Some(new_task) => priority_queue.push(new_task),
-                                None => break
+            // Wait two seconds before trying to get time again
+            thread::sleep(time::Duration::from_secs(2));
+        }
+    }
+
+    fn setup_kartor(&self) -> Vec<Arc<Mutex<dyn Karta>>> {
+        let mut kartor: Vec<Arc<Mutex<dyn Karta>>> = Vec::new();
+
+
+        
+        // A worker that pings a site with the machines local IP
+        // so that it is easy to discover - using that site.
+        // The site provides an UI that will list all available UIs on the 
+        // local network
+        KartaSite::new(self.name.clone(), self.port).map_or_else(
+            // If we are unable to create it we just log an error and continue
+            // this means we can disable this karta but just not providing its config
+            // this error will then say that the config was not provided to alert the user of
+            // it, but friday will continue as usual and other kartas can be loaded.
+            |err| println!("Failed to create 'KartaSite' Karta - Reason: {:?}", err),
+            |karta| kartor.push(Arc::new(Mutex::new(karta))));
+
+        return kartor;
+    }
+
+    fn start(discovery: Box<Discovery>) {
+        let mut manager = task_manager::Manager::new()
+            .setup(
+                discovery
+                .setup_kartor());
+
+
+
+        loop {
+            let status: core::Status<()> = match discovery.get_seconds_timestamp() {
+                // We were able to get current time and thus continues discovery
+                core::Status::Continue(secs) => match manager.status(secs) {
+                    // No task is queued - we quit discovery
+                    task_manager::Status::NoTask => core::Status::Exit,
+
+                    // Polls until next task is available
+                    task_manager::Status::Next(duration) => discovery.poll_for(duration),
+
+                    // Exec runs and removes task
+                    task_manager::Status::Ready => match manager.exec() {
+                        // Task manager says we should exit - so we do
+                        core::Status::Exit => core::Status::Exit,
+
+                        // Task executed this karta and suggests we should requeue the
+                        // clue in this karta, so we queue it and continue
+                        core::Status::Continue(karta) => match karta.lock() {
+                            Ok(guarded_karta) => {
+                                manager.add(karta.clone(), secs + guarded_karta.time_to_clue().as_secs());
+                                core::Status::Continue(())
                             }
+                            Err(err) => {
+                                println!("Failed to aquire lock for a 'Karta' - Reason: {} - Will retry in future",
+                                    err);
+                                // try again in 10 sec
+                                manager.add(karta.clone(), secs + 10);
+                                core::Status::Continue(())
+
+                            }
+                        },
+                        // the task manager says we should retry this task in duration time
+                        // so we re-queue it in suggested time 
+                        core::Status::Retry(karta, duration) => {
+                            manager.add(karta, secs + duration.as_secs());
+                            core::Status::Continue(())
                         }
-
-                        None => break
                     }
                 },
-                None => break
+                // Time getting asks us to retry 'this will not happend at all in
+                // the current implementation' but it it happeds we just continue
+                core::Status::Retry(_, _) => core::Status::Continue(()),
+
+                // We were unable to get time and got an exit signal
+                // so we exit
+                core::Status::Exit => core::Status::Exit
+            };
+
+            // Break - this will exit the loop and stop the discovery thread 
+            if status == core::Status::Exit {
+                break;
             }
         }
     }
