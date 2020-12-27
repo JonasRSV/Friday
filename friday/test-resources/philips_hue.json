@@ -1,24 +1,30 @@
 {
-  "lights": {
-    "släck ljuset": [
-      {
-        "id": "4",
-        "state": {
-          "on": false,
-          "brightness": null,
-          "hue": null,
-          "saturation": null
-        }
-      },
-      {
-        "id": "4",
-        "state": {
-          "on": true,
-          "brightness": null,
-          "hue": null,
-          "saturation": null
-        }
-      }
-    ]
-  }
+    "lights": {
+        "släck ljuset": [{
+            "id": "4",
+            "state": {
+                "on": false,
+                "brightness": null,
+                "hue": null,
+                "saturation": null
+            }
+        }],
+        "tänd ljuset": [{
+            "id": "4",
+            "state": {
+                "on": true,
+                "brightness": null,
+                "hue": null,
+                "saturation": null
+            }
+        }, {
+            "id": "5",
+            "state": {
+                "on": true,
+                "brightness": 120,
+                "hue": null,
+                "saturation": null
+            }
+        }]
+    }
 }

@@ -1,3 +1,7 @@
+/// This module houses the webserver that drives the web vendors of Friday
+/// Today it is implemented using tiny_http - TODO: Move to tokio in future to improve
+/// performance.
+
 use url;
 use tiny_http;
 use std::str::FromStr;
@@ -72,8 +76,6 @@ impl Server {
     }
 
     pub fn register(&mut self, mut vendors: Vec<Arc<Mutex<dyn Vendor + Send>>>) -> Result<(), FridayError> { 
-        // TODO do checks that we dont have conflicting endpoints
-
         // Add self to make sure we're not colliding to anything already there
         vendors.extend(self.vendors.clone());
 
@@ -160,6 +162,13 @@ impl Server {
 
         match self_reference.lookup(&r) {
             Ok(locked_vendor) => 
+                // This can be a bottleneck if a client is only talking to one
+                // vendor - since here we're synchronizing all threads so that only
+                // on thread is run per vendor. This synchronization makes writing vendors
+                // much less painful - but perhaps at a too great cost?
+                //
+                // It is probably not a problem but worth investigating if performance becomes
+                // an issue
                 match locked_vendor.lock() {
                     Ok(mut vendor) => self_reference.dispatch_vendor(&mut (*vendor), r),
                     Err(err) => {

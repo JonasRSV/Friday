@@ -29,7 +29,7 @@ mod tests {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
 
         // Path to UI you want to run this with
-        env::set_var("FRIDAY_GUI", "../web/boring-nightout");
+        env::set_var("FRIDAY_GUI", ".");
 
         let mut server = Server::new().expect("Failed to create webserver");
 
