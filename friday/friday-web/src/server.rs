@@ -145,7 +145,7 @@ impl Server {
                                     }
                                 }
                             )
-                            );
+                                );
                     }
 
                     return Ok(ServerHandle {
@@ -155,35 +155,60 @@ impl Server {
                 });
         }
 
+    /// A handler that returns 'Access-Control-Allow-Origin: *'
+    fn handle_allow_all_origins(r: tiny_http::Request) {
+        let method = r.method().clone();
+        let address = r.remote_addr().clone();
+        let url = String::from(r.url());
+
+        tiny_http::Header::from_str("Access-Control-Allow-Origin: *").map_or_else(
+            |_| friday_logging::warning!(
+                "Failed to send allow origin response because header construction failed"),
+                |header| 
+                match r.respond(tiny_http::Response::empty(200)
+                    .with_header(header)) {
+                    Ok(_) => friday_logging::info!("{} {} {} {}", 200, method, address, url),
+                    Err(err) => friday_logging::warning!(
+                        "Failed to send allow origin response - Reason: {}", err)
+                })
+
+    }
+
     fn handle_request(r: tiny_http::Request, self_reference: &Box<Server>) {
         let method = r.method().clone();
         let address = r.remote_addr().clone();
         let url = String::from(r.url());
 
-        match self_reference.lookup(&r) {
-            Ok(locked_vendor) => 
-                // This can be a bottleneck if a client is only talking to one
-                // vendor - since here we're synchronizing all threads so that only
-                // on thread is run per vendor. This synchronization makes writing vendors
-                // much less painful - but perhaps at a too great cost?
-                //
-                // It is probably not a problem but worth investigating if performance becomes
-                // an issue
-                match locked_vendor.lock() {
-                    Ok(mut vendor) => self_reference.dispatch_vendor(&mut (*vendor), r),
-                    Err(err) => {
-                        friday_logging::fatal!("Failed to aquire mutex lock - Reason: {}", err);
+        match method {
+            // Lets anyone on the network query the assistant from whatever
+            // TODO: maybe it is a security problem?
+            // it is very convenient when developing UIs to that is why we have it.
+            tiny_http::Method::Options => Server::handle_allow_all_origins(r),
+            _ => match self_reference.lookup(&r) {
+                Ok(locked_vendor) => 
+                    // This can be a bottleneck if a client is only talking to one
+                    // vendor - since here we're synchronizing all threads so that only
+                    // on thread is run per vendor. This synchronization makes writing vendors
+                    // much less painful - but perhaps at a too great cost?
+                    //
+                    // It is probably not a problem but worth investigating if performance becomes
+                    // an issue
+                    match locked_vendor.lock() {
+                        Ok(mut vendor) => self_reference.dispatch_vendor(&mut (*vendor), r),
+                        Err(err) => {
+                            friday_logging::fatal!("Failed to aquire mutex lock - Reason: {}", err);
 
-                        // To avoid any spamming - We do not deal well with mutex poisoning
-                        // and it should never happend
-                        thread::sleep(std::time::Duration::from_millis(500));
+                            // To avoid any spamming - We do not deal well with mutex poisoning
+                            // and it should never happend
+                            thread::sleep(std::time::Duration::from_millis(500));
 
-                        Server::status_500(r);
+                            Server::status_500(r);
+                        }
+                    },
+                Err(err) => {
+                    friday_logging::warning!("400 {} {} {} - Reason: {:?}", method, address, url, err);
+                    Server::status_400(r);
                     }
-                },
-            Err(err) => {
-                friday_logging::warning!("400 {} {} {} - Reason: {:?}", method, address, url, err);
-                Server::status_400(r);
             }
         };
 
@@ -200,44 +225,44 @@ impl Server {
                 match response {
                     Response::Empty{status} => 
                         match r.respond(tiny_http::Response::from_string("")
-                                        .with_status_code(status)) {
-                            Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
-                            Err(err) => friday_logging::warning!("Failed to send empty response - Reason: {}", err)
-                    },
-                    Response::JSON{status, content} => 
-                             tiny_http::Header::from_str("Content-Type:  application/json").map_or_else(
-                                |_| friday_logging::warning!(
-                                    "Failed to send json response because header construction failed"),
-                                |header| 
-                        match r.respond(tiny_http::Response::from_string(content)
-                            .with_status_code(status)
-                            .with_header(header)) {
-                                Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
-                                Err(err) => friday_logging::warning!(
-                                    "Failed to send json response - Reason: {}", err)
-                    }),
-                    Response::TEXT{status, content} => 
-                        match r.respond(tiny_http::Response::from_string(content)
                             .with_status_code(status)) {
                             Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
-                            Err(err) => friday_logging::warning!(
-                                "Failed to send text response - Reason: {}", err)
-                    },
-                    Response::FILE{status, file, content_type} => 
-                            tiny_http::Header::from_str(format!("Content-Type: {}", content_type).as_str()
-                                ).map_or_else(
+                            Err(err) => friday_logging::warning!("Failed to send empty response - Reason: {}", err)
+                        },
+                        Response::JSON{status, content} => 
+                            tiny_http::Header::from_str("Content-Type:  application/json").map_or_else(
                                 |_| friday_logging::warning!(
-                                    "Failed to send file response because header construction failed"),
-                                |header| 
-                                match r.respond(tiny_http::Response::from_file(file)
-                                    .with_status_code(status)
-                                    .with_header(header)) {
-                                    Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
-                                    Err(err) => friday_logging::warning!(
-                                        "Failed to send file response - Reason: {}", err)
-                                }
+                                    "Failed to send json response because header construction failed"),
+                                    |header| 
+                                    match r.respond(tiny_http::Response::from_string(content)
+                                        .with_status_code(status)
+                                        .with_header(header)) {
+                                        Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                                        Err(err) => friday_logging::warning!(
+                                            "Failed to send json response - Reason: {}", err)
+                                    }),
+                                    Response::TEXT{status, content} => 
+                                        match r.respond(tiny_http::Response::from_string(content)
+                                            .with_status_code(status)) {
+                                            Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                                            Err(err) => friday_logging::warning!(
+                                                "Failed to send text response - Reason: {}", err)
+                                        },
+                                        Response::FILE{status, file, content_type} => 
+                                            tiny_http::Header::from_str(format!("Content-Type: {}", content_type).as_str()
+                                            ).map_or_else(
+                                            |_| friday_logging::warning!(
+                                                "Failed to send file response because header construction failed"),
+                                                |header| 
+                                                match r.respond(tiny_http::Response::from_file(file)
+                                                    .with_status_code(status)
+                                                    .with_header(header)) {
+                                                    Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                                                    Err(err) => friday_logging::warning!(
+                                                        "Failed to send file response - Reason: {}", err)
+                                                }
 
-                    )
+                                            )
                 }
             }, 
             Err(err) => {
@@ -254,23 +279,23 @@ impl Server {
         return url::Url::parse(&r.url()).map_or_else(
             |err| frierr!("Failed to parse http URL {} - Reason: {}", r.url(), err),
             |url| path::Path::new(url.path()).map_or_else(
-                    propagate!("Failed to create path from a valid path"),
-                    |path| {
-                        for vendor in self.vendors.iter() {
+                propagate!("Failed to create path from a valid path"),
+                |path| {
+                    for vendor in self.vendors.iter() {
 
-                            // TODO deal with lock failures
-                            let endpoints = vendor.lock().expect("Failed to aquire lock in lookup").endpoints();
-                            for endpoint in endpoints.iter() {
-                                for method in endpoint.methods.clone() {
-                                    if request_method == method && path::Path::overlap(&path, &endpoint.path) {
-                                        return Ok(vendor.clone());
-                                    }
+                        // TODO deal with lock failures
+                        let endpoints = vendor.lock().expect("Failed to aquire lock in lookup").endpoints();
+                        for endpoint in endpoints.iter() {
+                            for method in endpoint.methods.clone() {
+                                if request_method == method && path::Path::overlap(&path, &endpoint.path) {
+                                    return Ok(vendor.clone());
                                 }
                             }
                         }
-                        frierr!("Found no matching handler for {} ", path)
+                    }
+                    frierr!("Found no matching handler for {} ", path)
 
-                    }));
+                }));
 
 
     }

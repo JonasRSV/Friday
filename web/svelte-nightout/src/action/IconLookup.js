@@ -1,47 +1,45 @@
 import Lamp from "./icons/Lamp.svelte"
 import Unknown from "./icons/Unknown.svelte"
 import LampID from "./icons/LampID.svelte"
-import { Vendor } from "../dManager.js"
+import { Vendor } from "../Core.js"
 
 
 
-class HueLookup {
-  static lookup(update) {
-    let icons = []
+function lookupHueLights(daction) {
+  let icons = []
+  icons.push({
+    "component": LampID,
+    "props": {
+      "number": daction.command.id,
+    }
+  })
+
+  if (daction.command.state.on) {
     icons.push({
-      "component": LampID,
+      "component": Lamp,
       "props": {
-        "number": update.command.id,
+        "on": true
       }
     })
-
-    if (update.command.state.on) {
-      icons.push({
-        "component": Lamp,
-        "props": {
-          "on": true
-        }
-      })
-    } else {
-      icons.push({
-        "component": Lamp,
-        "props": {
-          "on": false
-        }
-      })
-    }
-
-    return icons;
+  } else {
+    icons.push({
+      "component": Lamp,
+      "props": {
+        "on": false
+      }
+    })
   }
+
+  return icons;
 }
 
 export class IconLookup {
   // This is a Action.js / Update
   // Really wish there were types :(
-  static lookup(update) {
+  static lookup(daction) {
 
-    if (update.vendor = Vendor.hue) {
-      return HueLookup.lookup(update);
+    if (daction.vendor == Vendor.hueLights) {
+      return lookupHueLights(daction);
     }
 
     // List of components and props

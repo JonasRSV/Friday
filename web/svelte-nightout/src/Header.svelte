@@ -8,7 +8,7 @@
 <style>
 
   .header-title {
-    font-size: max(20pt, 5vw);
+    font-size: 40pt;
   }
 
   .header-container {

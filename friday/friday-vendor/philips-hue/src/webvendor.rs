@@ -17,6 +17,7 @@ use std::sync::{Arc, Mutex, RwLock, MutexGuard};
 use std::net::IpAddr;
 
 use serde_json;
+use serde_json::json;
 use std::collections::HashMap;
 
 
@@ -130,11 +131,20 @@ impl WebHue {
     fn is_logged_in(&self) -> Result<friday_web::core::Response, FridayError> {
         match self.bridge.lock() {
             Ok(maybe_bridge) => match *maybe_bridge {
-                // Not logged in - HTTP code I am a teapot - Why is there not a HTTP code for 'Not Ok' :(
-                // TODO: If this is a horrible practise.. return a json with a bool instead
-                None => Ok(friday_web::core::Response::Empty { status: 418 }),
+                None => Ok(
+                    friday_web::core::Response::JSON { 
+                        status: 200, 
+                        content: json!({
+                            "ok": false
+                        }).to_string()
+                    }),
                 // We're logged in! 
-                Some(_) => Ok(friday_web::core::Response::Empty { status: 200 })
+                Some(_) => Ok(friday_web::core::Response::JSON { 
+                    status: 200,
+                    content: json!({
+                        "ok": true
+                    }).to_string()
+                })
             },
             Err(err) => frierr!("Failed to aquire lock to check for login - Reason: {}", err)
         }
@@ -169,7 +179,13 @@ impl WebHue {
         match self.bridge.lock() {
             Ok(mut maybe_bridge) => match *maybe_bridge {
                 // We're already logged in
-                Some(_) => Ok(friday_web::core::Response::Empty { status: 200}), 
+                Some(_) => Ok(
+                    friday_web::core::Response::JSON { 
+                        status: 200,
+                        content: json!({
+                            "ok": true
+                        }).to_string()
+                }), 
                 // Not logged in 
                 None => 
                     match Hue::get_hue_login() {
@@ -314,7 +330,7 @@ impl friday_web::vendor::Vendor for WebHue{
                     "login" => match r.method() { 
                         // This tries to login - blocks until success of fail after x seconds
                         friday_web::core::Method::Put => self.login(),        
-                        // This gets login status - Returns 200 if success.. currently 418 if not
+                        // This gets login status - Returns 200 if success.. 
                         friday_web::core::Method::Get => self.is_logged_in(), 
                         m => friday_web::not_acceptable(
                             format!("Only Put or Get is accepted for 'WebHue'\

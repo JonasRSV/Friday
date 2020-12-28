@@ -7,6 +7,8 @@
     "start": "sirv public"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@rollup/plugin-babel": "^5.2.2",
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
     "rollup": "^2.3.4",
@@ -17,6 +19,7 @@
     "smelte": "^1.0.18"
   },
   "dependencies": {
+    "@babel/core": "^7.12.10",
     "sirv-cli": "^1.0.0",
     "svelte-icons": "^2.1.0",
     "sveltestrap": "^3.9.7"

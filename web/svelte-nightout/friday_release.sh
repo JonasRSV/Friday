@@ -3,6 +3,8 @@
 # This makes takes the 'build' directory and creates a 'release' directory
 # that is a servable Friday GUI
 
+npm run build
+
 mkdir -p release/static
 
 cp public/index.html release

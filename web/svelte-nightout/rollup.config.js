@@ -1,3 +1,4 @@
+import babel from '@rollup/plugin-babel';
 import svelte from 'rollup-plugin-svelte';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
@@ -51,6 +52,10 @@ export default {
         css({
             output: 'bundle.css'
         }),
+        babel({
+            exclude: 'node_modules/**',
+        }),
+
 
         // If you have external dependencies installed from
         // npm, you'll most likely need these plugins. In

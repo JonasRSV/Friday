@@ -1,71 +1,104 @@
 <script>
 import Action from "./Action.svelte";
-import ActionModifier from "./ActionModifier.svelte";
+import Mechanic from "./Mechanic.svelte";
+import Factory from "./Factory.svelte";
 import Header from "./Header.svelte";
+import { dAction, Vendor } from './Core';
 import { Spinner } from 'sveltestrap';
 import { onMount } from "svelte";
-
-import { dManager } from "./dManager.js";
-import { API } from "./FridayAPI.js"
+import { FridayAPI } from "./FridayAPI.js"
 
 export let title = "Friday";
 
 
-// Different view states
-let display_modifier = false;
-let display_actions = false;
-
-// All rendered dActions
-let dactions = [];
-
-let manager = new dManager();
-let api = new API(manager);
+// States for our mechanic
+let displayMechanic = false; // Render y/n
+let dActionAtMech = null;    // daction to fix
 
 
-export let onNameClick = () => {
-  console.log("Clicked on name");
+// States for our actions
+let displayActions = false; // Render y/n
+let dActions = [];           // all dactions
 
-};
 
+// The 'App' exposes 4 things.
+// 1. It exposes a way to 'remove' actions
+// 2. It exposes a way to 'add' actions 
+// 3. It exposes a way to 'modify' actions 
+// 4. It exposes a way to sync with friday
+// These things are represented by the functions below
 
-export let onCommandClick = () => {
-  console.log("Clicked on command");
-};
+// Currently removing and syncing is O(n) n: num actions
+// I believe this will be fine
+
+export let removeAction = dActionClicked => {
+  dActions = dActions.filter(elem => elem.id != dActionClicked.id);
+
+  // TODO: kind of bruteforce but maybe ok?
+  // Sync all
+
+  if (dActionClicked.vendor == Vendor.hueLights) {
+    FridayAPI.setHueLightsCommands(dActions);
+  } else {
+    console.log("No vendor implemented for", daction.vendor)
+  }
+}
+
+export let addAction = () => {
+  dActions.push(dAction.New());
+
+  // force re-render
+  dActions = dActions
+}
+
+export let showMechanic = dActionClicked => {
+  dActionAtMech = dActionClicked
+  displayMechanic = true;
+}
+
+export let syncFriday = daction => {
+  if (daction.vendor == Vendor.hueLights) {
+    FridayAPI.setHueLightsCommands(dActions);
+  } else {
+    console.log("No vendor implemented for", daction.vendor)
+  }
+}
 
 
 onMount (async () => { 
-  await api.fetch_actions()
+  // Javascript is weird
+  // basically push takes *args and we unfold the entire list as args
+  // Also this only works for lists up to about 1e5 elements.. 
+  dActions.push(... await FridayAPI.fetchActions());
 
-  // After fetching actions we display them.
-  dactions = manager.get_actions();
-  display_actions = true;
+  // And then we display them
+  displayActions = true;
 });
 
-setTimeout(() => {
-  dactions[0].component.updateName("Cookie");
-
-}, 5000);
 
 
 </script>
 
 <main>
   <Header title="{title}"/>
-  {#if display_modifier}
-    <ActionModifier action="hi" />
-  {:else if display_actions}
-    {#each dactions as action (action.id)}
+
+  {#if displayActions}
+    {#each dActions as action (action.id)}
       <Action action={action} 
               bind:this={action.component}
-              onNameClick={onNameClick}
-              onCommandClick={onCommandClick}/>
-      <div class="empty-space"> </div>
+              onNameClick={showMechanic}
+              onCommandClick={showMechanic}
+              onRemoveClick={removeAction}
+              />
     {/each}
   {:else}
     <div class="middle-screen">
       <Spinner info type="grow" />
     </div>
   {/if}
+
+  <Factory bind:active={displayActions} onAddClick={addAction}/>
+  <Mechanic sync={syncFriday} daction={dActionAtMech} bind:active={displayMechanic} />
 </main>
 
 <style>
@@ -73,10 +106,12 @@ setTimeout(() => {
   background-color: #080a10;
   color: #dfe6e9;
 }
+
+
+
 main {
   text-align: center;
   padding: 1em;
-  max-width: 240px;
   margin: 0 auto;
 }
 
@@ -91,14 +126,4 @@ main {
   transform: translate(-50%, -50%);
 }
 
-.empty-space {
-  height: 80px;
-}
-
-
-@media (min-width: 640px) {
-  main {
-    max-width: none;
-  }
-}
 </style>
