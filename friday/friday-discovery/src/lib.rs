@@ -2,6 +2,7 @@ mod core;
 mod task_manager;
 mod karta_site;
 pub mod discovery;
+pub mod webvendor;
 
 #[cfg(test)]
 mod tests {

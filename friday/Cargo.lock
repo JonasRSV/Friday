@@ -706,6 +706,7 @@ dependencies = [
  "friday-error",
  "friday-logging",
  "friday-storage",
+ "friday-web",
  "pnet",
  "serde",
  "serde_derive",

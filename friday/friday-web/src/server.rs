@@ -1,6 +1,6 @@
 /// This module houses the webserver that drives the web vendors of Friday
 /// Today it is implemented using tiny_http - TODO: Move to tokio in future to improve
-/// performance.
+/// performance?
 
 use url;
 use tiny_http;
@@ -179,15 +179,25 @@ impl Server {
         let address = r.remote_addr().clone();
         let url = String::from(r.url());
 
+
+        friday_logging::debug!(
+            "Received request - {} {} {}", 
+            address, 
+            url, 
+            method);
+
         match method {
-            // Lets anyone on the network query the assistant from whatever
+            // Webbrowsers sends a 'Option' request when doing CORS 
+            // if we don't reply with 'ALLOW..' the browser will not allow
+            // the client to finish its request - by having this
+            // we let anyone on the network query the assistant from whatever
             // TODO: maybe it is a security problem?
             // it is very convenient when developing UIs to that is why we have it.
             tiny_http::Method::Options => Server::handle_allow_all_origins(r),
             _ => match self_reference.lookup(&r) {
                 Ok(locked_vendor) => 
                     // This can be a bottleneck if a client is only talking to one
-                    // vendor - since here we're synchronizing all threads so that only
+                    // vendor - since here we're synchronizing all threads on vendors, so that only
                     // on thread is run per vendor. This synchronization makes writing vendors
                     // much less painful - but perhaps at a too great cost?
                     //

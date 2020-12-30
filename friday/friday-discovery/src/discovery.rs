@@ -35,13 +35,13 @@ impl DiscoveryHandle {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-struct DiscoveryConfig {
-    name: String
+pub struct DiscoveryConfig {
+    pub name: String
 }
 
 #[derive(Clone)]
 pub struct Discovery {
-    name: Arc<RwLock<String>>,
+    pub name: Arc<RwLock<String>>,
     running: Arc<atomic::AtomicBool>,
     // Port which the webserver is running on
     port: u16

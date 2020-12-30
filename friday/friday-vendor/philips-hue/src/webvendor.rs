@@ -16,8 +16,6 @@ use huelib;
 use std::sync::{Arc, Mutex, RwLock, MutexGuard};
 use std::net::IpAddr;
 
-use serde_json;
-use serde_json::json;
 use std::collections::HashMap;
 
 
@@ -55,7 +53,7 @@ impl WebHue {
                     path: friday_web::path::Path::safe_new(
                         "/friday-vendor/philips-hue/lights/commands")
                 },
-                // Returns 200 if a login is successful
+                // Logging in and checking for if we're logged in.
                 friday_web::endpoint::Endpoint{ 
                     name: "login".to_owned(),
                     methods: vec![
@@ -75,17 +73,14 @@ impl WebHue {
         -> Result<friday_web::core::Response, FridayError> {
             return match b.get_all_lights() {
                 Err(err) => frierr!("Error occurred while querying for all lights: {}", err),
-                Ok(lights) => serde_json::to_string(
+                Ok(lights) => friday_web::json!(200, 
                     &lights
                     .into_iter()
                     // Huelib Lights does not support serialization so we wrap them in a
                     // serializeable type
                     .map(serializeable_lights::Light::from) 
                     .collect::<Vec<serializeable_lights::Light>>()
-                ).map_or_else(
-                |err| frierr!("Failed to serialize lights to json response - Reason {}", err),
-                |content| Ok(friday_web::core::Response::JSON {status: 200, content }))
-
+                )
             }
 
     }
@@ -99,11 +94,9 @@ impl WebHue {
         match self.bridge.lock() {
             Ok(maybe_bridge) => match *maybe_bridge {
                 // Not logged in 
-                None => Ok(friday_web::core::Response::TEXT {
-                    status: 405, 
-                    content: "Please login first".to_owned()}),
-                    // We're logged in! 
-                    Some(ref bridge) => WebHue::create_lights_response_with_bridge(bridge)
+                None => friday_web::forbidden!("Please login first"),
+                // We're logged in! 
+                Some(ref bridge) => WebHue::create_lights_response_with_bridge(bridge)
             },
             Err(err) => frierr!("Failed to aquire lock to check for login - Reason: {}", err)
         }
@@ -116,12 +109,10 @@ impl WebHue {
         match self.bridge.lock() {
             Ok(maybe_bridge) => match *maybe_bridge {
                 // Not logged in 
-                None => Ok(friday_web::core::Response::TEXT {
-                    status: 405, 
-                    content: "Please login first".to_owned()}),
-                    // We're logged in! 
-                    Some(ref bridge) => vendor::execute_light_updates(bridge, &updates).map(
-                        |_| friday_web::core::Response::Empty {status: 200})
+                None => friday_web::forbidden!("Please login first"),
+                // We're logged in! 
+                Some(ref bridge) => vendor::execute_light_updates(bridge, &updates).map(
+                    |_| friday_web::ok!("Executed updates!"))
             },
             Err(err) => frierr!("Failed to aquire lock to check for login - Reason: {}", err)
         }
@@ -131,20 +122,8 @@ impl WebHue {
     fn is_logged_in(&self) -> Result<friday_web::core::Response, FridayError> {
         match self.bridge.lock() {
             Ok(maybe_bridge) => match *maybe_bridge {
-                None => Ok(
-                    friday_web::core::Response::JSON { 
-                        status: 200, 
-                        content: json!({
-                            "ok": false
-                        }).to_string()
-                    }),
-                // We're logged in! 
-                Some(_) => Ok(friday_web::core::Response::JSON { 
-                    status: 200,
-                    content: json!({
-                        "ok": true
-                    }).to_string()
-                })
+                None => friday_web::not_ok!("Not logged in"),
+                Some(_) => friday_web::ok!("Logged in!")
             },
             Err(err) => frierr!("Failed to aquire lock to check for login - Reason: {}", err)
         }
@@ -165,8 +144,7 @@ impl WebHue {
                 login.user.clone())
         );
 
-        Ok(friday_web::core::Response::Empty { status: 200})
-
+        friday_web::ok!("All good!")
     }
 
 
@@ -179,13 +157,7 @@ impl WebHue {
         match self.bridge.lock() {
             Ok(mut maybe_bridge) => match *maybe_bridge {
                 // We're already logged in
-                Some(_) => Ok(
-                    friday_web::core::Response::JSON { 
-                        status: 200,
-                        content: json!({
-                            "ok": true
-                        }).to_string()
-                }), 
+                Some(_) => friday_web::ok!("All good!"),
                 // Not logged in 
                 None => 
                     match Hue::get_hue_login() {
@@ -218,9 +190,7 @@ impl WebHue {
     /// This responds with the command map used by the vendor
     fn get_lights_commands(&self) -> Result<friday_web::core::Response, FridayError> {
         match self.config.read() {
-            Ok(config) => serde_json::to_string(&config.lights).map_or_else(
-                |err| frierr!("Failed to serialize config - Reason: {}", err),
-                |content| Ok(friday_web::core::Response::JSON {status: 200, content})),
+            Ok(config) => friday_web::json!(200, &config.lights),
             Err(err) => frierr!("Failed to aquire config lock - Reason: {}", err)
         }
     }
@@ -237,7 +207,7 @@ impl WebHue {
                     // it has the new commands
                     match friday_storage::config::write_config(&*config, "philips_hue.json") {
                         // Successfully stored commands - all is well in the world! 
-                        Ok(_) => Ok(friday_web::core::Response::Empty {status: 200}),
+                        Ok(_) => friday_web::ok!("All good!"),
 
                         // What to do here is not clear.. we have successfully updated this session
                         // with the new commands - but we have failed to store them - so the next
@@ -250,12 +220,7 @@ impl WebHue {
                             friday_logging::warning!("Failed to store new commands to disk - Reason: {:?}", 
                                 err);
 
-                            Ok(
-                                friday_web::core::Response::TEXT {
-                                    status: 200, 
-                                    content: "Updated for this session - But failed to store on disk".to_owned()
-                                }
-                            )
+                            friday_web::ok!("Updated for this session - But failed to store on disk")
                         }
                     }
 
@@ -267,7 +232,7 @@ impl WebHue {
 }
 
 
-impl friday_web::vendor::Vendor for WebHue{
+impl friday_web::vendor::Vendor for WebHue {
     fn name(&self) -> String { return "friday-vendor/philips-hue".to_owned() }
     fn endpoints(&self) -> Vec<friday_web::endpoint::Endpoint> { return self.endpoints.clone(); }
 
@@ -280,24 +245,11 @@ impl friday_web::vendor::Vendor for WebHue{
                         // This gets all lights
                         friday_web::core::Method::Get => self.get_lights(), 
                         // This sets the state of the lights as provided in the JSON
-                        friday_web::core::Method::Put => match r.data() {
-                            Ok(data) => match data { 
-                                // This JSON data is a string
-                                // This just means that the content-type header was JSON
-                                friday_web::core::Data::JSON { json } => 
-                                    serde_json::from_str(&json).map_or_else(
-                                        |err| frierr!(
-                                            "Failed to deserialize JSON body - Reason : {}\n\
-                                            BODY: {}", err, json),
-                                            |updates| self.set_lights(updates)),
-                                _ => friday_web::not_acceptable("Body must contain JSON data"),
-
-                            },
-                            Err(err) => propagate!("Unable to get data from request")(err)
-                        }, 
-                        m => friday_web::not_acceptable(
-                            format!("Only Put or Get is accepted for 'WebHue'\
-                                commands endpoint I received: {:?}", m))
+                        friday_web::core::Method::Put => friday_web::request_json(
+                            r,
+                            &|updates| self.set_lights(updates)),
+                        m => friday_web::not_acceptable!("Only Put or Get is accepted for 'WebHue'\
+                            commands endpoint I received: {:?}", m)
 
                     }
 
@@ -305,25 +257,11 @@ impl friday_web::vendor::Vendor for WebHue{
                         // This returns the commands as a JSON file
                         friday_web::core::Method::Get => self.get_lights_commands(),     // This gets the commands
                         // This updates the commands and stores updates to disk
-                        friday_web::core::Method::Put => match r.data() {
-                            Ok(data) => match data { 
-                                // This JSON data is a string
-                                // This just means that the content-type header was JSON
-                                friday_web::core::Data::JSON { json } => 
-                                    serde_json::from_str(&json).map_or_else(
-                                        |err| frierr!(
-                                            "Failed to deserialize JSON body - Reason : {}\n\
-                                            BODY: {}", err, json),
-                                            |commands| self.set_lights_commands(commands)),
-                                _ => friday_web::not_acceptable("Body must contain JSON data"),
-
-                            },
-                            Err(err) => propagate!("Unable to get data from request")(err)
-                        },     // This updates the commands
-
-                        m => friday_web::not_acceptable(
-                            format!("Only Put or Get is accepted for 'WebHue'\
-                                commands endpoint I received: {:?}", m))
+                        friday_web::core::Method::Put => friday_web::request_json(
+                            r,
+                            &|commands| self.set_lights_commands(commands)),
+                        m => friday_web::not_acceptable!("Only Put or Get is accepted for 'WebHue'\
+                            commands endpoint I received: {:?}", m)
 
                     }
 
@@ -332,9 +270,9 @@ impl friday_web::vendor::Vendor for WebHue{
                         friday_web::core::Method::Put => self.login(),        
                         // This gets login status - Returns 200 if success.. 
                         friday_web::core::Method::Get => self.is_logged_in(), 
-                        m => friday_web::not_acceptable(
-                            format!("Only Put or Get is accepted for 'WebHue'\
-                                commands endpoint I received: {:?}", m))
+                        m => friday_web::not_acceptable!(
+                            "Only Put or Get is accepted for 'WebHue'\
+                                commands endpoint I received: {:?}", m)
 
                     },
                     _ => frierr!("Unknown endpoint name {}", name)
