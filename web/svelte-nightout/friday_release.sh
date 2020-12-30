@@ -5,6 +5,8 @@
 
 npm run build
 
+rm -rf release
+
 mkdir -p release/static
 
 cp public/index.html release

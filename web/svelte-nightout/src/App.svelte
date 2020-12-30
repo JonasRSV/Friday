@@ -32,16 +32,15 @@ let dActions = [];           // all dactions
 // I believe this will be fine
 
 export let removeAction = dActionClicked => {
+  // Removes the action
   dActions = dActions.filter(elem => elem.id != dActionClicked.id);
 
-  // TODO: kind of bruteforce but maybe ok?
-  // Sync all
-
+  // Syncs with friday
   if (dActionClicked.vendor == Vendor.hueLights) {
     FridayAPI.setHueLightsCommands(dActions);
-  } else {
+  } else if (daction != undefined) {
     console.log("No vendor implemented for", daction.vendor)
-  }
+  } else { }
 }
 
 export let addAction = () => {
@@ -71,8 +70,17 @@ onMount (async () => {
   // Also this only works for lists up to about 1e5 elements.. 
   dActions.push(... await FridayAPI.fetchActions());
 
+  title = await FridayAPI.getDeviceName();
+
   // And then we display them
   displayActions = true;
+
+
+  // TODO While developing mechanic
+  /*dActionAtMech = dActions[0];*/
+  /*displayMechanic = true;*/
+
+
 });
 
 
@@ -86,7 +94,7 @@ onMount (async () => {
     {#each dActions as action (action.id)}
       <Action action={action} 
               bind:this={action.component}
-              onNameClick={showMechanic}
+              onKeywordClick={showMechanic}
               onCommandClick={showMechanic}
               onRemoveClick={removeAction}
               />
@@ -103,6 +111,7 @@ onMount (async () => {
 
 <style>
 :global(body, html) {
+  font-family: 'Lato', sans-serif;
   background-color: #080a10;
   color: #dfe6e9;
 }
@@ -125,5 +134,6 @@ main {
   /*To truly get it into the center*/
   transform: translate(-50%, -50%);
 }
+
 
 </style>

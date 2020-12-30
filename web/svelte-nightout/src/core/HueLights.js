@@ -11,11 +11,11 @@ export function dActionsToHueLights(dactions) {
 
     dactions.forEach(action => {
         if (action.vendor == Vendor.hueLights) {
-            if (!(action.name in lightsResponse)) {
-                lightsResponse[action.name] = []
+            if (!(action.keyword in lightsResponse)) {
+                lightsResponse[action.keyword] = []
             }
 
-            lightsResponse[action.name].push(action.command)
+            lightsResponse[action.keyword].push(action.command)
         }
     });
 
@@ -25,9 +25,9 @@ export function dActionsToHueLights(dactions) {
 
 export function hueLightsToDActions(lights) {
     let dactions = []
-    for (const [name, commands] of Object.entries(lights)) {
+    for (const [keyword, commands] of Object.entries(lights)) {
         commands.forEach((command) => {
-            dactions.push(new dAction(name, Vendor.hueLights, command))
+            dactions.push(new dAction(keyword, Vendor.hueLights, command))
         });
     }
     return dactions;

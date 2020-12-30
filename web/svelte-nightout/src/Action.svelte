@@ -4,13 +4,13 @@
   import { IconLookup } from "./action/IconLookup.js";
 
 export let action;
-export let onNameClick;
+export let onKeywordClick;
 export let onCommandClick;
 export let onRemoveClick;
 export let icons = [];
 
-export function setName(newName) {
-  action.name = newName;
+export function setKeyword(newKeyword) {
+  action.keyword = newKeyword;
 }
 
 export function setCommand(newCommand) {
@@ -98,8 +98,8 @@ icons = IconLookup.lookup(action);
       </div>
     </Col>
     <Col xs=6 sm=4 md=4 lg=4 class="text-center"> 
-      <div class="keyword vertical-center action-height" on:click={() => onNameClick(action)}>
-        {action.name}
+      <div class="keyword vertical-center action-height" on:click={() => onKeywordClick(action)}>
+        {action.keyword}
       </div>
     </Col>
 

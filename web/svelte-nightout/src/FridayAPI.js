@@ -2,14 +2,19 @@ import {
     ActiondActionBi
 } from "./Core.js";
 import {
-    APInames
-} from "./api/Names.js";
+    APIGetKeywords
+} from "./api/Keywords.js";
 import {
     APIGetHueLights,
     APISetHueLights,
     APIGetHueLightsCommands,
     APISetHueLightsCommands
 } from "./api/HueLights.js";
+
+import {
+  APIGetDeviceName,
+  APISetDeviceName,
+} from "./api/Device";
 
 
 export class FridayAPI {
@@ -18,9 +23,14 @@ export class FridayAPI {
     //static prefix = "http://0.0.0.0:8000";
     // For production
     static prefix = "";
+    
+    static getDeviceName = () => APIGetDeviceName(this.prefix);
+    static setDeviceName = (name) => APISetDeviceName(
+      this.prefix, 
+      JSON.stringify({"name": name}));
 
-    // Gets the names of the command e.g 'on' - 'off' etc
-    static names = () => APInames(this.prefix);
+    // Gets the keywords of the command e.g 'on' - 'off' etc
+    static getKeywords = () => APIGetKeywords(this.prefix);
 
     // Gets the hue lights available 
     // See philips hue /lights endpoint for documentation of content

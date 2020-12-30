@@ -1,9 +1,9 @@
 // This will be could possibly be called a lot 
 // nice to cache the results
-let namesCache = null;
-export async function APInames(prefix) {
-    if (namesCache == null) {
-        namesCache = await fetch(
+let keywordsCache = null;
+export async function APIGetKeywords(prefix) {
+    if (keywordsCache == null) {
+        keywordsCache = await fetch(
                 prefix + "/friday-inference/tensorflow-models/discriminative/classes")
             .then(r => r.json())
             .then(j => {
@@ -11,5 +11,5 @@ export async function APInames(prefix) {
                 return j.slice(1, j.length);
             });
     }
-    return namesCache;
+    return keywordsCache;
 }
