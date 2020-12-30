@@ -127,7 +127,7 @@ impl KartaSite {
 
                         return Ok(());
                     } else {
-                        return frierr!("Received status {} when seding IP using KartaSite", 
+                        return frierr!("Received status {} when sending IP using KartaSite", 
                             response.status());
                     }
                 }

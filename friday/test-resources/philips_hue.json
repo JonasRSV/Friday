@@ -1,22 +1,22 @@
 {
   "lights": {
-    "tänd ljuset": [
-      {
-        "id": "4",
-        "state": {
-          "on": true,
-          "brightness": null,
-          "hue": null,
-          "saturation": null
-        }
-      }
-    ],
     "släck ljuset": [
       {
         "id": "4",
         "state": {
           "on": false,
           "brightness": 120,
+          "hue": null,
+          "saturation": null
+        }
+      }
+    ],
+    "tänd ljuset": [
+      {
+        "id": "4",
+        "state": {
+          "on": true,
+          "brightness": null,
           "hue": null,
           "saturation": null
         }

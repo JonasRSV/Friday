@@ -36,6 +36,8 @@ mod tests {
         let hue_vendor = philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
         let model = tensorflow_models::discriminative::Discriminative::new()
             .expect("Failed to load model");
+        let discovery = friday_discovery::discovery::Discovery::new(8000)
+            .expect("Failed to create discovery");
 
         server.register(
             vec![
@@ -50,6 +52,12 @@ mod tests {
             Arc::new(
                 Mutex::new(
                     philips_hue::webvendor::WebHue::new(&hue_vendor)
+                )
+            ),
+
+            Arc::new(
+                Mutex::new(
+                    friday_discovery::webvendor::WebDiscovery::new(&discovery)
                 )
             )
 

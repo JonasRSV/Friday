@@ -29,11 +29,16 @@ use ctrlc;
 
 
 fn main() {
+
+    // For webserver & discovery
+    let port: u16 = 8000;
+
     // Webserver that serves the GUI and also all of fridays endpoints
     let mut server = Server::new().expect("Failed to create webserver");
+    let discovery = friday_discovery::discovery::Discovery::new(port)
+        .expect("Failed to create discovery");
 
     let hue_vendor = philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
-
 
     // Tensorflow model that identifies the keyword present in speech
     let mut model = tensorflow_models::discriminative::Discriminative::new()
@@ -52,6 +57,12 @@ fn main() {
         Arc::new(
             Mutex::new(
                 philips_hue::webvendor::WebHue::new(&hue_vendor)
+            )
+        ),
+
+        Arc::new(
+            Mutex::new(
+                friday_discovery::webvendor::WebDiscovery::new(&discovery)
             )
         )
 
@@ -73,15 +84,12 @@ fn main() {
         Box::new(hue_vendor)
     ];
 
-    let port: u16 = 8000;
 
     // Non-blocking webserver serving the web vendors Currently this starts two threads 
     let web_handle = server.listen(format!("0.0.0.0:{}", port))
         .expect("Failed to start webserver");
     // Non-blocking discovery server (Tries to make it easy to discover the assistant)
-    let discovery_handle = friday_discovery::discovery::Discovery::new(port)
-        .expect("Failed to start discovery server")
-        .make_discoverable();
+    let discovery_handle = discovery.make_discoverable();
 
     // Cheap voice activity detection - if this one triggers we then trigger
     // the tensorflow model
