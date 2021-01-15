@@ -11,16 +11,12 @@ class AudioPadding(PreprocessFn):
         self.length = length
 
     def do(self, example: tf.train.Example) -> List[tf.train.Example]:
-        text = tfexample_utils.get_text(example)
         sample_rate = tfexample_utils.get_sample_rate(example)
         audio = tfexample_utils.get_audio(example)
 
         pad_to = int(sample_rate * self.length)
-
         padding = np.random.normal(0, 10, size=pad_to - len(audio)).astype(np.int64)
 
         audio.extend(padding)
 
-        return [tfexample_utils.create_example(text=text,
-                                               sample_rate=sample_rate,
-                                               audio=audio)]
+        return [tfexample_utils.set_audio(example=example, audio=audio)]

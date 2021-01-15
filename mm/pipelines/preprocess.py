@@ -14,6 +14,8 @@ import argparse
 from pipelines.preprocessing.abstract_preprocess_fn import PreprocessFn
 from pipelines.preprocessing.audio_padding import AudioPadding
 from pipelines.preprocessing.filter_on_length import LengthFilter
+from pipelines.preprocessing.lowercase_text import TextLowerCase
+from pipelines.preprocessing.crop_audio import IdentifySpeechAndCrop
 from pipelines.preprocessing.label_map_labler import Labler
 from tqdm import tqdm
 
@@ -109,7 +111,9 @@ if __name__ == '__main__':
 
     with open(args.label_map_path, "r") as label_map_file:
         doFns = [
-            LengthFilter(max_length=args.maximum_clip_length, min_length=0.0),
+            IdentifySpeechAndCrop(length_of_speech=args.maximum_clip_length),
+            #LengthFilter(max_length=args.maximum_clip_length, min_length=0.0),
+            TextLowerCase(),
             AudioPadding(length=args.maximum_clip_length),
             Labler(label_map=json.load(label_map_file)),
         ]

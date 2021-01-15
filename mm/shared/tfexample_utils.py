@@ -2,20 +2,53 @@ import tensorflow as tf
 from typing import List
 
 
-def get_text(example: tf.train.Example):
+def get_text(example: tf.train.Example) -> str:
     return example.features.feature["text"].bytes_list.value[0].decode("utf-8")
 
 
-def get_audio(example: tf.train.Example):
+def set_text(example: tf.train.Example, text: str) -> tf.train.Example:
+    example.features.feature["text"].bytes_list.value[0] = text.encode("utf-8")
+
+    return example
+
+
+def get_audio(example: tf.train.Example) -> [int]:
     return example.features.feature["audio"].int64_list.value
 
 
-def get_sample_rate(example: tf.train.Example):
+def set_audio(example: tf.train.Example, audio: [int]) -> tf.train.Example:
+    if len(example.features.feature["audio"].int64_list.value) == len(audio):
+        # If they are the same length we can just overwrite
+        example.features.feature["audio"].int64_list.value[:] = audio
+    else:
+        # we first have to delete it then reassign it
+        del example.features.feature["audio"].int64_list.value[:]
+        example.features.feature["audio"].int64_list.value.extend(audio)
+
+    return example
+
+
+def get_sample_rate(example: tf.train.Example) -> int:
     return example.features.feature["sample_rate"].int64_list.value[0]
 
 
-def get_label(example: tf.train.Example):
+def set_sample_rate(example: tf.train.Example, sample_rate: int) -> tf.train.Example:
+    example.features.feature["sample_rate"].int64_list.value[0] = sample_rate
+
+    return example
+
+
+def get_label(example: tf.train.Example) -> int:
     return example.features.feature["label"].int64_list.value[0]
+
+
+def set_label(example: tf.train.Example, label: int) -> tf.train.Example:
+    if "label" in example.features.feature:
+        example.features.feature["label"].int64_list.value[0] = label
+    else:
+        example.features.feature["label"].int64_list.value.append(label)
+
+    return example
 
 
 def bytes_feature(value):
@@ -37,7 +70,6 @@ def create_example(
         audio: List[int],
         sample_rate: int,
         label: int = None) -> tf.train.Example:
-
     if label is not None:
         features = tf.train.Features(
             feature=dict(audio=int64list_feature(audio),

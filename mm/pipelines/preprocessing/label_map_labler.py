@@ -11,15 +11,11 @@ class Labler(PreprocessFn):
 
     def do(self, example: tf.train.Example) -> List[tf.train.Example]:
         text = tfexample_utils.get_text(example)
-        sample_rate = tfexample_utils.get_sample_rate(example)
-        audio = tfexample_utils.get_audio(example)
 
         if text in self.label_map:
             label = self.label_map[text]
         else:
             label = self.label_map["[UNK]"]
 
-        return [tfexample_utils.create_example(text=text,
-                                               sample_rate=sample_rate,
-                                               audio=audio,
-                                               label=label)]
+        return [tfexample_utils.set_label(example=example,
+                                          label=label)]
