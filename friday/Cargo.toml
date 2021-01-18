@@ -12,8 +12,10 @@ friday-discovery = { path = "friday-discovery" }
 friday-logging = { path = "friday-logging" }
 friday-audio = { path = "friday-audio" }
 friday-vad = { path = "friday-vad" }
+
 friday-vendor = { path = "friday-vendor" }
-philips-hue = { path = "friday-vendor/philips-hue" }
+vendor-philips-hue = { path = "friday-vendor/vendor-philips-hue" }
+
 friday-inference = { path = "friday-inference" }
 tensorflow-models = { path = "friday-inference/tensorflow-models" }
 ctrlc = "3.1.7"

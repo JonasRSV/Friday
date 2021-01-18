@@ -127,8 +127,9 @@ impl KartaSite {
 
                         return Ok(());
                     } else {
-                        return frierr!("Received status {} when sending IP using KartaSite", 
-                            response.status());
+                        return frierr!("Received status {} when sending IP to {} using 'KartaSite'", 
+                            response.status(),
+                            self.config.site_url.as_str());
                     }
                 }
             }

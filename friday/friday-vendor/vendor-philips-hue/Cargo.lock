@@ -424,22 +424,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
 
 [[package]]
-name = "philips-hue"
-version = "0.1.0"
-dependencies = [
- "friday-error",
- "friday-logging",
- "friday-storage",
- "friday-vendor",
- "friday-web",
- "huelib",
- "serde",
- "serde_derive",
- "serde_json",
- "ureq",
-]
-
-[[package]]
 name = "proc-macro-hack"
 version = "0.5.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -867,6 +851,22 @@ dependencies = [
  "idna 0.2.0",
  "matches",
  "percent-encoding 2.1.0",
+]
+
+[[package]]
+name = "vendor-philips-hue"
+version = "0.1.0"
+dependencies = [
+ "friday-error",
+ "friday-logging",
+ "friday-storage",
+ "friday-vendor",
+ "friday-web",
+ "huelib",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "ureq",
 ]
 
 [[package]]

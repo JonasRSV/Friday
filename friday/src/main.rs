@@ -4,7 +4,7 @@ use friday_vendor;
 use friday_vendor::DispatchResponse;
 use friday_vendor::Vendor;
 
-use philips_hue;
+use vendor_philips_hue;
 
 use friday_audio;
 use friday_audio::recorder::Recorder;
@@ -38,7 +38,7 @@ fn main() {
     let discovery = friday_discovery::discovery::Discovery::new(port)
         .expect("Failed to create discovery");
 
-    let hue_vendor = philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
+    let hue_vendor = vendor_philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
 
     // Tensorflow model that identifies the keyword present in speech
     let mut model = tensorflow_models::discriminative::Discriminative::new()
@@ -56,7 +56,7 @@ fn main() {
         // Webserver for philips_hue vendor to control lights and light actions 
         Arc::new(
             Mutex::new(
-                philips_hue::webvendor::WebHue::new(&hue_vendor)
+                vendor_philips_hue::webvendor::WebHue::new(&hue_vendor)
             )
         ),
 
@@ -66,8 +66,8 @@ fn main() {
             )
         )
 
-        ]
-    ).expect("Failed to register vendors");
+            ]
+            ).expect("Failed to register vendors");
 
 
     let recording_config = friday_audio::RecordingConfig {

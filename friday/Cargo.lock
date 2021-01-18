@@ -683,8 +683,8 @@ dependencies = [
  "friday-vad",
  "friday-vendor",
  "friday-web",
- "philips-hue",
  "tensorflow-models",
+ "vendor-philips-hue",
 ]
 
 [[package]]
@@ -1246,21 +1246,6 @@ name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
-
-[[package]]
-name = "philips-hue"
-version = "0.1.0"
-dependencies = [
- "friday-error",
- "friday-logging",
- "friday-storage",
- "friday-vendor",
- "friday-web",
- "huelib",
- "serde",
- "serde_derive",
- "serde_json",
-]
 
 [[package]]
 name = "pin-project-lite"
@@ -2081,6 +2066,21 @@ name = "vec_map"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
+
+[[package]]
+name = "vendor-philips-hue"
+version = "0.1.0"
+dependencies = [
+ "friday-error",
+ "friday-logging",
+ "friday-storage",
+ "friday-vendor",
+ "friday-web",
+ "huelib",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
 
 [[package]]
 name = "version_check"
