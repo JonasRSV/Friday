@@ -5,11 +5,7 @@ use crate::RecordingConfig;
 
 pub struct ALSAIStream;
 
-impl Recorder for ALSAIStream {
-    fn read(&self) -> Option<Vec<i16>> {
-        todo!()
-    }
-
+impl ALSAIStream {
     fn record(_conf: &RecordingConfig) -> Result<Box<Self>, FridayError> {
         // This was mostly used to debug CPAL, since CPAL uses ALSA internally
         // but one day maybe ill just use alsa directly for some reason
@@ -36,6 +32,17 @@ impl Recorder for ALSAIStream {
         }
 
         todo!()
+    }
+}
+
+impl Recorder for ALSAIStream {
+    fn read(&self) -> Option<Vec<i16>> {
+        todo!()
+    }
+
+
+    fn sample_rate(&self) -> u32 {
+        8000
     }
 }
 

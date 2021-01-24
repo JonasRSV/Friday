@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "wow": "./test-resources/scripts/hello_world.sh"
+  }
+}

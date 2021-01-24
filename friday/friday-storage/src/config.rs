@@ -7,7 +7,7 @@ use friday_error::FridayError;
 use std::path::PathBuf;
 use std::fs;
 
-fn get_config_directory() -> Result<PathBuf, FridayError> {
+pub fn get_config_directory() -> Result<PathBuf, FridayError> {
     return env::var("FRIDAY_CONFIG").map_or_else(
         |_| frierr!("The environment variable FRIDAY_CONFIG needs to point \
                 to a configuration directory. \nPlease set the FRIDAY_CONFIG environment variable.\

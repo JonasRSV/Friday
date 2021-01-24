@@ -12,12 +12,6 @@ use std::thread;
 use std::time;
 
 
-pub struct CPALIStream {
-    config: RecordingConfig,
-    _stream: cpal::Stream,
-    buffer: Arc<Mutex<CircularQueue<i16>>>
-
-}
 
 fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>) 
     where T: cpal::Sample {
@@ -44,14 +38,14 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>)
 
 fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError> {
     //for host in cpal::available_hosts().iter() {
-        //friday_logging::info!("Found Host {}", host.name());
+    //friday_logging::info!("Found Host {}", host.name());
     //}
     //for device in cpal::default_host().input_devices().unwrap() {
-        //friday_logging::info!("Found {}", device.name().unwrap());
+    //friday_logging::info!("Found {}", device.name().unwrap());
     //}
 
     //for device in cpal::default_host().devices().unwrap() {
-        //friday_logging::info!("Found device {}", device.name().unwrap());
+    //friday_logging::info!("Found device {}", device.name().unwrap());
     //}
     // TODO: Make a smart choice of device here
     // For some platforms the default device is not a good choice
@@ -68,29 +62,21 @@ fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError
 
 }
 
-impl Recorder for CPALIStream {
-    fn read(&self) -> Option<Vec<i16>> {
-        return match self.buffer.lock() {
-            Ok(guard) => {
-                let mut data: Vec<i16> = Vec::with_capacity(self.config.model_frame_size);
-                data.extend(guard.asc_iter());
-                data.resize(self.config.model_frame_size, 0);
-                return Some(data);
-            }
-            Err(err) => {
-                friday_logging::fatal!("Failed to aquire lock for reading audio data -
-                    Reason: {}", err);
+pub struct CPALIStream {
+    config: RecordingConfig,
+    _stream: cpal::Stream,
+    buffer: Arc<Mutex<CircularQueue<i16>>>
 
-                // To not spam the living #!#! out of the audio device mutex if we get a poison
-                // error
-                thread::sleep(time::Duration::from_secs(1));
+}
 
-                None
-            }
-        }
-    }
+// TODO(jonasrsv) Why does CPAL flag recording as not thread safe?
+// If things break, this is likely a culprit
+// It should be threadsafe though since we're using sync primitives for our audio buffer
+unsafe impl Send for CPALIStream { }
 
-    fn record(conf: &RecordingConfig) -> Result<Box<CPALIStream>, FridayError> {
+impl CPALIStream {
+
+    pub fn record(conf: &RecordingConfig) -> Result<Arc<Mutex<CPALIStream>>, FridayError> {
         return get_recording_device(conf)
             .map_or_else(
                 propagate!("Could not setup any recording device..."),
@@ -128,14 +114,42 @@ impl Recorder for CPALIStream {
                             .map_or_else(
                                 |err| frierr!("Recording Failed {}", err),
                                 |_| {
-                                    Ok(Box::new(CPALIStream{
+                                    Ok(Arc::new(Mutex::new(CPALIStream{
                                         config: conf.clone(),
                                         _stream: stream,
-                                        buffer: read_buffer}))
+                                        buffer: read_buffer})))
                                 })
 
                     });
                 });
+    }
+}
+
+impl Recorder for CPALIStream {
+    fn read(&self) -> Option<Vec<i16>> {
+        return match self.buffer.lock() {
+            Ok(guard) => {
+                let mut data: Vec<i16> = Vec::with_capacity(self.config.model_frame_size);
+                data.extend(guard.asc_iter());
+                data.resize(self.config.model_frame_size, 0);
+                return Some(data);
+            }
+            Err(err) => {
+                friday_logging::fatal!("Failed to aquire lock for reading audio data -
+                    Reason: {}", err);
+
+                // To not spam the living #!#! out of the audio device mutex if we get a poison
+                // error
+                thread::sleep(time::Duration::from_secs(1));
+
+                None
+            }
+        }
+    }
+
+
+    fn sample_rate(&self) -> u32 {
+        self.config.sample_rate
     }
 }
 
@@ -158,14 +172,14 @@ mod tests {
 
 
         std::thread::sleep(std::time::Duration::from_secs(1));
-        match istream.read() {
+        match istream.clone().lock().unwrap().read() {
             Some(v) => friday_logging::info!("{:?}", v[0..1000].iter()),
             _ => friday_logging::info!("Failed to read")
         }
 
         std::thread::sleep(std::time::Duration::from_secs(2));
 
-        match istream.read() {
+        match istream.clone().lock().unwrap().read() {
             Some(v) => friday_logging::info!("{:?}", v[0..1000].iter()),
             _ => friday_logging::info!("Failed to read")
         }
@@ -187,7 +201,7 @@ mod tests {
 
         for _ in 0..50 {
             std::thread::sleep(std::time::Duration::from_millis(250));
-            match istream.read() {
+            match istream.lock().unwrap().read() {
                 Some(_) => friday_logging::info!("Read Ok!"),
                 _ => friday_logging::info!("Failed to read")
             }
@@ -209,7 +223,7 @@ mod tests {
 
         for index in 0..8 {
             std::thread::sleep(std::time::Duration::from_millis(2000));
-            match istream.read() {
+            match istream.lock().unwrap().read() {
                 Some(data) => {
                     friday_logging::info!("Read Ok!");
                     let out = File::create(

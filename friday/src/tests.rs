@@ -33,7 +33,7 @@ mod tests {
 
         let mut server = Server::new().expect("Failed to create webserver");
 
-        let hue_vendor = philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
+        let hue_vendor = vendor_philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
         let model = tensorflow_models::discriminative::Discriminative::new()
             .expect("Failed to load model");
         let discovery = friday_discovery::discovery::Discovery::new(8000)
@@ -51,7 +51,7 @@ mod tests {
             // Webserver for philips_hue vendor to control lights and light actions 
             Arc::new(
                 Mutex::new(
-                    philips_hue::webvendor::WebHue::new(&hue_vendor)
+                    vendor_philips_hue::webvendor::WebHue::new(&hue_vendor)
                 )
             ),
 

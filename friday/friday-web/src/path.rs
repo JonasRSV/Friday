@@ -63,6 +63,7 @@ impl Path {
         }
     }
 
+    /// Checks if two paths point to the same resource
     pub fn overlap(a: &Path, b: &Path) -> bool {
         // This functions check if two paths overlap
         // if paths use no special syntax this is the same as equivalence
@@ -91,6 +92,9 @@ impl Path {
     }
 }
 
+/// Return a path relative to some base e.g
+/// "/static/some_path/some_file.ext" with base "static" returns
+/// "/some_path/some_file.ext"
 pub fn rel_from<S: AsRef<str>>(path: S, base: S) -> Option<String> {
     return Path::new(path).map_or_else(
         |_| None,

@@ -60,6 +60,7 @@ impl Scripts {
     /// Executes 'script' this blocks until exit
     /// Throws an error if the program has a non-zero exit code
     fn execute(&self, script: String) -> Result<DispatchResponse, FridayError> {
+        friday_logging::info!("Executing {}", script);
         process::Command::new(script.clone()).output().map_or_else(
             |err| frierr!("Failed to execute {} - Reason: {}", script, err), 
             |output| {

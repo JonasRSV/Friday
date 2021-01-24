@@ -192,7 +192,7 @@ impl Server {
             // the client to finish its request - by having this
             // we let anyone on the network query the assistant from whatever
             // TODO: maybe it is a security problem?
-            // it is very convenient when developing UIs to that is why we have it.
+            // it is very convenient to have this when developing UIs.
             tiny_http::Method::Options => Server::handle_allow_all_origins(r),
             _ => match self_reference.lookup(&r) {
                 Ok(locked_vendor) => 
@@ -239,40 +239,40 @@ impl Server {
                             Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
                             Err(err) => friday_logging::warning!("Failed to send empty response - Reason: {}", err)
                         },
-                        Response::JSON{status, content} => 
-                            tiny_http::Header::from_str("Content-Type:  application/json").map_or_else(
-                                |_| friday_logging::warning!(
-                                    "Failed to send json response because header construction failed"),
-                                    |header| 
-                                    match r.respond(tiny_http::Response::from_string(content)
-                                        .with_status_code(status)
-                                        .with_header(header)) {
-                                        Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
-                                        Err(err) => friday_logging::warning!(
-                                            "Failed to send json response - Reason: {}", err)
-                                    }),
-                                    Response::TEXT{status, content} => 
-                                        match r.respond(tiny_http::Response::from_string(content)
-                                            .with_status_code(status)) {
-                                            Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
-                                            Err(err) => friday_logging::warning!(
-                                                "Failed to send text response - Reason: {}", err)
-                                        },
-                                        Response::FILE{status, file, content_type} => 
-                                            tiny_http::Header::from_str(format!("Content-Type: {}", content_type).as_str()
-                                            ).map_or_else(
-                                            |_| friday_logging::warning!(
-                                                "Failed to send file response because header construction failed"),
-                                                |header| 
-                                                match r.respond(tiny_http::Response::from_file(file)
-                                                    .with_status_code(status)
-                                                    .with_header(header)) {
-                                                    Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
-                                                    Err(err) => friday_logging::warning!(
-                                                        "Failed to send file response - Reason: {}", err)
-                                                }
+                    Response::JSON{status, content} => 
+                        tiny_http::Header::from_str("Content-Type:  application/json").map_or_else(
+                            |_| friday_logging::warning!(
+                                "Failed to send json response because header construction failed"),
+                                |header| 
+                                match r.respond(tiny_http::Response::from_string(content)
+                                    .with_status_code(status)
+                                    .with_header(header)) {
+                                    Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                                    Err(err) => friday_logging::warning!(
+                                        "Failed to send json response - Reason: {}", err)
+                                }),
+                    Response::TEXT{status, content} => 
+                        match r.respond(tiny_http::Response::from_string(content)
+                            .with_status_code(status)) {
+                            Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                            Err(err) => friday_logging::warning!(
+                                "Failed to send text response - Reason: {}", err)
+                        },
+                    Response::FILE{status, file, content_type} => 
+                        tiny_http::Header::from_str(format!("Content-Type: {}", content_type).as_str()
+                        ).map_or_else(
+                        |_| friday_logging::warning!(
+                            "Failed to send file response because header construction failed"),
+                            |header| 
+                            match r.respond(tiny_http::Response::from_file(file)
+                                .with_status_code(status)
+                                .with_header(header)) {
+                                Ok(_) => friday_logging::info!("{} {} {} {}", status, method, address, url),
+                                Err(err) => friday_logging::warning!(
+                                    "Failed to send file response - Reason: {}", err)
+                            }
 
-                                            )
+                        )
                 }
             }, 
             Err(err) => {

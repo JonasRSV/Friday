@@ -12,10 +12,21 @@ friday-discovery = { path = "friday-discovery" }
 friday-logging = { path = "friday-logging" }
 friday-audio = { path = "friday-audio" }
 friday-vad = { path = "friday-vad" }
+friday-error = { path = "friday-error" }
+friday-storage= { path = "friday-storage" }
 
 friday-vendor = { path = "friday-vendor" }
 vendor-philips-hue = { path = "friday-vendor/vendor-philips-hue" }
+vendor-scripts = { path = "friday-vendor/vendor-scripts" }
 
 friday-inference = { path = "friday-inference" }
 tensorflow-models = { path = "friday-inference/tensorflow-models" }
 ctrlc = "3.1.7"
+serde_json = "1.0"
+serde = "1.0"
+serde_derive = "1.0"
+rand = "0.5"
+
+# Used for testing web endpoint
+[dev-dependencies]
+ureq = { version = "1.5.4", features = ["json", "charset"] }
