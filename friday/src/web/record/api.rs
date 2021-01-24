@@ -103,34 +103,52 @@ impl WebRecord {
                                     id: file_name
                                 })
                         }
-                    }
+                }
             }
         }
     }
 
     /// Return audio file corresponding to the ID
     fn listen(&self, req: core::ListenRequest) -> Result<friday_web::core::Response, FridayError> {
-        todo!()
+        match self.files.get_file(req.id) {
+            Err(err) => propagate!("Failed to get file for listening")(err),
+            Ok(file) => Ok( friday_web::core::Response::FILE 
+                { 
+                    status: 200, 
+                    file,  
+                    content_type: "audio/wav".to_owned()
+                })
+        }
     }
 
     /// Remove the audio file corresponding to the ID
     fn remove(&self, req: core::RemoveRequest) -> Result<friday_web::core::Response, FridayError> {
-        todo!()
+        match self.files.remove_file(req.id) {
+            Err(err) => propagate!("Failed to remove recording")(err),
+            Ok(_) => friday_web::ok!("Successfully removed file")
+        }
     }
 
     /// Rename the audio file corresponding to the ID
     fn rename(&self, req: core::RenameRequest) -> Result<friday_web::core::Response, FridayError> {
-        todo!()
+        match self.files.rename(req.old_id, req.new_id) {
+            Err(err) => propagate!("Failed to rename recording")(err),
+            Ok(_) => friday_web::ok!("Successfully renamed file")
+        }        
     }
 
     /// Return IDs of all audio files
     fn clips(&self) -> Result<friday_web::core::Response, FridayError> {
-        todo!()
+        match self.files.list_files_under("") {
+            Err(err) => propagate!("Failed to list clips")(err),
+            Ok(ids) => friday_web::json!(
+                200,
+                &core::ClipsResponse {
+                    ids
+                }
+            )
+        }
     }
-
-
-
-
 }
 
 impl friday_web::vendor::Vendor for WebRecord {

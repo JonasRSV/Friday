@@ -48,6 +48,17 @@ impl Files {
         }
     }
 
+    /// Opens and returns handle to a file read-only file
+    pub fn get_file<S: AsRef<str>>(&self, name: S) -> Result<File, FridayError> {
+        let mut file_path = self.root.clone();
+        file_path.push(name.as_ref());
+
+        match File::open(file_path.clone()) {
+            Err(err) => frierr!("Failed to open file {:?}, Reason: {:?}", file_path, err),
+            Ok(handle) => Ok(handle)
+        }
+    }
+
     /// Tries to rename the node identified by 'old_name' to 'new_name'
     pub fn rename<S: AsRef<str>>(&self, old_name: S, new_name: S) -> Result<(), FridayError> {
         let mut old_path = self.root.clone();

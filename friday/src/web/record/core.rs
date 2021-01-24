@@ -22,6 +22,11 @@ pub struct RenameRequest {
     pub new_id: String
 }
 
+#[derive(Serialize, Debug, Deserialize)]
+pub struct ClipsResponse {
+    pub ids: Vec<String>
+}
+
 pub fn random_file_id() -> String {
     let mut rng = rand::thread_rng();
 
