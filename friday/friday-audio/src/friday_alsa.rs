@@ -6,7 +6,7 @@ use crate::RecordingConfig;
 pub struct ALSAIStream;
 
 impl ALSAIStream {
-    fn record(_conf: &RecordingConfig) -> Result<Box<Self>, FridayError> {
+    pub fn record(_conf: &RecordingConfig) -> Result<Box<Self>, FridayError> {
         // This was mostly used to debug CPAL, since CPAL uses ALSA internally
         // but one day maybe ill just use alsa directly for some reason
         // so ill leave the code here
