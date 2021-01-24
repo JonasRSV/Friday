@@ -87,7 +87,7 @@ impl WebRecord {
             Ok(istream) => {
                 friday_logging::info!("Recording...");
                 // Sleep for 1.8 seconds to let the buffer fill
-                std::thread::sleep(std::time::Duration::from_millis(18000));
+                std::thread::sleep(std::time::Duration::from_millis(2000));
                 // Then we read the buffer store to file
                 match istream.read() {
                     None => frierr!("Failed to read audio stream"),
@@ -230,9 +230,6 @@ mod tests {
         println!("{:?}", response_data);
 
         web_record_vendor.lock().unwrap().files.remove_file(response_data.id).expect("Failed to remove file");
-
-        // Means login success! :)
-        //assert_eq!(resp.status(), 200);
 
         handle.stop();
     }
