@@ -39,6 +39,16 @@ mod tests {
         let discovery = friday_discovery::discovery::Discovery::new(8000)
             .expect("Failed to create discovery");
 
+        let recording_config = friday_audio::RecordingConfig {
+            sample_rate: 8000,
+            model_frame_size: model.expected_frame_size()
+        };
+
+        // Input audio stream, this is shared with the recording web-vendor
+        let istream = 
+            friday_audio::friday_cpal::CPALIStream::record(&recording_config)
+            .expect("Failed to start audio recording");
+
         server.register(
             vec![
             // Webserver for discriminiative model to serve its info
@@ -59,7 +69,16 @@ mod tests {
                 Mutex::new(
                     friday_discovery::webvendor::WebDiscovery::new(&discovery)
                 )
+            ),
+
+            // Webserver for recording and manipulating audio files on the assistant.
+            // Will be used to add keywords through the API.
+            Arc::new(
+                Mutex::new(
+                    web::record::api::WebRecord::new(istream.clone()).expect("Failed to create WebRecord")
+                )
             )
+
 
             ]
         ).expect("Failed to register vendors");
