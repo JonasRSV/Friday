@@ -86,7 +86,8 @@ $: {
 }
 
 .add-icon:hover {
-  cursor: not-allowed;
+  cursor: pointer;
+  opacity: 0.9;
 }
 
 </style>

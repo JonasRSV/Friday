@@ -104,7 +104,7 @@ impl CPALIStream {
                             // To not spam the living #!#! out of the audio device if an error
                             // occurs - e.g someone janks out the audio device from the
                             // computer
-                            thread::sleep(time::Duration::from_secs(1));
+                            thread::sleep(time::Duration::from_secs(10));
 
                         }
                     ).map_or_else(

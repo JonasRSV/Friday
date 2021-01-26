@@ -12,22 +12,32 @@ import {
 } from "./api/HueLights.js";
 
 import {
-  APIGetDeviceName,
-  APISetDeviceName,
+    APIGetDeviceName,
+    APISetDeviceName
 } from "./api/Device";
+
+import {
+    APIRecordingNew,
+    APIRecordingListen,
+    APIRecordingGetClips,
+    APIRecordingRemove,
+    APIRecordingRename
+} from "./api/Recording.js";
 
 
 export class FridayAPI {
     // TODO: how to do this better?
     // For dev
-    //static prefix = "http://0.0.0.0:8000";
+    static prefix = "http://0.0.0.0:8000";
     // For production
-    static prefix = "";
-    
+    //static prefix = "";
+
     static getDeviceName = () => APIGetDeviceName(this.prefix);
     static setDeviceName = (name) => APISetDeviceName(
-      this.prefix, 
-      JSON.stringify({"name": name}));
+        this.prefix,
+        JSON.stringify({
+            "name": name
+        }));
 
     // Gets the keywords of the command e.g 'on' - 'off' etc
     static getKeywords = () => APIGetKeywords(this.prefix);
@@ -54,4 +64,26 @@ export class FridayAPI {
 
         return dactions;
     }
+
+    // Recording API
+    static recordingNew = () => APIRecordingNew(this.prefix);
+    static recordingRemove = (id) => APIRecordingRemove(
+        this.prefix,
+        {
+            "id": id
+        });
+    static recordingRename = (oldId, newId) => APIRecordingRename(
+        this.prefix,
+        {
+            "old_id": oldId,
+            "new_id": newId
+        });
+
+    static recordingClips = () => APIRecordingGetClips(this.prefix);
+    static recordingAudio = (id) => APIRecordingListen(
+        this.prefix,
+        {
+            "id": id
+        });
+
 }

@@ -38,8 +38,8 @@ export let removeAction = dActionClicked => {
   // Syncs with friday
   if (dActionClicked.vendor == Vendor.hueLights) {
     FridayAPI.setHueLightsCommands(dActions);
-  } else if (daction != undefined) {
-    console.log("No vendor implemented for", daction.vendor)
+  } else if (dActionClicked.vendor != undefined) {
+    console.log("No vendor implemented for", dActionClicked.vendor)
   } else { }
 }
 
