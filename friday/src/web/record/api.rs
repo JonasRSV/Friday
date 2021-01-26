@@ -123,6 +123,7 @@ impl WebRecord {
 
     /// Remove the audio file corresponding to the ID
     fn remove(&self, req: core::RemoveRequest) -> Result<friday_web::core::Response, FridayError> {
+        friday_logging::info!("Removing {}", req.id);
         match self.files.remove_file(req.id) {
             Err(err) => propagate!("Failed to remove recording")(err),
             Ok(_) => friday_web::ok!("Successfully removed file")
@@ -206,12 +207,13 @@ impl friday_web::vendor::Vendor for WebRecord {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs::File;  
     use friday_audio;
     use std::env;
     use ureq;
 
     #[test]
-    fn record_via_web() {
+    fn record_new_via_web() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
         env::set_var("FRIDAY_GUI", ".");
 
@@ -228,7 +230,7 @@ mod tests {
         let web_record_vendor = Arc::new(Mutex::new(WebRecord::new(istream).expect("Failed to create 'WebRecord'")));
 
 
-        let mut server = friday_web::server::Server::new().expect("Failed to create web friday server");
+        let mut server = friday_web::server::Server::new().expect("Failed to create friday web server");
         server.register(vec![
             web_record_vendor.clone()
         ]).expect("Failed to register web vendor");
@@ -248,6 +250,149 @@ mod tests {
         println!("{:?}", response_data);
 
         web_record_vendor.lock().unwrap().files.remove_file(response_data.id).expect("Failed to remove file");
+
+        handle.stop();
+    }
+
+    #[test]
+    fn record_remove_via_web() {
+        env::set_var("FRIDAY_CONFIG", "./test-resources");
+        env::set_var("FRIDAY_GUI", ".");
+
+        let r = friday_audio::RecordingConfig {
+            sample_rate: 8000,
+            model_frame_size: 16000
+        };
+
+
+        let istream = 
+            friday_audio::friday_cpal::CPALIStream::record(&r)
+            .expect("Failed to start audio recording");
+
+        let web_record_vendor = Arc::new(
+            Mutex::new(
+                WebRecord::new(istream).expect("Failed to create 'WebRecord'")
+                )
+            );
+
+        let mut server = friday_web::server::Server::new().expect("Failed to create friday web server");
+        server.register(vec![
+            web_record_vendor.clone()
+        ]).expect("Failed to register web vendor");
+
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
+
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+
+        File::create("./test-resources/recordings/tmp_file").expect("Failed to create file");
+        assert!(web_record_vendor.lock().unwrap().files.exists("tmp_file"));
+
+        let resp = ureq::put("http://0.0.0.0:8000/record/remove")
+            .send_json(serde_json::to_value(core::RemoveRequest {
+                id: "tmp_file".to_owned()
+            }).expect("Failed to serialize state"));
+
+        assert!(resp.status() == 200);
+
+        handle.stop();
+    }
+
+    #[test]
+    fn record_rename_via_web() {
+        env::set_var("FRIDAY_CONFIG", "./test-resources");
+        env::set_var("FRIDAY_GUI", ".");
+
+        let r = friday_audio::RecordingConfig {
+            sample_rate: 8000,
+            model_frame_size: 16000
+        };
+
+
+        let istream = 
+            friday_audio::friday_cpal::CPALIStream::record(&r)
+            .expect("Failed to start audio recording");
+
+        let web_record_vendor = Arc::new(
+            Mutex::new(
+                WebRecord::new(istream).expect("Failed to create 'WebRecord'")
+                )
+            );
+
+        let mut server = friday_web::server::Server::new().expect("Failed to create friday web server");
+        server.register(vec![
+            web_record_vendor.clone()
+        ]).expect("Failed to register web vendor");
+
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
+
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+
+        File::create("./test-resources/recordings/tmp_file").expect("Failed to create file");
+        assert!(web_record_vendor.lock().unwrap().files.exists("tmp_file"));
+
+        let resp = ureq::put("http://0.0.0.0:8000/record/rename")
+            .send_json(serde_json::to_value(core::RenameRequest {
+                old_id: "tmp_file".to_owned(),
+                new_id: "new_tmp_file".to_owned()
+            }).expect("Failed to serialize state"));
+
+        assert!(resp.status() == 200);
+
+        assert!(web_record_vendor.lock().unwrap().files.exists("new_tmp_file"));
+        assert!(!web_record_vendor.lock().unwrap().files.exists("tmp_file"));
+
+        let resp = ureq::put("http://0.0.0.0:8000/record/remove")
+            .send_json(serde_json::to_value(core::RemoveRequest {
+                id: "new_tmp_file".to_owned()
+            }).expect("failed to serialize state"));
+
+        assert!(resp.status() == 200);
+
+        handle.stop();
+    }
+
+    #[test]
+    fn record_clips_via_web() {
+        env::set_var("FRIDAY_CONFIG", "./test-resources");
+        env::set_var("FRIDAY_GUI", ".");
+
+        let r = friday_audio::RecordingConfig {
+            sample_rate: 8000,
+            model_frame_size: 16000
+        };
+
+
+        let istream = 
+            friday_audio::friday_cpal::CPALIStream::record(&r)
+            .expect("Failed to start audio recording");
+
+        let web_record_vendor = Arc::new(
+            Mutex::new(
+                WebRecord::new(istream).expect("Failed to create 'WebRecord'")
+                )
+            );
+
+
+        let mut server = friday_web::server::Server::new().expect("Failed to create friday web server");
+        server.register(vec![
+            web_record_vendor.clone()
+        ]).expect("Failed to register web vendor");
+
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
+
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+
+        let resp = ureq::get("http://0.0.0.0:8000/record/clips").call();
+
+        assert!(resp.status() == 200);
+
+        let response_data : core::ClipsResponse = 
+            resp.into_json_deserialize::<core::ClipsResponse>()
+            .expect("Failed to parse json response");
+
+        println!("{:?}", response_data);
+
+        assert_eq!(response_data.ids, vec!["test.wav", "test_2.wav"]);
 
         handle.stop();
     }

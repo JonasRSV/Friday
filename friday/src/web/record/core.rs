@@ -6,17 +6,17 @@ pub struct RecordResponse {
     pub id: String
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Serialize)]
 pub struct ListenRequest {
     pub id: String
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Serialize)]
 pub struct RemoveRequest {
     pub id: String
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Serialize)]
 pub struct RenameRequest {
     pub old_id: String, 
     pub new_id: String
