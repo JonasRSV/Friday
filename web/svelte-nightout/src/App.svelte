@@ -1,7 +1,7 @@
 <script>
 import Action from "./Action.svelte";
 import Mechanic from "./Mechanic.svelte";
-import Factory from "./Factory.svelte";
+import ActionAdd from "./action/ActionAdd.svelte";
 import Header from "./Header.svelte";
 import { dAction, Vendor } from './Core';
 import { Spinner } from 'sveltestrap';
@@ -94,8 +94,7 @@ onMount (async () => {
     {#each dActions as action (action.id)}
       <Action action={action} 
               bind:this={action.component}
-              onKeywordClick={showMechanic}
-              onCommandClick={showMechanic}
+              openMechanic={showMechanic}
               onRemoveClick={removeAction}
               />
     {/each}
@@ -105,7 +104,7 @@ onMount (async () => {
     </div>
   {/if}
 
-  <Factory bind:active={displayActions} onAddClick={addAction}/>
+  <ActionAdd bind:active={displayActions} onAddClick={addAction}/>
   <Mechanic sync={syncFriday} daction={dActionAtMech} bind:active={displayMechanic} />
 </main>
 

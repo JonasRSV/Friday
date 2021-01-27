@@ -1,7 +1,7 @@
 
 <script>
 import { Row, Col } from 'sveltestrap';
-import NameInputBanner from "./NameInputBanner.svelte"
+import WaveBanner from "./../../banners/WaveBanner.svelte"
 import { onMount } from "svelte";
 
 export let name;
@@ -39,7 +39,7 @@ onMount (() => {
 
 
 <div class="inputBanner" on:click={bannerClick}>
-<NameInputBanner>
+<WaveBanner>
   <Row class="text-center"> 
     <Col xs=12 sm=12 md=12 lg=12>
       <div class="title">
@@ -52,7 +52,7 @@ onMount (() => {
       <input id="name-input" lass="name-input" type="text" on:keyup={keyClicked}> 
     </Col>
   </Row>
-</NameInputBanner>
+</WaveBanner>
 </div>
 
 

@@ -1,7 +1,8 @@
 
 <script>
 import { Container, Row, Col } from 'sveltestrap';
-import RecordingBanner from "./RecordingBanner.svelte"
+import WaveBanner from "./../../banners/WaveBanner.svelte"
+import GreenWaveBanner from "./../../banners/GreenWaveBanner.svelte"
 import FaTrash from 'svelte-icons/fa/FaTrash.svelte'
 import FaPencilAlt from 'svelte-icons/fa/FaPencilAlt.svelte'
 import FaPlay from 'svelte-icons/fa/FaPlay.svelte'
@@ -71,7 +72,7 @@ let localClick = (handler) => (e) => {
 
 
 {#if selecting}
-<RecordingBanner>
+<WaveBanner>
   <Row> 
     <Col xs=3 sm=3 md=3 lg=3 >
       <div class="icon-onclick red" on:click={localClick(() => onRemoveClick())}>
@@ -100,16 +101,18 @@ let localClick = (handler) => (e) => {
     {/if}
     </Col>
   </Row>
-</RecordingBanner>
+</WaveBanner>
 {:else}
 <div class="activate-selection" on:click={activateSelection}>
-<RecordingBanner>
   {#if selected}
-    <div class="id-text green">{id}</div> 
+    <GreenWaveBanner>
+      <div class="id-text">{id}</div> 
+    </GreenWaveBanner>
   {:else}
-    <div class="id-text">{id}</div> 
+    <WaveBanner>
+      <div class="id-text">{id}</div> 
+    </WaveBanner>
   {/if}
-</RecordingBanner>
 </div>
 {/if}
 

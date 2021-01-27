@@ -5,6 +5,8 @@
 import {Col, Container, Row, Card} from 'sveltestrap';
 import { FridayAPI } from "./../../FridayAPI.js"
 import { Vendor } from "./../../Core.js"
+import CogsBanner from "./../../banners/CogsBanner.svelte"
+import GreenCogsBanner from "./../../banners/GreenCogsBanner.svelte"
 
 // This function syncs a daction to friday
 export let sync;
@@ -15,7 +17,6 @@ export let daction;
 export let lights = [];
 export let states = []
 
-// Everything in this block is called on a change of our variables
 
 let makeIntoHueAction = (localDAction) => {
     if (localDAction.vendor !== Vendor.hueLights) {
@@ -27,6 +28,7 @@ let makeIntoHueAction = (localDAction) => {
     }
 }
 
+// Everything in this block is called on a change of our variables
 $: {
   console.log("Re-rendered")
   if (daction != null) {
@@ -135,23 +137,35 @@ let updateLightState = (e, state) => {
   width: 100%;
 }
 
-.on-click:hover {
-  cursor: pointer;
-  opacity: 0.9;
-}
-
-.light {
-  width: 100%;
-  overflow: hidden;
-}
-
 .empty-space {
   height: 10px;
 }
 
-.horizontal-space {
-  width: 10px;
+
+.block {
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
 }
+
+.block-name {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.opacity-hover {
+  width: 100%;
+  height: 100%;
+}
+
+.opacity-hover:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
 
 </style>
 
@@ -162,17 +176,19 @@ let updateLightState = (e, state) => {
         <Row class="text-center">
 
           {#if light.active}
-            <div class="full-width" on:click={(e) => e.stopPropagation()}>
-                <Card color="primary">
-                <div class="light card-header" {...light.props}> {light.name} </div>
-                </Card>
+            <GreenCogsBanner>
+              <div class="block full-width" on:click={(e) => e.stopPropagation()}>
+                <div class="block-name"> {light.name} </div>
               </div>
+            </GreenCogsBanner>
           {:else}
-              <div class="on-click full-width"  on:click={(e) => updateLightID(e, light)}>
-                <Card color="dark">
-                <div  class="light card-header" {...light.props}> {light.name} </div>
-                </Card>
-              </div>
+            <div class="opacity-hover">
+              <CogsBanner>
+                <div class="block full-width"  on:click={(e) => updateLightID(e, light)}>
+                  <div class="block-name"> {light.name} </div>
+                </div>
+              </CogsBanner>
+            </div>
           {/if}
           </Row>
           <div class="empty-space"></div>
@@ -185,17 +201,19 @@ let updateLightState = (e, state) => {
         <Row class="text-center">
 
           {#if state.active}
-            <div class="full-width" on:click={(e) => e.stopPropagation()}>
-                <Card color="primary" class="ml-4">
-                <div class="light card-header" {...state.props}> {state.name} </div>
-                </Card>
+            <GreenCogsBanner>
+              <div class="block full-width" on:click={(e) => e.stopPropagation()}>
+                <div class="block-name"> {state.name} </div>
               </div>
+            </GreenCogsBanner>
           {:else}
-              <div class="on-click full-width "  on:click={(e) => updateLightState(e, state)}>
-                <Card color="dark" class="ml-4">
-                <div  class="light card-header" {...state.props}> {state.name} </div>
-                </Card>
-              </div>
+            <div class="opacity-hover">
+              <CogsBanner>
+                <div class="block full-width "  on:click={(e) => updateLightState(e, state)}>
+                  <div class="block-name"> {state.name} </div>
+                </div>
+              </CogsBanner>
+            </div>
           {/if}
           </Row>
           <div class="empty-space"></div>

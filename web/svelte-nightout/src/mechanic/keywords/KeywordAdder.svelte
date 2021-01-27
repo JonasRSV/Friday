@@ -3,7 +3,7 @@
 import { Container, Row, Col } from 'sveltestrap';
 import Recording from './Recording.svelte';
 import NameInput from './NameInput.svelte';
-import MicrophoneBanner from './MicrophoneBanner.svelte';
+import WaveBanner from "./../../banners/WaveBanner.svelte"
 import IoMdMicrophone from 'svelte-icons/io/IoMdMicrophone.svelte'
 import { FridayAPI } from "./../../FridayAPI.js"
 import { playAudio } from "./../../core/Audio";
@@ -122,12 +122,16 @@ onMount (async () => {
 
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: scroll;
 }
 
-.mic-separator {
+.top-separator {
    height: 100px;
+}
+
+.separator {
+   height: 30px;
 }
 
 .mic-icon {
@@ -143,46 +147,63 @@ onMount (async () => {
 
 
 <div class="keyword-adder-keypress-capture" on:click={captureIfSelecting}>
-<Container fluid class="keyword-adder">
-  <Row> 
-      <Col xs=6 sm=6 md=6 lg=6>
-      {#each recordingsIDs as recording }
-        <Recording id={recording.id} 
-                   onRemoveClick={() => onRemoveClick(recording)}
-                   onSelectClick={() => onSelectClick(recording)}
-                   onPlayClick={() => onPlayClick(recording)}
-                   onRename={(newId) => onRename(recording, newId)}
-                   bind:selecting={recording.selecting}
-                   bind:selected={recording.selected}
-                   />
-        <div class="empty-space"></div>
-      {/each}
-      </Col >
-      <Col xs=6 sm=6 md=6 lg=6>
-      <NameInput 
-        onComplete={onComplete}
-        bind:name={name}/>
+  <Container fluid>
+    <Row> 
+      <Col xs=12 sm=12 md=12 lg=12>
+        <div class="top-separator"></div>
       </Col>
-  </Row>
-
-  <Row> 
-    <Col xs=12 sm=12 md=12 lg=12>
-      <div class="mic-separator"></div>
-    </Col>
-  </Row>
-  <Row> 
-    <Col xs=4 sm=4 md=4 lg=4/>
-    <Col xs=4 sm=4 md=4 lg=4>
-      <div on:click={onRecordClick}>
-        <MicrophoneBanner>
-          <div class="mic-icon">
-            <IoMdMicrophone/>
-          </div>
-        </MicrophoneBanner>
-      </div>
-    </Col>
-    <Col xs=4 sm=4 md=4 lg=4/>
-  </Row>
-</Container>
+    </Row>
+    <Row>
+      <Col xs=0 sm=3 md=3 lg=3/>
+      <Col xs=12 sm=6 md=6 lg=6>
+        <NameInput 
+          onComplete={onComplete}
+          bind:name={name}/>
+      </Col>
+      <Col xs=0 sm=3 md=3 lg=3/>
+    </Row>
+    <Row> 
+      <Col xs=12 sm=12 md=12 lg=12>
+        <div class="separator"></div>
+      </Col>
+    </Row>
+    <Row>
+      <Col xs=0 sm=3 md=3 lg=3/>
+      <Col xs=12 sm=6 md=6 lg=6>
+        <div on:click={onRecordClick}>
+          <WaveBanner>
+            <div class="mic-icon">
+              <IoMdMicrophone/>
+            </div>
+          </WaveBanner>
+        </div>
+      </Col>
+      <Col xs=0 sm=3 md=3 lg=3/>
+    </Row>
+    <Row> 
+      <Col xs=12 sm=12 md=12 lg=12>
+        <div class="separator"></div>
+      </Col>
+    </Row>
+    <Row> 
+      <Col xs=0 sm=2 md=2 lg=2/>
+      <Col xs=12 sm=8 md=8 lg=8>
+        <div class="keyword-container">
+          {#each recordingsIDs as recording }
+            <Recording id={recording.id} 
+                       onRemoveClick={() => onRemoveClick(recording)}
+                       onSelectClick={() => onSelectClick(recording)}
+                       onPlayClick={() => onPlayClick(recording)}
+                       onRename={(newId) => onRename(recording, newId)}
+                       bind:selecting={recording.selecting}
+                       bind:selected={recording.selected}
+                       />
+            <div class="empty-space"></div>
+          {/each}
+        </div>
+      </Col>
+      <Col xs=0 sm=2 md=2 lg=2/>
+    </Row>
+  </Container>
 </div>
 

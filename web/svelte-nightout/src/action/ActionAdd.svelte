@@ -1,5 +1,5 @@
 <script>
-  import GiNewBorn from 'svelte-icons/gi/GiNewBorn.svelte'
+  import FaRegPlusSquare from 'svelte-icons/fa/FaRegPlusSquare.svelte'
   import {Col, Container, Row} from 'sveltestrap';
 
 
@@ -20,7 +20,7 @@ export let onAddClick;
   .icon {
     width: 60px;
     height: 60px;
-    color: green;
+    color: #8A8A8A;
   }
 
   .icon:hover {
@@ -36,7 +36,7 @@ export let onAddClick;
     <Col xs=12 sm=12 md=12 lg=12 class="text-center"> 
       <div class="horizontal-center">
         <div class="icon" on:click={onAddClick}>
-          <GiNewBorn/>
+          <FaRegPlusSquare/>
         </div>
       </div>
     </Col>

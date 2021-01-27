@@ -1,8 +1,10 @@
 <script>
 // This Component is used to modify Actions
 // It is a Action mechanic!
-import { Container, Row, Card } from 'sveltestrap';
-import FaPlus from 'svelte-icons/fa/FaPlus.svelte'
+import { Container, Row } from 'sveltestrap';
+import FaRegPlusSquare from 'svelte-icons/fa/FaRegPlusSquare.svelte'
+import CogsBanner from "./../banners/CogsBanner.svelte"
+import GreenCogsBanner from "./../banners/GreenCogsBanner.svelte"
 
 // Current active keyword
 export let activeKeyword;
@@ -35,9 +37,6 @@ $: {
       return {
         "name": keyword,
         "active": keyword == activeKeyword,
-        "props": {
-          "class": "card-header keyword"
-        }
       }
   })
 }
@@ -50,16 +49,17 @@ $: {
 
 .full-width {
   width: 100%;
-}
-
-.on-click:hover {
-  cursor: pointer;
-  opacity: 0.9;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 .keyword {
-  width: 100%;
+  height: 50px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column; 
+  justify-content: center;
 }
 
 :global(.container-keywords) {
@@ -71,7 +71,6 @@ $: {
   height: 10px;
 }
 
-
 .horizontal-center {
   display: flex;
   flex-direction: row;
@@ -80,9 +79,9 @@ $: {
 }
 
 .add-icon {
-  width: 30px;
-  height: 30px;
-  color: green;
+  width: 60px;
+  height: 60px;
+  color: #8A8A8A;
 }
 
 .add-icon:hover {
@@ -90,26 +89,35 @@ $: {
   opacity: 0.9;
 }
 
+.opacity-hover:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
 </style>
 
 
 <Container fluid class="container-keywords">
 {#each keywordProperties as keyword }
-  <Row class="text-center"> 
-    {#if keyword.active}
+  {#if keyword.active}
+    <GreenCogsBanner>
+      <Row class="text-center"> 
         <div class="full-width" on:click={onActiveClick}>
-          <Card color="primary">
-          <div class="keyword" {...keyword.props}> {keyword.name} </div>
-          </Card>
+          <div class="keyword active" > {keyword.name} </div>
         </div>
-    {:else}
-        <div class="on-click full-width"  on:click={(e) => onInactiveClick(e, keyword.name)}>
-          <Card color="dark">
-          <div  {...keyword.props}> {keyword.name} </div>
-          </Card>
-        </div>
-    {/if}
-  </Row>
+      </Row>
+    </GreenCogsBanner>
+  {:else}
+    <div class="opacity-hover">
+      <CogsBanner>
+        <Row class="text-center"> 
+          <div class="full-width"  on:click={(e) => onInactiveClick(e, keyword.name)}>
+            <div class="keyword"> {keyword.name} </div>
+          </div>
+        </Row>
+      </CogsBanner>
+    </div>
+  {/if}
 
   <div class="empty-space"></div>
 {/each}
@@ -120,7 +128,7 @@ $: {
 <Row class="text-center"> 
   <div class="horizontal-center">
     <div class="add-icon" on:click={onNewClick}>
-      <FaPlus/> 
+      <FaRegPlusSquare/> 
     </div>
   </div>
 </Row>

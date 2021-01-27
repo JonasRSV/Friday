@@ -27,11 +27,17 @@ let keywordBuilderActive = false;
 
 
 // Function for deactivating the mechanic
-let deactivateMechanic = () => { 
-  control = null;
-  controlActive = false;
-  keywordBuilderActive = false;
-  active = false;
+let deactivateClick = () => { 
+  // We deactivate control if it is active
+  // if control is not active we deactivate whole mechanic
+  if (controlActive) {
+    control = null;
+    controlActive = false;
+  } else {
+    control = null;
+    keywordBuilderActive = false;
+    active = false;
+  }
 }
 
 let deactiveKeywordBuilder = () => {
@@ -99,7 +105,7 @@ FridayAPI.getKeywords().then(kw => keywords = kw);
       <KeywordAdder />
     </div>
   {:else}
-  <div class="fixed-above" on:click={deactivateMechanic} >
+  <div class="fixed-above" on:click={deactivateClick} >
   <Container class=container-xs>
     <Row> 
       <Col xs=4 sm=4 md=4 lg=4>
