@@ -16,32 +16,71 @@ export let active;
 // The current action we're tinkering on
 export let daction;
 
+
+$: {
+  console.log("Activating picker")
+  keywordPickerActive = active;
+}
+
 let keywords = []
 
 let control;
 // If we are to render the control builder
-let controlActive = false;
+let controlBuilderActive = false;
+
+// If we are to render the controlPicker 
+let controlPickerActive = false;
 
 // If we are to render the keyword builder
 let keywordBuilderActive = false;
 
+// If we are to render the keyword picker
+let keywordPickerActive = false;
+
 
 // Function for deactivating the mechanic
-let deactivateClick = () => { 
-  // We deactivate control if it is active
-  // if control is not active we deactivate whole mechanic
-  if (controlActive) {
-    control = null;
-    controlActive = false;
-  } else {
-    control = null;
-    keywordBuilderActive = false;
-    active = false;
-  }
+let deActMechanic = () => { 
+  active = false;
+  controlBuilderActive = false;
+  controlPickerActive = false;
+  keywordBuilderActive = false;
+  keywordPickerActive = false;
 }
 
-let deactiveKeywordBuilder = () => {
+let deActControlBuilder = () => {
+  controlBuilderActive = false;
+  controlPickerActive = true;
+}
+
+let deActControlPicker = () => {
+  controlPickerActive = false;
+  keywordPickerActive = true;
+}
+
+let deActKeywordBuilder = () => {
   keywordBuilderActive = false;
+}
+
+let deActKeywordPicker = () => {
+  keywordPickerActive = false;
+
+  deActMechanic();
+}
+
+let actControlBuilder = () => {
+  controlBuilderActive = true;
+}
+
+let actControlPicker = () => {
+  controlPickerActive = true;
+}
+
+let actKeywordBuilder = () => {
+  keywordBuilderActive = true;
+}
+
+let actKeywordPicker = () => {
+  keywordPickerActive = true;
 }
 
 let updateKeyword = (keyword) => {
@@ -56,16 +95,16 @@ let updateKeyword = (keyword) => {
   sync(daction);
 
   console.log("Updated keyword");
-}
 
-let newKeyword = () => {
-  keywordBuilderActive = true;
+  // Control Picker
+  controlPickerActive = true;
+  keywordPickerActive = false;
 }
 
 let onBannerClick = (controlComponent) => {
   console.log("Clicked banner")
   control = controlComponent;
-  controlActive = true;
+  controlBuilderActive = true;
 }
 
 
@@ -85,7 +124,7 @@ FridayAPI.getKeywords().then(kw => keywords = kw);
   position: fixed;
   width: 100%;
   height: 100%;
-  background-color: rgba(5, 5, 5, 0.9);
+  background-color: rgba(5, 5, 5, 0.97);
   top: 0px;
   left: 0px;
 
@@ -101,29 +140,26 @@ FridayAPI.getKeywords().then(kw => keywords = kw);
 
 {#if active}
   {#if keywordBuilderActive}
-    <div class="fixed-above" on:click={deactiveKeywordBuilder}>
+    <div class="fixed-above" on:click={deActKeywordBuilder}>
       <KeywordAdder />
     </div>
-  {:else}
-  <div class="fixed-above" on:click={deactivateClick} >
-  <Container class=container-xs>
-    <Row> 
-      <Col xs=4 sm=4 md=4 lg=4>
-        <Keywords 
-           bind:activeKeyword={daction.keyword} 
-           bind:keywords={keywords} 
-           updateKeyword={updateKeyword} 
-           newKeyword={newKeyword}/>
-      </Col>
-    <Col xs=8 sm=8 md=8 lg=8>
-      {#if controlActive}
+  {:else if keywordPickerActive}
+    <div class="fixed-above" on:click={deActKeywordPicker}>
+      <Keywords 
+         bind:activeKeyword={daction.keyword} 
+         bind:keywords={keywords} 
+         updateKeyword={updateKeyword} 
+         newKeyword={actKeywordBuilder}/>
+    </div>
+  {:else if controlBuilderActive}
+    <div class="fixed-above" on:click={deActControlBuilder}>
         <svelte:component this={control} daction={daction} sync={sync} />
-      {:else}
+    </div>
+  {:else if controlPickerActive}
+    <div class="fixed-above" on:click={deActControlPicker}>
         <Banners onBannerClick={onBannerClick}/>
-      {/if}
-    </Col>
-    </Row>
-  </Container>
-  </div>
+    </div>
+  {:else}
+    <h1> Error </h1>
   {/if}
 {/if}

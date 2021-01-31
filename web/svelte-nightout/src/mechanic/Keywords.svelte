@@ -1,10 +1,10 @@
 <script>
 // This Component is used to modify Actions
 // It is a Action mechanic!
-import { Container, Row } from 'sveltestrap';
+import { Container, Col, Row } from 'sveltestrap';
 import FaRegPlusSquare from 'svelte-icons/fa/FaRegPlusSquare.svelte'
-import CogsBanner from "./../banners/CogsBanner.svelte"
-import GreenCogsBanner from "./../banners/GreenCogsBanner.svelte"
+import BubbleBanner from "./../banners/BubbleBanner.svelte"
+import GreenBubbleBanner from "./../banners/GreenBubbleBanner.svelte"
 
 // Current active keyword
 export let activeKeyword;
@@ -17,7 +17,7 @@ export let newKeyword;
 // All keywords available
 export let keywords = [];
 
-let onActiveClick = (e) => e.stopPropagation();
+/*let onActiveClick = (e) => e.stopPropagation();*/
 let onInactiveClick = (e, keyword) => {
   e.stopPropagation();
   updateKeyword(keyword);
@@ -55,20 +55,20 @@ $: {
 }
 
 .keyword {
-  height: 50px;
+  height: 80px;
   overflow: hidden;
   display: flex;
   flex-direction: column; 
   justify-content: center;
-}
-
-:global(.container-keywords) {
-  overflow-y: scroll;
-  overflow-x: visible;
+  font-size: 18pt;
 }
 
 .empty-space {
   height: 10px;
+}
+
+.top-space {
+  height: 50px;
 }
 
 .horizontal-center {
@@ -94,36 +94,62 @@ $: {
   opacity: 0.8;
 }
 
+.title-text {
+  font-size: 22pt;
+}
+
 </style>
 
 
-<Container fluid class="container-keywords">
+<Container fluid class="full-height">
+  <Row>
+    <Col xs=12 sm=12 md=12 lg=12>
+    <div class="top-space"></div>
+    </Col>
+  </Row>
+  <Row class="text-center">
+    <Col xs=12 sm=12 md=12 lg=12>
+      <div class="title-text">When you say...</div>
+    </Col>
+  </Row>
+  <Row>
+    <div class="empty-space"></div>
+    <div class="empty-space"></div>
+    <div class="empty-space"></div>
+  </Row>
 {#each keywordProperties as keyword }
-  {#if keyword.active}
-    <GreenCogsBanner>
-      <Row class="text-center"> 
-        <div class="full-width" on:click={onActiveClick}>
-          <div class="keyword active" > {keyword.name} </div>
+  <Row>
+    <Col xs=1 sm=3 md=3 lg=3></Col>
+    <Col xs=10 sm=6 md=6 lg=6>
+      {#if keyword.active}
+        <div class="opacity-hover">
+          <GreenBubbleBanner>
+            <div class="full-width" on:click={(e) => onInactiveClick(e, keyword.name)}>
+              <div class="keyword active" > {keyword.name} </div>
+            </div>
+          </GreenBubbleBanner>
         </div>
-      </Row>
-    </GreenCogsBanner>
-  {:else}
-    <div class="opacity-hover">
-      <CogsBanner>
-        <Row class="text-center"> 
-          <div class="full-width"  on:click={(e) => onInactiveClick(e, keyword.name)}>
-            <div class="keyword"> {keyword.name} </div>
-          </div>
-        </Row>
-      </CogsBanner>
-    </div>
-  {/if}
-
-  <div class="empty-space"></div>
+      {:else}
+        <div class="opacity-hover">
+          <BubbleBanner>
+            <div class="full-width"  on:click={(e) => onInactiveClick(e, keyword.name)}>
+              <div class="keyword"> {keyword.name} </div>
+            </div>
+          </BubbleBanner>
+        </div>
+      {/if}
+    </Col>
+    <Col xs=1 sm=3 md=3 lg=3></Col>
+  </Row>
+  <Row>
+    <div class="empty-space"></div>
+  </Row>
 {/each}
 
-<div class="empty-space"></div>
-<div class="empty-space"></div>
+<Row>
+  <div class="empty-space"></div>
+  <div class="empty-space"></div>
+</Row>
 
 <Row class="text-center"> 
   <div class="horizontal-center">

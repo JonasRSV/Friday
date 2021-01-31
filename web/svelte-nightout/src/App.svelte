@@ -77,8 +77,8 @@ onMount (async () => {
 
 
   // TODO While developing mechanic
-  /*dActionAtMech = dActions[0];*/
-  /*displayMechanic = true;*/
+  dActionAtMech = dActions[0];
+  displayMechanic = true;
 
 
 });
@@ -89,7 +89,6 @@ onMount (async () => {
 
 <main>
   <Header title="{title}"/>
-
   {#if displayActions}
     {#each dActions as action (action.id)}
       <Action action={action} 
@@ -113,6 +112,10 @@ onMount (async () => {
   font-family: 'Lato', sans-serif;
   background-color: #080a10;
   color: #dfe6e9;
+}
+
+:global(.full-height) {
+  height: 100%;
 }
 
 

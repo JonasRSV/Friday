@@ -2,11 +2,11 @@
 <script>
 // This Component is used to modify Actions
 // It is a Action mechanic!
-import {Col, Container, Row, Card} from 'sveltestrap';
+import {Col, Container, Row} from 'sveltestrap';
 import { FridayAPI } from "./../../FridayAPI.js"
 import { Vendor } from "./../../Core.js"
-import CogsBanner from "./../../banners/CogsBanner.svelte"
-import GreenCogsBanner from "./../../banners/GreenCogsBanner.svelte"
+import BubbleBanner from "./../../banners/BubbleBanner.svelte"
+import GreenBubbleBanner from "./../../banners/GreenBubbleBanner.svelte"
 
 // This function syncs a daction to friday
 export let sync;
@@ -143,7 +143,7 @@ let updateLightState = (e, state) => {
 
 
 .block {
-  height: 50px;
+  height: 80px;
   display: flex;
   justify-content: center;
   flex-direction: row;
@@ -154,6 +154,7 @@ let updateLightState = (e, state) => {
   display: flex;
   justify-content: center;
   flex-direction: column;
+  font-size: 18pt;
 }
 
 .opacity-hover {
@@ -167,27 +168,40 @@ let updateLightState = (e, state) => {
 }
 
 
+.title-text {
+  font-size: 22pt;
+}
+
 </style>
 
 <Container fluid>
   <Row> 
-    <Col xs=6 sm=6 md=6 lg=6 > 
+    <Col xs=1 sm=1 md=1 lg=1> </Col>
+    <Col xs=5 sm=4 md=4 lg=4> 
+      <Row>
+        <Col xs=12 sm=12 md=12 lg=12>
+          <div class="title-text">Set...</div>
+        </Col>
+      </Row>
+      <Row>
+        <div class="empty-space"></div>
+      </Row>
       {#each lights as light }
         <Row class="text-center">
 
           {#if light.active}
-            <GreenCogsBanner>
+            <GreenBubbleBanner>
               <div class="block full-width" on:click={(e) => e.stopPropagation()}>
                 <div class="block-name"> {light.name} </div>
               </div>
-            </GreenCogsBanner>
+            </GreenBubbleBanner>
           {:else}
             <div class="opacity-hover">
-              <CogsBanner>
+              <BubbleBanner>
                 <div class="block full-width"  on:click={(e) => updateLightID(e, light)}>
                   <div class="block-name"> {light.name} </div>
                 </div>
-              </CogsBanner>
+              </BubbleBanner>
             </div>
           {/if}
           </Row>
@@ -195,30 +209,38 @@ let updateLightState = (e, state) => {
         {/each}
     </Col>
 
+    <Col xs=1 sm=2 md=2 lg=2> </Col>
 
-    <Col xs=6 sm=6 md=6 lg=6  > 
+    <Col xs=4 sm=4 md=4 lg=4> 
+      <Col xs=12 sm=12 md=12 lg=12>
+        <div class="title-text">To...</div>
+      </Col>
+      <Row>
+        <div class="empty-space"></div>
+      </Row>
       {#each states as state }
         <Row class="text-center">
 
           {#if state.active}
-            <GreenCogsBanner>
+            <GreenBubbleBanner>
               <div class="block full-width" on:click={(e) => e.stopPropagation()}>
                 <div class="block-name"> {state.name} </div>
               </div>
-            </GreenCogsBanner>
+            </GreenBubbleBanner>
           {:else}
             <div class="opacity-hover">
-              <CogsBanner>
+              <BubbleBanner>
                 <div class="block full-width "  on:click={(e) => updateLightState(e, state)}>
                   <div class="block-name"> {state.name} </div>
                 </div>
-              </CogsBanner>
+              </BubbleBanner>
             </div>
           {/if}
           </Row>
           <div class="empty-space"></div>
         {/each}
     </Col>
+    <Col xs=1 sm=1 md=1 lg=1> </Col>
 
   </Row>
 </Container>
