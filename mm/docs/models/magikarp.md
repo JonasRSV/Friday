@@ -1,6 +1,11 @@
 
 # Magikarp
 
+![magikarp](magikarp/magikarp.jpeg)
+
+Magikarp is a audio to class model, it is a discriminative model that predicts a trained class directly from data. It works 
+quite well for its trained keywords but does not support adding custom keywords.
+
 This document explains how to train the Magikarp keyword spotting model. First set the
 model output directory
 
@@ -21,7 +26,7 @@ python3 models/magikarp/magikarp.py\
     --clip_length=2.0\
     --batch_size=32\
     --start_learning_rate=0.001\
-    --use_mixup\
+    #--use_mixup\
     --num_labels=10\
     --max_steps=1000000\
     --save_summary_every=1000\
@@ -46,3 +51,5 @@ python3 models/magikarp/magikarp.py\
 
 ***If you get obscure errors***
 - Are --num_labels correct? Is it the same as in the label map used to create your data?
+
+Now, the exported model can be used with the Friday service, with the 'Discriminative' inference engine.

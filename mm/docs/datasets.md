@@ -12,7 +12,7 @@ Datasets, no matter source is currently converted into TFExamples with the follo
 audio: int64list # Would be nice with int16 list but tfexample does not support it.. which unfortunately makes the dataset 4x larger.
 text:  byteslist
 sample_rate: int64 # This should pretty much always be 8kHz or 16kHz
-label: int64 # This is optional and not always present.
+label: int64list # This is optional and not always present.
 ```
 
 This document assumes that your current root is mm
@@ -54,3 +54,11 @@ cd $FRIDAY_DATA/common_voice_sentence \
     && tar -xvf sv-SE.tar.gz
 ```
 
+## LibriSpeech
+
+[LibriSpeech](http://www.openslr.org/12) is a open ASR dataset.
+
+Run the following commands to Download the Data
+```bash
+FRIDAY_DATA=data ./scripts/download_librispeech.sh
+```
