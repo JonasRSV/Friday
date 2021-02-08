@@ -3,9 +3,9 @@ import tensorflow as tf
 
 # Taken from https://www.kaggle.com/c/tensorflow-speech-recognition-challenge/discussion/47715
 def spectrogram_model_big(x: tf.Tensor,
-                   num_labels: int,
-                   mode: tf.estimator.ModeKeys,
-                   regularization: float = 1e-6) -> tf.Tensor:
+                          num_phonemes: int,
+                          mode: tf.estimator.ModeKeys,
+                          regularization: float = 1e-6) -> tf.Tensor:
     x = tf.expand_dims(x, -1)
     x = tf.compat.v1.layers.Conv2D(filters=64,
                                    kernel_size=(7, 3),
@@ -27,5 +27,5 @@ def spectrogram_model_big(x: tf.Tensor,
     x = tf.compat.v1.layers.Dropout(rate=0.5)(
         x, training=mode == tf.estimator.ModeKeys.TRAIN)
     x = tf.compat.v1.layers.Dense(256, activation=tf.nn.relu)(x)
-    logits = tf.compat.v1.layers.Dense(num_labels, activation=None)(x)
+    logits = tf.compat.v1.layers.Dense(num_phonemes, activation=None)(x)
     return logits

@@ -1,7 +1,9 @@
 # Docs for shared tools
 
 - [Inspect](#Inspect)
-- [Recording Personal](#Recording Personal)
+- [Recording Personal](#Recording-Personal)
+- [Manually Filtering a Record](#manually-filtering-a-record)
+- [Convert Text of a collection of record](#convert-text-of-a-collection-of-record)
 
 ---
 
@@ -57,6 +59,14 @@ python3 tools/friday_inspect.py \
  --path="${FRIDAY_SESSION?}/ptfexamples.train*" \
  --mode=play_random\
  --arg="släck ljuset"
+```
+
+To get longest audio length and longest phoneme length
+
+```bash 
+python3 tools/friday_inspect.py \
+ --path="${FRIDAY_SESSION?}/ptfexamples*" \
+ --mode=sequence_lengths
 ```
 
 ## Recording Personal

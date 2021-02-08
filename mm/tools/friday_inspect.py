@@ -34,6 +34,7 @@ class Mode(Enum):
     meta = "meta"
     count_labels = "count_labels"
     play_random = "play_random"
+    sequence_lengths = "sequence_lengths"
 
 
 def play_audio(file: str, *_):
@@ -115,15 +116,11 @@ def visualize(file: str, *_):
 
         # feature = librosa.feature.mfcc(float_audio, sr=sample_rate, n_mfcc=40)
 
-
         sb.heatmap(feature)
         plt.subplot(5, 3, 3 + 3 * i)
         plt.title(f"{text}")
-        feature = librosa.feature.melspectrogram(float_audio, sr=sample_rate)#,
-                                                 #n_fft=1024,
-                                                 #hop_length=512,
-                                                 #win_length=1024,
-                                                 #n_mels=256)
+        feature = librosa.feature.melspectrogram(float_audio, sr=sample_rate)
+
         print("min Feature", feature.min())
         print("max Feature", feature.max())
         print("mean Feature", feature.max())
@@ -153,7 +150,7 @@ def show_meta(file: str, *_):
 
         label = None
         try:
-            label = tfexample_utils.get_label(example)
+            label = tfexample_utils.get_phoneme_labels(example)
         except IndexError:
             pass
 
@@ -227,6 +224,30 @@ def play_random(path: str, name: str):
                 return
 
 
+def sequence_lengths(path: str, *_):
+    entries = path.split("/")
+
+    path = "/".join(entries[:-1])
+    prefix = entries[-1]
+
+    files = list(pathlib.Path(path).glob(f"{prefix}"))
+
+    max_audio_length = 0
+    max_labels_length = 0
+    for file in tqdm(files):
+        for example in tf.data.TFRecordDataset(filenames=[str(file)]):
+            example = example.numpy()
+            example = tf.train.Example.FromString(example)
+
+            phonemes = tfexample_utils.get_phoneme_labels(example)
+            audio = tfexample_utils.get_audio(example)
+
+            max_audio_length = max(len(audio), max_audio_length)
+            max_labels_length = max(len(phonemes), max_labels_length)
+
+    print(max_audio_length, max_labels_length)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path",
@@ -245,7 +266,8 @@ if __name__ == "__main__":
             Mode.meta: show_meta,
             Mode.count_labels: count_labels,
             Mode.play_random: play_random,
-            Mode.play_augmented_audio: play_audio_with_augmentation
+            Mode.play_augmented_audio: play_audio_with_augmentation,
+            Mode.sequence_lengths: sequence_lengths
             }
 
     mode[args.mode](args.path, args.arg)

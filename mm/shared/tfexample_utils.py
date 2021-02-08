@@ -51,6 +51,22 @@ def set_label(example: tf.train.Example, label: int) -> tf.train.Example:
     return example
 
 
+def get_phoneme_labels(example: tf.train.Example) -> List[int]:
+    return example.features.feature["label"].int64_list.value
+
+
+def set_phoneme_labels(example: tf.train.Example, labels: [int]) -> tf.train.Example:
+    if len(example.features.feature["label"].int64_list.value) == len(labels):
+        # If they are the same length we can just overwrite
+        example.features.feature["label"].int64_list.value[:] = labels
+    else:
+        # we first have to delete it then reassign it
+        del example.features.feature["label"].int64_list.value[:]
+        example.features.feature["label"].int64_list.value.extend(labels)
+
+    return example
+
+
 def bytes_feature(value):
     """Returns a bytes_list from a string / byte."""
     if isinstance(value, type(tf.constant(0))):
