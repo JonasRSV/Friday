@@ -10,11 +10,16 @@ class LengthFilter(PreprocessFn):
         self.max_length = max_length
         self.min_length = min_length
 
+        self.dropped_samples = 0
+        self.kept_samples = 0
+
     def do(self, example: tf.train.Example) -> List[tf.train.Example]:
         sample_rate = tfexample_utils.get_sample_rate(example)
         audio = tfexample_utils.get_audio(example)
 
         if self.min_length <= (len(audio) / sample_rate) <= self.max_length:
+            self.kept_samples += 1
             return [example]
 
+        self.dropped_samples += 1
         return []

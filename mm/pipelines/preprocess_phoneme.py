@@ -8,6 +8,7 @@ import pathlib
 import tensorflow as tf
 import argparse
 from pipelines.preprocessing.uppercase_text import TextUpperCase
+from pipelines.preprocessing.filter_on_length import LengthFilter
 from pipelines.preprocessing.phoneme_dict_labler import ARPABETPhonemeLabeler
 from pipelines.preprocessing import core
 from tqdm import tqdm
@@ -26,13 +27,18 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('--phoneme_dictionary_path', type=pathlib.Path,
                         help="Path to phoneme dictionary", required=True)
+    parser.add_argument('--maximum_clip_length', type=int, dest="maximum_clip_length",
+                        help="All audio clips with length longer than 'maximum_clip_length' will be dropped",
+                        default=10)
 
     args = parser.parse_args()
 
     labeler = ARPABETPhonemeLabeler(phoneme_dict_path=args.phoneme_dictionary_path)
+    length_filter = LengthFilter(min_length=0, max_length=args.maximum_clip_length)
     doFns = [
         # All should be uppercase already in LibriSpeech
         # TextUpperCase(),
+        length_filter,
         labeler
     ]
 
@@ -51,5 +57,8 @@ if __name__ == '__main__':
             job.execute()
             progress_bar.update(n=job.size)
 
-    print("Dropped samples", labeler.dropped_samples)
-    print("Kept samples", labeler.kept_samples)
+    print("Dropped samples length_filter", length_filter.dropped_samples)
+    print("Kept samples length_filter", length_filter.kept_samples)
+
+    print("Dropped samples labeling", labeler.dropped_samples)
+    print("Kept samples labeling", labeler.kept_samples)

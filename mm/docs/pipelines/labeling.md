@@ -29,7 +29,8 @@ This pipelines adds labels using a word to phoneme dictionary - this pipeline wi
 PHONEME_DICTIONARY_PATH=${FRIDAY_DATA?}/librispeech/word_phoneme_lexicon.txt
 
 python3 pipelines/preprocess_phoneme.py \
- "--source=${FRIDAY_SESSION?}/tfexamples*"\
-  --sink_prefix=${FRIDAY_SESSION?}/ptfexamples\
-  --phoneme_dictionary_path=${PHONEME_DICTIONARY_PATH?}
+ "--source=${FRIDAY_SESSION?}/tfexamples*" \
+  --sink_prefix=${FRIDAY_SESSION?}/ptfexamples \
+  --phoneme_dictionary_path=${PHONEME_DICTIONARY_PATH?}\
+  --maximum_clip_length=20 
 ```
