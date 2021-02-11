@@ -14,6 +14,8 @@ Some environment variables are used
 FRIDAY_DATA=data
 EXPERIMENT_NAME=$(date | tr " " "_")
 FRIDAY_SESSION=${FRIDAY_DATA?}/${EXPERIMENT_NAME?}
+
+mkdir -p $FRIDAY_SESSION
 ```
 
 For converting some dataset into the common format, see [ToExamples](pipelines/toExamples.md). For Adding labels, 

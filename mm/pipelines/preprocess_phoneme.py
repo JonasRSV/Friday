@@ -30,6 +30,8 @@ if __name__ == '__main__':
     parser.add_argument('--maximum_clip_length', type=int, dest="maximum_clip_length",
                         help="All audio clips with length longer than 'maximum_clip_length' will be dropped",
                         default=10)
+    parser.add_argument("--expected_output_file_size", type=int, help="File size in MB",
+                        default=100)
 
     args = parser.parse_args()
 
@@ -44,7 +46,7 @@ if __name__ == '__main__':
 
     jobs, memory_to_process = core.build_jobs_with_file_information(source_prefix=args.source)
 
-    expected_MB_per_file = 100
+    expected_MB_per_file = args.expected_output_file_size
     sinks = core.create_sinks(prefix=args.sink_prefix, n=int(memory_to_process / expected_MB_per_file))
     jobs = [job.add_preprocessing_fn(doFns=doFns).add_sinks(sinks) for job in jobs]
 
