@@ -179,6 +179,7 @@ def make_model_fn(num_phonemes: int,
 
             # Add to summary
             tf.summary.scalar("learning_rate", decay_learning_rate)
+            tf.summary.histogram("argmax_logits", tf.reshape(tf.argmax(logits, axis=-1), [-1]))
 
             # Add regularization
             reg_loss = tf.compat.v1.losses.get_regularization_loss()
