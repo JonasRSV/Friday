@@ -151,7 +151,7 @@ def make_model_fn(num_phonemes: int,
         # If 'padded_audio_length' became 'frames' long, then
         # audio_length would become approximately (frames * audio_length/padded_audio_length) frames long.
 
-        logit_frames = tf.cast(logits.shape[1] * features["audio_length"] / features["audio"].shape[-1],
+        logit_frames = tf.cast(logits.shape[0] * features["audio_length"] / features["audio"].shape[-1],
                                tf.int32,
                                name="logit_frames")
 
