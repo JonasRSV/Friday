@@ -105,7 +105,7 @@ def get_metric_ops(labels: tf.Tensor,
                                  logit_length=sequence_length,
                                  blank_index=0)
 
-    metric_ops["avg_ctc_loss"] = tf.metrics.mean(ctc_loss)
+    metric_ops["avg_ctc_loss"] = tf.metrics.mean(ctc_loss / tf.cast(sequence_length, ctc_loss.dtype))
     return metric_ops
 
 
@@ -143,7 +143,8 @@ def make_model_fn(num_phonemes: int,
                                     lower_edge_hertz=128,
                                     upper_edge_hertz=4000)
 
-        logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
+        #logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
+        logits = arch.rnn(signal, num_phonemes=num_phonemes, mode=mode)
 
         # Make it time-major
         logits = tf.transpose(logits, (1, 0, 2))
