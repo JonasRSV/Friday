@@ -23,6 +23,5 @@ def rnn(x: tf.Tensor,
 
 
     print("logits", logits)
-    sys.exit(1)
 
     return logits
