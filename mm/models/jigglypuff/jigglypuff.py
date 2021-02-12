@@ -157,13 +157,15 @@ def make_model_fn(num_phonemes: int,
                                tf.int32,
                                name="logit_frames")
 
-        print("logits", logits, "frames", logit_frames)
+        logits_frames_padded = tf.ones_like(features["audio_length"]) * logits.shape[0]
+
+        print("logits", logits, "frames", logit_frames, "padded", logits_frames_padded)
 
         loss_op, train_op, train_logging_hooks, eval_metric_ops = None, None, None, None
         if mode != tf.estimator.ModeKeys.PREDICT:
             ctc_loss = tf.nn.ctc_loss_v2(labels=features["label"], logits=logits,
                                          label_length=features["label_length"],
-                                         logit_length=logit_frames,
+                                         logit_length=logits_frames_padded,
                                          blank_index=0)
 
             loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_frames, ctc_loss.dtype),
@@ -185,7 +187,7 @@ def make_model_fn(num_phonemes: int,
             reg_loss = tf.compat.v1.losses.get_regularization_loss()
             tf.summary.scalar("regularization_loss", reg_loss)
 
-            total_loss = reg_loss + loss_op
+            total_loss = loss_op
             tf.summary.scalar("total_loss", total_loss)
 
             train_op = tf.compat.v1.train.AdamOptimizer(
