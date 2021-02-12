@@ -146,6 +146,7 @@ def make_model_fn(num_phonemes: int,
         #logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
         logits = arch.rnn(signal, num_phonemes=num_phonemes, mode=mode)
 
+
         # Make it time-major
         logits = tf.transpose(logits, (1, 0, 2))
 
@@ -179,7 +180,6 @@ def make_model_fn(num_phonemes: int,
 
             # Add to summary
             tf.summary.scalar("learning_rate", decay_learning_rate)
-            tf.summary.histogram("argmax_logits", tf.reshape(tf.argmax(logits, axis=-1), [-1]))
 
             # Add regularization
             reg_loss = tf.compat.v1.losses.get_regularization_loss()
@@ -193,10 +193,18 @@ def make_model_fn(num_phonemes: int,
                 loss=total_loss,
                 global_step=tf.compat.v1.train.get_global_step())
 
+            final_logits = tf.transpose(logits, (1, 0, 2))
+            tf.identity(final_logits[0], name="final_logits")
+            tf.identity(tf.argmax(final_logits[0], axis=-1), name="final_logits_argmax")
+            tf.identity(features["label"][0], name="final_labels")
+
             train_logging_hooks = [
                 tf.estimator.LoggingTensorHook({"loss": "loss_op",
                                                 "logit_frames": "logit_frames",
-                                                "learning_rate": "learning_rate"
+                                                "learning_rate": "learning_rate",
+                                                "final_logits": "final_logits",
+                                                "final_labels": "final_labels",
+                                                "final_logits_argmax": "final_logits_argmax",
                                                 }, every_n_iter=1),
                 tf.estimator.SummarySaverHook(
                     save_steps=save_summaries_every,

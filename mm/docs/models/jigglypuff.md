@@ -43,7 +43,7 @@ python3 models/jigglypuff/jigglypuff.py\
     --batch_size=20\
     --start_learning_rate=0.0005\
     --max_steps=1000000\
-    --save_summary_every=100\
+    --save_summary_every=5\
     --eval_every=5\
     --parallel_reads=5
 ```
