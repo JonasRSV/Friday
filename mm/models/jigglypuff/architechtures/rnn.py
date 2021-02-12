@@ -8,12 +8,21 @@ def rnn(x: tf.Tensor,
         mode: tf.estimator.ModeKeys,
         regularization: float = 1e-6) -> tf.Tensor:
 
+    print("x", x)
+
     cells = [
         tf.contrib.rnn.LSTMCell(128),
-        tf.contrib.rnn.LSTMCell(256),
-        tf.contrib.rnn.LSTMCell(num_phonemes, activation=None)
+        tf.contrib.rnn.LSTMCell(128),
     ]
     # The second output is the last state and we will no use that
-    logits = tf.keras.layers.RNN(cells, return_sequences=True)(x, training=mode == tf.estimator.ModeKeys.TRAIN)
+    x = tf.keras.layers.RNN(cells, return_sequences=True)(x, training=mode == tf.estimator.ModeKeys.TRAIN)
+    print("x", x)
+    x = tf.keras.layers.Dense(128, activation='relu')(x)
+    print("x", x)
+    logits = tf.keras.layers.Dense(num_phonemes, activation=None)(x)
+
+
+    print("logits", logits)
+    sys.exit(1)
 
     return logits
