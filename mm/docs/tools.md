@@ -4,6 +4,7 @@
 - [Recording Personal](#Recording-Personal)
 - [Manually Filtering a Record](#manually-filtering-a-record)
 - [Convert Text of a collection of record](#convert-text-of-a-collection-of-record)
+- [Record online evaluation datapoint](record-online-evaluation-datapoint)
 
 ---
 
@@ -86,7 +87,7 @@ TEXT="godmorgon"
 
 DEVICE="default"
 
-python3 tools/record_personal_examples.py\
+python3 tools/record/record_personal_examples.py\
     --file_prefix=${FRIDAY_SESSION?}/tfexamples\
     --sample_rate=8000\
     --clip_length=2.0\
@@ -101,7 +102,7 @@ Recording background noise
 # use arecord -L to list devices
 DEVICE="default"
 
-python3 tools/record_personal_examples.py\
+python3 tools/record/record_personal_examples.py\
     --file_prefix=${FRIDAY_SESSION?}/tfexamples\
     --sample_rate=8000\
     --clip_length=2.0\
@@ -133,4 +134,11 @@ python3 tools/convert_text.py\
   --output_directory=data/tmp\
   --convert_from="god natt"\
   --convert_to="godnatt"
+```
+
+### Record Online evaluation datapoint
+
+```bash
+python3 tools/record/record_evaluation_datapoint.py\
+  --sample_rate=8000
 ```

@@ -32,5 +32,6 @@ python3 pipelines/preprocess_phoneme.py \
  "--source=${FRIDAY_SESSION?}/tfexamples*" \
   --sink_prefix=${FRIDAY_SESSION?}/ptfexamples \
   --phoneme_dictionary_path=${PHONEME_DICTIONARY_PATH?}\
+  --expected_output_file_size=100\
   --maximum_clip_length=20 
 ```

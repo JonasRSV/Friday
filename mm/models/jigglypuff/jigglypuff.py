@@ -154,7 +154,7 @@ def make_model_fn(num_phonemes: int,
                                          logits_time_major=False,
                                          blank_index=0)
 
-            loss_op = tf.reduce_mean(ctc_loss,
+            loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_frames, ctc_loss.dtype),
                                      name="loss_op")
 
             decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
