@@ -163,7 +163,8 @@ def make_model_fn(num_phonemes: int,
                 first_decay_steps=1000,
                 t_mul=2.0,
                 m_mul=1.0,
-                alpha=0.0)
+                alpha=0.0,
+                name="learning_rate")
 
             # Add to summary
             tf.summary.scalar("learning_rate", decay_learning_rate)
@@ -182,8 +183,9 @@ def make_model_fn(num_phonemes: int,
 
             train_logging_hooks = [
                 tf.estimator.LoggingTensorHook({"loss": "loss_op",
-                                                "logit_frames": "logit_frames"},
-                                               every_n_iter=1),
+                                                "logit_frames": "logit_frames",
+                                                "learning_rate": "learning_rate"
+                                                }, every_n_iter=1),
                 tf.estimator.SummarySaverHook(
                     save_steps=save_summaries_every,
                     output_dir=summary_output_dir,
