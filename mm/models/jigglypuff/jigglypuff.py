@@ -81,8 +81,8 @@ def create_input_fn(max_label_sequence_length: int,
         dataset = dataset.cache()
 
         # Apply augmentation if is train
-        if mode == tf.estimator.ModeKeys.TRAIN:
-            dataset = dataset.shuffle(buffer_size=100)
+        # if mode == tf.estimator.ModeKeys.TRAIN:
+        #    dataset = dataset.shuffle(buffer_size=100)
 
         dataset = dataset.batch(batch_size=batch_size)
 
@@ -94,9 +94,18 @@ def create_input_fn(max_label_sequence_length: int,
     return input_fn
 
 
-def get_metric_ops(labels: tf.Tensor, predicted_class: tf.Tensor, num_phonemes: int):
+def get_metric_ops(labels: tf.Tensor,
+                   logits: tf.Tensor,
+                   label_length: tf.Tensor,
+                   sequence_length: tf.Tensor,
+                   num_phonemes: int):
     metric_ops = {}
+    ctc_loss = tf.nn.ctc_loss_v2(labels=labels, logits=logits,
+                                 label_length=label_length,
+                                 logit_length=sequence_length,
+                                 blank_index=0)
 
+    metric_ops["avg_ctc_loss"] = tf.metrics.mean(ctc_loss)
     return metric_ops
 
 
@@ -119,10 +128,10 @@ def make_model_fn(num_phonemes: int,
 
         signal = audio.normalize_audio(audio_signal)
 
-        if mode != tf.estimator.ModeKeys.PREDICT:
-            tf.summary.audio(name="audio",
-                             tensor=signal,
-                             sample_rate=sample_rate)
+        # if mode != tf.estimator.ModeKeys.PREDICT:
+        # tf.summary.audio(name="audio",
+        #                 tensor=signal,
+        #                 sample_rate=sample_rate)
 
         signal = audio.mfcc_feature(signal=signal,
                                     coefficients=120,
@@ -135,7 +144,9 @@ def make_model_fn(num_phonemes: int,
                                     upper_edge_hertz=4000)
 
         logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
-        predict_op = tf.nn.softmax(logits)
+
+        # Make it time-major
+        logits = tf.transpose(logits, (1, 0, 2))
 
         # If 'padded_audio_length' became 'frames' long, then
         # audio_length would become approximately (frames * audio_length/padded_audio_length) frames long.
@@ -144,14 +155,13 @@ def make_model_fn(num_phonemes: int,
                                tf.int32,
                                name="logit_frames")
 
-        print("logits", logits, "predictions", predict_op, "frames", logit_frames)
+        print("logits", logits, "frames", logit_frames)
 
         loss_op, train_op, train_logging_hooks, eval_metric_ops = None, None, None, None
         if mode != tf.estimator.ModeKeys.PREDICT:
             ctc_loss = tf.nn.ctc_loss_v2(labels=features["label"], logits=logits,
                                          label_length=features["label_length"],
                                          logit_length=logit_frames,
-                                         logits_time_major=False,
                                          blank_index=0)
 
             loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_frames, ctc_loss.dtype),
@@ -194,15 +204,17 @@ def make_model_fn(num_phonemes: int,
 
             if mode == tf.estimator.ModeKeys.EVAL:
                 eval_metric_ops = get_metric_ops(labels=features["label"],
-                                                 predicted_class=tf.argmax(predict_op, axis=-1),
+                                                 logits=logits,
+                                                 label_length=features["label_length"],
+                                                 sequence_length=logit_frames,
                                                  num_phonemes=num_phonemes)
 
         # Squeeze prediction to vector again
-        if mode == tf.estimator.ModeKeys.PREDICT:
-            predict_op = tf.squeeze(predict_op, name="output")
+        # if mode == tf.estimator.ModeKeys.PREDICT:
+        #    predict_op = tf.squeeze(predict_op, name="output")
 
         return tf.estimator.EstimatorSpec(mode=mode,
-                                          predictions=predict_op,
+                                          predictions=None,
                                           loss=loss_op,
                                           train_op=train_op,
                                           training_hooks=train_logging_hooks,
