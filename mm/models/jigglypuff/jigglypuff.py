@@ -176,20 +176,22 @@ def make_model_fn(num_phonemes: int,
                 loss=total_loss,
                 global_step=tf.compat.v1.train.get_global_step())
 
-            #final_logits = tf.transpose(logits, (1, 0, 2))
-            #top_beam_search = tf.expand_dims(final_logits[0], 0)
-            #top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
-            #top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
-            #                                                      tf.cast(tf.expand_dims(logit_length[0], 0),
-            #                                                              dtype=tf.int32),
-            #                                                      beam_width=300)
-            #top_beam_search = top_beam_search[0]
-            #top_beam_search = tf.sparse.to_dense(top_beam_search)
-            #tf.identity(top_beam_search, name="top_beam_search")
-            #tf.identity(features["label"][0], name="final_labels")
+            final_logits = tf.transpose(logits, (1, 0, 2))
+            top_beam_search = tf.expand_dims(final_logits[0], 0)
+            top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
+            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
+                                                                  tf.cast(tf.expand_dims(logit_length[0], 0),
+                                                                          dtype=tf.int32),
+                                                                  beam_width=300)
+            top_beam_search = top_beam_search[0]
+            top_beam_search = tf.sparse.to_dense(top_beam_search)
+            tf.identity(top_beam_search, name="top_beam_search")
+            tf.identity(features["label"][0], name="final_labels")
 
             train_logging_hooks = [
                 tf.estimator.LoggingTensorHook({"loss": "loss_op",
+                                                "final_labels": "final_labels",
+                                                "top_beam_search": "top_beam_search",
                                                 }, every_n_iter=10),
                 tf.estimator.SummarySaverHook(
                     save_steps=save_summaries_every,
