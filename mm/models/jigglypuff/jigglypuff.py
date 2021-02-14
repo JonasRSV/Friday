@@ -148,8 +148,9 @@ def make_model_fn(num_phonemes: int,
                                          logit_length=logit_length,
                                          blank_index=-1)
 
-            loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype),
-                                     name="loss_op")
+            loss_op = tf.reduce_mean(ctc_loss, name="loss_op")
+            #loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype),
+            #                         name="loss_op")
 
             decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
                 learning_rate=learning_rate,
@@ -176,8 +177,8 @@ def make_model_fn(num_phonemes: int,
                 global_step=tf.compat.v1.train.get_global_step())
 
             final_logits = tf.transpose(logits, (1, 0, 2))
-            tf.identity(final_logits[0], name="final_logits")
-            tf.identity(tf.argmax(final_logits[0], axis=-1), name="final_logits_argmax")
+            tf.identity(final_logits[0][:logit_length[0]], name="final_logits")
+            tf.identity(tf.argmax(final_logits[0][logit_length[0]], axis=-1), name="final_logits_argmax")
             tf.identity(features["label"][0], name="final_labels")
 
             train_logging_hooks = [
