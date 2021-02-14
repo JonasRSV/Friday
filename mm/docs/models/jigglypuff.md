@@ -26,7 +26,7 @@ python3 models/jigglypuff/jigglypuff.py\
     --mode="train_eval"\
     --sample_rate=8000\
     --batch_size=20\
-    --start_learning_rate=0.005\
+    --start_learning_rate=0.0005\
     --max_steps=1000000\
     --save_summary_every=50\
     --eval_every=50\
