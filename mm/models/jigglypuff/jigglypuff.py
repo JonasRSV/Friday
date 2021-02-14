@@ -181,14 +181,17 @@ def make_model_fn(num_phonemes: int,
 
             top_beam_search = tf.expand_dims(final_logits[0], 0)
             top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
-            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(
-                top_beam_search,
-                tf.cast(tf.expand_dims(features["label_length"][0], 0), dtype=tf.int32))
-
+            print("top_beam_search", top_beam_search)
+            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
+                                                                  tf.cast(tf.expand_dims(logit_length[0], 0),
+                                                                          dtype=tf.int32),
+                                                                  beam_width=300)
             top_beam_search = top_beam_search[0]
             top_beam_search = tf.sparse.to_dense(top_beam_search)
             tf.identity(top_beam_search, name="top_beam_search")
             tf.identity(features["label"][0], name="final_labels")
+            tf.identity(tf.shape(features["label"][0]), name="final_labels_shape")
+            tf.identity(tf.shape(top_beam_search), name="top_beam_search_shape")
 
             train_logging_hooks = [
                 tf.estimator.LoggingTensorHook({"loss": "loss_op",
@@ -196,7 +199,9 @@ def make_model_fn(num_phonemes: int,
                                                 "learning_rate": "learning_rate",
                                                 "final_logits": "final_logits",
                                                 "final_labels": "final_labels",
+                                                "final_labels_shape": "final_labels_shape",
                                                 "top_beam_search": "top_beam_search",
+                                                "top_beam_search_shape": "top_beam_search_shape",
                                                 }, every_n_iter=10),
                 tf.estimator.SummarySaverHook(
                     save_steps=save_summaries_every,
