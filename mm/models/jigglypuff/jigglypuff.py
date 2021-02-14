@@ -188,6 +188,7 @@ def make_model_fn(num_phonemes: int,
                                                                   beam_width=300)
             top_beam_search = top_beam_search[0]
             top_beam_search = tf.sparse.to_dense(top_beam_search)
+            tf.identity(tf.argmax(final_logits[0][0:logit_length[0]], axis=-1), name="argmax")
             tf.identity(top_beam_search, name="top_beam_search")
             tf.identity(features["label"][0], name="final_labels")
             tf.identity(tf.shape(features["label"][0]), name="final_labels_shape")
@@ -195,6 +196,7 @@ def make_model_fn(num_phonemes: int,
 
             train_logging_hooks = [
                 tf.estimator.LoggingTensorHook({"loss": "loss_op",
+                                                "argmax": "argmax",
                                                 "logit_length": "logit_length",
                                                 "learning_rate": "learning_rate",
                                                 "final_logits": "final_logits",
