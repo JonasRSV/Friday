@@ -178,7 +178,20 @@ def make_model_fn(num_phonemes: int,
 
             final_logits = tf.transpose(logits, (1, 0, 2))
             tf.identity(final_logits[0][:logit_length[0]], name="final_logits")
-            tf.identity(tf.argmax(final_logits[0][:logit_length[0]], axis=-1), name="final_logits_argmax")
+
+            top_beam_search = tf.expand_dims(final_logits[0], 0)
+            top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
+            print("top_beam_search", top_beam_search)
+            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
+                                                                  tf.cast(tf.expand_dims(logit_length[0], 0),
+                                                                          dtype=tf.int32))
+            print("top_beam_search", top_beam_search)
+            top_beam_search = top_beam_search[0]
+            print("top_beam_search", top_beam_search)
+            top_beam_search = tf.sparse.to_dense(top_beam_search)
+            print("top_beam_search", top_beam_search)
+            tf.identity(top_beam_search, name="top_beam_search")
+            tf.identity(tf.argmax(final_logits[0][:logit_length[0]], axis=-1), name="top_beam_search")
             tf.identity(features["label"][0], name="final_labels")
 
             train_logging_hooks = [
@@ -187,7 +200,7 @@ def make_model_fn(num_phonemes: int,
                                                 "learning_rate": "learning_rate",
                                                 "final_logits": "final_logits",
                                                 "final_labels": "final_labels",
-                                                "final_logits_argmax": "final_logits_argmax",
+                                                "top_beam_search": "top_beam_search",
                                                 }, every_n_iter=10),
                 tf.estimator.SummarySaverHook(
                     save_steps=save_summaries_every,
