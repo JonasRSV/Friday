@@ -128,8 +128,8 @@ def make_model_fn(num_phonemes: int,
                                     frame_step=128,
                                     fft_length=128,
                                     num_mel_bins=40,
-                                    lower_edge_hertz=40,
-                                    upper_edge_hertz=8000)
+                                    lower_edge_hertz=1,
+                                    upper_edge_hertz=4000)
 
         # logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
         logits = arch.rnn(signal, num_phonemes=num_phonemes, mode=mode)
