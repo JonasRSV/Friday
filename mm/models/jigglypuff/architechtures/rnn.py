@@ -17,7 +17,7 @@ def rnn(x: tf.Tensor,
     # The second output is the last state and we will no use that
     x = tf.keras.layers.RNN(cells, return_sequences=True)(x, training=mode == tf.estimator.ModeKeys.TRAIN)
     print("x", x)
-    x = tf.keras.layers.Dense(256, activation='tanh')(x)
+    x = tf.keras.layers.Dense(256, activation='relu')(x)
     print("x", x)
     logits = tf.keras.layers.Dense(num_phonemes, activation=None)(x)
 
