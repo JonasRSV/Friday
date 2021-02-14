@@ -21,9 +21,7 @@ class Mode(Enum):
     export = "export"
 
 
-def create_input_fn(max_label_sequence_length: int,
-                    max_audio_sequence_length: int,
-                    mode: tf.estimator.ModeKeys,
+def create_input_fn(mode: tf.estimator.ModeKeys,
                     input_prefix: str,
                     parallel_reads: int = 5,
                     batch_size: int = 32,
@@ -45,23 +43,14 @@ def create_input_fn(max_label_sequence_length: int,
         x["audio_length"] = tf.squeeze(x["audio"].dense_shape)
         return x
 
-    def sparse_to_dense(x: tf.train.Example) -> tf.train.Example:
-        x["audio"] = tf.sparse.to_dense(x["audio"])
-        x["label"] = tf.sparse.to_dense(x["label"])
+    def add_padded_length(x: dict) -> dict:
+        """Length of padded audio inside a batch."""
+        x["audio_length_padded"] = tf.cast(tf.shape(x["audio"])[1], tf.int64)
         return x
 
-    def pad_phoneme_sequence_numpy(x: np.ndarray) -> np.ndarray:
-        return np.append(x, np.zeros(max_label_sequence_length - x.size, dtype=x.dtype))
-
-    def pad_audio_sequence_numpy(x: np.ndarray) -> np.ndarray:
-        return np.append(x, np.zeros(max_audio_sequence_length - x.size, dtype=x.dtype))
-
-    def pad_sequences(x: tf.train.Example) -> tf.train.Example:
-        x["label"] = tf.compat.v1.numpy_function(pad_phoneme_sequence_numpy, inp=[x["label"]], Tout=tf.int64)
-        x["audio"] = tf.compat.v1.numpy_function(pad_audio_sequence_numpy, inp=[x["audio"]], Tout=tf.int16)
-
-        x["label"] = tf.reshape(x["label"], [max_label_sequence_length])
-        x["audio"] = tf.reshape(x["audio"], [max_audio_sequence_length])
+    def sparse_to_dense(x: dict) -> tf.train.Example:
+        x["audio"] = tf.sparse.to_dense(x["audio"], default_value=0)
+        x["label"] = tf.sparse.to_dense(x["label"], default_value=0)
         return x
 
     def input_fn():
@@ -76,15 +65,15 @@ def create_input_fn(max_label_sequence_length: int,
         dataset = dataset.map(decode_example)
         dataset = dataset.map(cast_to_int16)
         dataset = dataset.map(add_lengths)
-        dataset = dataset.map(sparse_to_dense)
-        dataset = dataset.map(pad_sequences)
-        dataset = dataset.cache()
 
         # Apply augmentation if is train
         # if mode == tf.estimator.ModeKeys.TRAIN:
         #    dataset = dataset.shuffle(buffer_size=100)
 
         dataset = dataset.batch(batch_size=batch_size)
+        # Sparse to dense does padding
+        dataset = dataset.map(sparse_to_dense)
+        dataset = dataset.map(add_padded_length)
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.repeat()
@@ -97,15 +86,21 @@ def create_input_fn(max_label_sequence_length: int,
 def get_metric_ops(labels: tf.Tensor,
                    logits: tf.Tensor,
                    label_length: tf.Tensor,
-                   sequence_length: tf.Tensor,
+                   logit_length: tf.Tensor,
                    num_phonemes: int):
     metric_ops = {}
     ctc_loss = tf.nn.ctc_loss_v2(labels=labels, logits=logits,
                                  label_length=label_length,
-                                 logit_length=sequence_length,
-                                 blank_index=0)
+                                 logit_length=logit_length,
+                                 blank_index=-1)
 
-    metric_ops["avg_ctc_loss"] = tf.metrics.mean(ctc_loss / tf.cast(sequence_length, ctc_loss.dtype))
+    #decoded, log_prob = tf.nn.ctc_greedy_decoder(logits, tf.cast(logit_length, tf.int32))
+
+    # Inaccuracy: label error rate
+    #metric_ops["ler"] = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32),
+    #                                                    tf.sparse.from_dense(labels)))
+
+    metric_ops["avg_ctc_loss"] = tf.metrics.mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype))
     return metric_ops
 
 
@@ -117,8 +112,6 @@ def make_model_fn(num_phonemes: int,
     def model_fn(features, labels, mode, config, params):
 
         print("Features", features, "audio", features["audio"].shape, "label", features["label"].shape)
-        # features["audio"] = tf.reshape(features["audio"], [-1, 16000])
-        print("Features", features, "audio", features["audio"].shape, "label", features["label"].shape)
 
         audio_signal = features["audio"]
 
@@ -128,47 +121,34 @@ def make_model_fn(num_phonemes: int,
 
         signal = audio.normalize_audio(audio_signal)
 
-        # if mode != tf.estimator.ModeKeys.PREDICT:
-        # tf.summary.audio(name="audio",
-        #                 tensor=signal,
-        #                 sample_rate=sample_rate)
-
         signal = audio.mfcc_feature(signal=signal,
                                     coefficients=120,
                                     sample_rate=sample_rate,
-                                    frame_length=512,
+                                    frame_length=1024,
                                     frame_step=256,
-                                    fft_length=512,
-                                    num_mel_bins=128,
-                                    lower_edge_hertz=128,
+                                    fft_length=1024,
+                                    num_mel_bins=120,
+                                    lower_edge_hertz=10,
                                     upper_edge_hertz=4000)
 
-        #logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
+        # logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
         logits = arch.rnn(signal, num_phonemes=num_phonemes, mode=mode)
-
-
-        # Make it time-major
-        logits = tf.transpose(logits, (1, 0, 2))
-
-        # If 'padded_audio_length' became 'frames' long, then
-        # audio_length would become approximately (frames * audio_length/padded_audio_length) frames long.
-
-        logit_frames = tf.cast(logits.shape[0] * features["audio_length"] / features["audio"].shape[-1],
-                               tf.int32,
-                               name="logit_frames")
-
-        logits_frames_padded = tf.ones_like(features["audio_length"]) * logits.shape[0]
-
-        print("logits", logits, "frames", logit_frames, "padded", logits_frames_padded)
 
         loss_op, train_op, train_logging_hooks, eval_metric_ops = None, None, None, None
         if mode != tf.estimator.ModeKeys.PREDICT:
+            # Make it time-major
+            logits = tf.transpose(logits, (1, 0, 2))
+            logit_length = (features["audio_length"] / features["audio_length_padded"]) * tf.cast(tf.shape(logits)[0],
+                                                                                                  tf.float64)
+            logit_length = tf.cast(logit_length, tf.int64, name="logit_length")
+
+            print("logits", logits, "logit_length", logit_length)
             ctc_loss = tf.nn.ctc_loss_v2(labels=features["label"], logits=logits,
                                          label_length=features["label_length"],
-                                         logit_length=logits_frames_padded,
-                                         blank_index=0)
+                                         logit_length=logit_length,
+                                         blank_index=-1)
 
-            loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_frames, ctc_loss.dtype),
+            loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype),
                                      name="loss_op")
 
             decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
@@ -202,7 +182,7 @@ def make_model_fn(num_phonemes: int,
 
             train_logging_hooks = [
                 tf.estimator.LoggingTensorHook({"loss": "loss_op",
-                                                "logit_frames": "logit_frames",
+                                                "logit_length": "logit_length",
                                                 "learning_rate": "learning_rate",
                                                 "final_logits": "final_logits",
                                                 "final_labels": "final_labels",
@@ -218,7 +198,7 @@ def make_model_fn(num_phonemes: int,
                 eval_metric_ops = get_metric_ops(labels=features["label"],
                                                  logits=logits,
                                                  label_length=features["label_length"],
-                                                 sequence_length=logit_frames,
+                                                 logit_length=logit_length,
                                                  num_phonemes=num_phonemes)
 
         # Squeeze prediction to vector again
@@ -255,14 +235,6 @@ def main():
         help="absolute path to prefix of eval files",
         type=str,
     )
-    parser.add_argument("--max_label_sequence_length",
-                        required=True,
-                        type=int,
-                        help="Length of longest label sequence")
-    parser.add_argument("--max_audio_sequence_length",
-                        required=True,
-                        type=int,
-                        help="Length of longest audio sequence")
     parser.add_argument("--num_phonemes",
                         required=True,
                         type=int,
@@ -317,9 +289,7 @@ def main():
 
     if args.mode == Mode.train_eval.value:
         train_spec = tf.estimator.TrainSpec(
-            input_fn=create_input_fn(max_label_sequence_length=args.max_label_sequence_length,
-                                     max_audio_sequence_length=args.max_audio_sequence_length,
-                                     mode=tf.estimator.ModeKeys.TRAIN,
+            input_fn=create_input_fn(mode=tf.estimator.ModeKeys.TRAIN,
                                      input_prefix=args.train_prefix,
                                      parallel_reads=args.parallel_reads,
                                      batch_size=args.batch_size,
@@ -329,9 +299,7 @@ def main():
 
         eval_spec = tf.estimator.EvalSpec(
             steps=args.eval_every,
-            input_fn=create_input_fn(max_label_sequence_length=args.max_label_sequence_length,
-                                     max_audio_sequence_length=args.max_audio_sequence_length,
-                                     mode=tf.estimator.ModeKeys.EVAL,
+            input_fn=create_input_fn(mode=tf.estimator.ModeKeys.EVAL,
                                      input_prefix=args.train_prefix,
                                      parallel_reads=args.parallel_reads,
                                      batch_size=args.batch_size,

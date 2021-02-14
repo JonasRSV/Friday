@@ -5,9 +5,6 @@ from tqdm import tqdm
 from pipelines.preprocessing.abstract_preprocess_fn import PreprocessFn
 from typing import List
 
-import sys
-
-
 def extract_phoneme(phoneme: str) -> str:
     """This takes a ARPABET phoneme and returns the consonant or vowel representation.
 
@@ -60,22 +57,17 @@ class ARPABETPhonemeLabeler(PreprocessFn):
         print(f"There were {number_of_collisions} collisions")
         print(f"Found {len(self.phonemes)} phonemes")
 
-        self.phonemes = [""] + list(self.phonemes)
+        self.phonemes = list(self.phonemes)
         self.phonemes.sort()
         self.phoneme_labels = {}
         for label, phoneme in enumerate(self.phonemes):
             print(f"{label}: {phoneme}")
             self.phoneme_labels[phoneme] = label
 
-        print(f"'blank' label is 0")
         # See https://dl.acm.org/doi/pdf/10.1145/1143844.1143891 about blank label
         # See https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/nn/ctc_loss_v2 why we set blank as 0
-        self.blank_label = 0
-        # TODO: Maybe just use blank label instead of having word boundaries too?
         self.word_boundary_label = len(self.phoneme_labels)
         print(f"Adding {self.word_boundary_label} as a word boundary label")
-        self.unknown_word_label = self.word_boundary_label + 1
-        print(f"Adding {self.unknown_word_label} as a unknown word label - Hopefully this is never used.")
 
         self.kept_samples = 0
         self.dropped_samples = 0
@@ -84,15 +76,13 @@ class ARPABETPhonemeLabeler(PreprocessFn):
         text = tfexample_utils.get_text(example)
 
         # Assume some silence in beginning
-        labels = [self.word_boundary_label, self.blank_label]
+        labels = [self.word_boundary_label]
         for word in text.split(" "):
             word = word.strip()
             if word in self.word_phonemes_mapping:
                 for phoneme in self.word_phonemes_mapping[word]:
                     labels.append(self.phoneme_labels[phoneme])
-                    labels.append(self.blank_label)
             else:
-                # print(f"Warning: {word} does not appear in the phoneme dictionary, using {self.unknown_word_label}")
                 self.dropped_samples += 1
                 return []
 

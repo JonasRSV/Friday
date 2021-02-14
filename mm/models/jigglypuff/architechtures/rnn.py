@@ -8,7 +8,7 @@ def rnn(x: tf.Tensor,
         mode: tf.estimator.ModeKeys,
         regularization: float = 1e-6) -> tf.Tensor:
 
-    print("x", x)
+    print("x", x.shape)
 
     cells = [
         tf.contrib.rnn.LSTMCell(128),
