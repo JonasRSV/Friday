@@ -187,7 +187,7 @@ def make_model_fn(num_phonemes: int,
                                                 "final_logits": "final_logits",
                                                 "final_labels": "final_labels",
                                                 "final_logits_argmax": "final_logits_argmax",
-                                                }, every_n_iter=1),
+                                                }, every_n_iter=10),
                 tf.estimator.SummarySaverHook(
                     save_steps=save_summaries_every,
                     output_dir=summary_output_dir,
