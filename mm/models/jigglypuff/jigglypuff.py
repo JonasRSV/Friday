@@ -122,7 +122,7 @@ def make_model_fn(num_phonemes: int,
         signal = audio.normalize_audio(audio_signal)
 
         signal = audio.mfcc_feature(signal=signal,
-                                    coefficients=13,
+                                    coefficients=27,
                                     sample_rate=sample_rate,
                                     frame_length=512,
                                     frame_step=256,
