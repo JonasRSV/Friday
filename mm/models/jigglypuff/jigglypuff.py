@@ -192,7 +192,7 @@ def make_model_fn(num_phonemes: int,
                 tf.estimator.LoggingTensorHook({"loss": "loss_op",
                                                 "final_labels": "final_labels",
                                                 "top_beam_search": "top_beam_search",
-                                                }, every_n_iter=10),
+                                                }, every_n_iter=50),
                 tf.estimator.SummarySaverHook(
                     save_steps=save_summaries_every,
                     output_dir=summary_output_dir,
@@ -278,7 +278,7 @@ def main():
     config = tf.estimator.RunConfig(
         model_dir=args.model_directory,
         save_summary_steps=args.save_summary_every,
-        log_step_count_steps=1,
+        log_step_count_steps=10,
         save_checkpoints_steps=args.eval_every,
     )
 
