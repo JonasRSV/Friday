@@ -122,14 +122,14 @@ def make_model_fn(num_phonemes: int,
         signal = audio.normalize_audio(audio_signal)
 
         signal = audio.mfcc_feature(signal=signal,
-                                    coefficients=27,
+                                    coefficients=13,
                                     sample_rate=sample_rate,
-                                    frame_length=512,
+                                    frame_length=128,
                                     frame_step=128,
-                                    fft_length=512,
-                                    num_mel_bins=80,
-                                    lower_edge_hertz=10,
-                                    upper_edge_hertz=4000)
+                                    fft_length=128,
+                                    num_mel_bins=40,
+                                    lower_edge_hertz=40,
+                                    upper_edge_hertz=8000)
 
         # logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
         logits = arch.rnn(signal, num_phonemes=num_phonemes, mode=mode)
