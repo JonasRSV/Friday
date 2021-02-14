@@ -178,7 +178,7 @@ def make_model_fn(num_phonemes: int,
 
             final_logits = tf.transpose(logits, (1, 0, 2))
             tf.identity(final_logits[0][:logit_length[0]], name="final_logits")
-            tf.identity(tf.argmax(final_logits[0][logit_length[0]], axis=-1), name="final_logits_argmax")
+            tf.identity(tf.argmax(final_logits[0][:logit_length[0]], axis=-1), name="final_logits_argmax")
             tf.identity(features["label"][0], name="final_labels")
 
             train_logging_hooks = [
