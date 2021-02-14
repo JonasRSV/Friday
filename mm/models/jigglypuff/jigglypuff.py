@@ -185,13 +185,9 @@ def make_model_fn(num_phonemes: int,
             top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
                                                                   tf.cast(tf.expand_dims(logit_length[0], 0),
                                                                           dtype=tf.int32))
-            print("top_beam_search", top_beam_search)
             top_beam_search = top_beam_search[0]
-            print("top_beam_search", top_beam_search)
             top_beam_search = tf.sparse.to_dense(top_beam_search)
-            print("top_beam_search", top_beam_search)
             tf.identity(top_beam_search, name="top_beam_search")
-            tf.identity(tf.argmax(final_logits[0][:logit_length[0]], axis=-1), name="top_beam_search")
             tf.identity(features["label"][0], name="final_labels")
 
             train_logging_hooks = [
