@@ -94,10 +94,10 @@ def get_metric_ops(labels: tf.Tensor,
                                  logit_length=logit_length,
                                  blank_index=-1)
 
-    #decoded, log_prob = tf.nn.ctc_greedy_decoder(logits, tf.cast(logit_length, tf.int32))
+    # decoded, log_prob = tf.nn.ctc_greedy_decoder(logits, tf.cast(logit_length, tf.int32))
 
     # Inaccuracy: label error rate
-    #metric_ops["ler"] = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32),
+    # metric_ops["ler"] = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32),
     #                                                    tf.sparse.from_dense(labels)))
 
     metric_ops["avg_ctc_loss"] = tf.metrics.mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype))
@@ -149,7 +149,7 @@ def make_model_fn(num_phonemes: int,
                                          blank_index=-1)
 
             loss_op = tf.reduce_mean(ctc_loss, name="loss_op")
-            #loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype),
+            # loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype),
             #                         name="loss_op")
 
             decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
@@ -176,34 +176,20 @@ def make_model_fn(num_phonemes: int,
                 loss=total_loss,
                 global_step=tf.compat.v1.train.get_global_step())
 
-            final_logits = tf.transpose(logits, (1, 0, 2))
-            tf.identity(final_logits[0][:logit_length[0]], name="final_logits")
-
-            top_beam_search = tf.expand_dims(final_logits[0], 0)
-            top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
-            print("top_beam_search", top_beam_search)
-            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
-                                                                  tf.cast(tf.expand_dims(logit_length[0], 0),
-                                                                          dtype=tf.int32),
-                                                                  beam_width=300)
-            top_beam_search = top_beam_search[0]
-            top_beam_search = tf.sparse.to_dense(top_beam_search)
-            argmax = tf.identity(tf.argmax(final_logits[0][0:logit_length[0]], axis=-1), name="logits_argmax")
-            tf.identity(top_beam_search, name="top_beam_search")
-            tf.identity(features["label"][0], name="final_labels")
-            tf.identity(tf.shape(features["label"][0]), name="final_labels_shape")
-            tf.identity(tf.shape(top_beam_search), name="top_beam_search_shape")
+            #final_logits = tf.transpose(logits, (1, 0, 2))
+            #top_beam_search = tf.expand_dims(final_logits[0], 0)
+            #top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
+            #top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
+            #                                                      tf.cast(tf.expand_dims(logit_length[0], 0),
+            #                                                              dtype=tf.int32),
+            #                                                      beam_width=300)
+            #top_beam_search = top_beam_search[0]
+            #top_beam_search = tf.sparse.to_dense(top_beam_search)
+            #tf.identity(top_beam_search, name="top_beam_search")
+            #tf.identity(features["label"][0], name="final_labels")
 
             train_logging_hooks = [
                 tf.estimator.LoggingTensorHook({"loss": "loss_op",
-                                                "logits_argmax": "logits_argmax",
-                                                "logit_length": "logit_length",
-                                                "learning_rate": "learning_rate",
-                                                "final_logits": "final_logits",
-                                                "final_labels": "final_labels",
-                                                "final_labels_shape": "final_labels_shape",
-                                                "top_beam_search": "top_beam_search",
-                                                "top_beam_search_shape": "top_beam_search_shape",
                                                 }, every_n_iter=10),
                 tf.estimator.SummarySaverHook(
                     save_steps=save_summaries_every,
