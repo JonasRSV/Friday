@@ -181,10 +181,10 @@ def make_model_fn(num_phonemes: int,
 
             top_beam_search = tf.expand_dims(final_logits[0], 0)
             top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
-            print("top_beam_search", top_beam_search)
-            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
-                                                                  tf.cast(tf.expand_dims(logit_length[0], 0),
-                                                                          dtype=tf.int32))
+            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(
+                top_beam_search,
+                tf.cast(tf.expand_dims(features["label_length"][0], 0), dtype=tf.int32))
+
             top_beam_search = top_beam_search[0]
             top_beam_search = tf.sparse.to_dense(top_beam_search)
             tf.identity(top_beam_search, name="top_beam_search")
