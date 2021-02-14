@@ -12,7 +12,6 @@ def rnn(x: tf.Tensor,
 
     cells = [
         tf.contrib.rnn.LSTMCell(256),
-        tf.contrib.rnn.LSTMCell(256),
     ]
     # The second output is the last state and we will no use that
     x = tf.keras.layers.RNN(cells, return_sequences=True)(x, training=mode == tf.estimator.ModeKeys.TRAIN)
