@@ -5,6 +5,7 @@ from tqdm import tqdm
 from pipelines.preprocessing.abstract_preprocess_fn import PreprocessFn
 from typing import List
 
+
 def extract_phoneme(phoneme: str) -> str:
     """This takes a ARPABET phoneme and returns the consonant or vowel representation.
 
@@ -60,14 +61,15 @@ class ARPABETPhonemeLabeler(PreprocessFn):
         self.phonemes = list(self.phonemes)
         self.phonemes.sort()
         self.phoneme_labels = {}
-        for label, phoneme in enumerate(self.phonemes):
+
+        self.word_boundary_label = 0
+        print(f"Adding {self.word_boundary_label} as a word boundary label")
+        for label, phoneme in enumerate(self.phonemes, 1):
             print(f"{label}: {phoneme}")
             self.phoneme_labels[phoneme] = label
 
         # See https://dl.acm.org/doi/pdf/10.1145/1143844.1143891 about blank label
         # See https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/nn/ctc_loss_v2 why we set blank as 0
-        self.word_boundary_label = len(self.phoneme_labels)
-        print(f"Adding {self.word_boundary_label} as a word boundary label")
 
         self.kept_samples = 0
         self.dropped_samples = 0
@@ -76,7 +78,7 @@ class ARPABETPhonemeLabeler(PreprocessFn):
         text = tfexample_utils.get_text(example)
 
         # Assume some silence in beginning
-        labels = [self.word_boundary_label]
+        labels = []
         for word in text.split(" "):
             word = word.strip()
             if word in self.word_phonemes_mapping:
@@ -86,8 +88,11 @@ class ARPABETPhonemeLabeler(PreprocessFn):
                 self.dropped_samples += 1
                 return []
 
-            # Assume silence after word and in the end
+            # Assume silence after word
             labels.append(self.word_boundary_label)
+
+        # Remove word boundary at the end
+        labels = labels[:-1]
 
         self.kept_samples += 1
         return [tfexample_utils.set_phoneme_labels(example=example,
