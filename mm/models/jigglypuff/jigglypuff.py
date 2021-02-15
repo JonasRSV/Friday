@@ -93,7 +93,7 @@ def get_metric_ops(labels: tf.Tensor,
                                  blank_index=-1)
 
     metric_ops["ctc_loss"] = tf.metrics.mean(ctc_loss)
-    return metric_ops
+    return tf.reduce_mean(ctc_loss), metric_ops
 
 
 def get_train_ops(features: dict,
@@ -125,7 +125,7 @@ def get_train_ops(features: dict,
     reg_loss = tf.compat.v1.losses.get_regularization_loss()
     tf.summary.scalar("regularization_loss", reg_loss)
 
-    total_loss = loss_op
+    total_loss = loss_op + reg_loss
     tf.summary.scalar("total_loss", total_loss)
 
     train_op = tf.compat.v1.train.AdamOptimizer(
@@ -203,11 +203,11 @@ def make_model_fn(num_phonemes: int,
                 save_summaries_every=save_summaries_every,
                 summary_output_dir=summary_output_dir)
         elif mode == tf.estimator.ModeKeys.EVAL:
-            eval_metric_ops = get_metric_ops(labels=features["label"],
-                                             logits=logits,
-                                             label_length=features["label_length"],
-                                             logit_length=logit_length,
-                                             num_phonemes=num_phonemes)
+            loss_op, eval_metric_ops = get_metric_ops(labels=features["label"],
+                                                      logits=logits,
+                                                      label_length=features["label_length"],
+                                                      logit_length=logit_length,
+                                                      num_phonemes=num_phonemes)
         elif mode == tf.estimator.ModeKeys.PREDICT:
             print("logits", logits, "logit_length", logit_length)
             top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(logits,
@@ -221,8 +221,6 @@ def make_model_fn(num_phonemes: int,
             tf.identity(tf.squeeze(logits)[:logit_length[0]], name="output_logits")
 
             predict_op = tf.identity(predict_op, name="output")
-
-            pass
         else:
             raise Exception(f"Unknown ModeKey {mode}")
 
