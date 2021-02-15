@@ -149,7 +149,7 @@ def get_train_ops(features: dict,
         tf.estimator.LoggingTensorHook({"loss": "loss_op",
                                         "final_labels": "final_labels",
                                         "top_beam_search": "top_beam_search",
-                                        }, every_n_iter=1),
+                                        }, every_n_iter=50),
         tf.estimator.SummarySaverHook(
             save_steps=save_summaries_every,
             output_dir=summary_output_dir,
