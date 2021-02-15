@@ -28,7 +28,7 @@ python3 models/jigglypuff/jigglypuff.py\
     --batch_size=32\
     --start_learning_rate=0.0005\
     --max_steps=1000000\
-    --save_summary_every=200\
+    --save_summary_every=2\
     --eval_every=200\
     --parallel_reads=5
 ```
@@ -37,6 +37,7 @@ To Export after training run
 ```bash
 python3 models/jigglypuff/jigglypuff.py\
     --model_directory=$MODEL_OUTPUT\
+    --num_phonemes=${NUM_PHONEMES?}\
     --mode="export"\
     --sample_rate=8000
     

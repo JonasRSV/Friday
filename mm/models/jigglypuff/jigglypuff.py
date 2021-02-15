@@ -1,15 +1,13 @@
 import sys
 import os
 
-# Some systems dont use the launching directory as root
+# Some systems don't use the launching directory as root
 sys.path.append(os.getcwd())
 
 import pathlib
 import tensorflow as tf
 import models.shared.audio as audio
-import models.shared.augmentation as augmentation
 import argparse
-import numpy as np
 import models.jigglypuff.architechtures as arch
 from enum import Enum
 
@@ -43,9 +41,9 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         x["audio_length"] = tf.squeeze(x["audio"].dense_shape)
         return x
 
-    def add_padded_length(x: dict) -> dict:
-        """Length of padded audio inside a batch."""
-        x["audio_length_padded"] = tf.cast(tf.shape(x["audio"])[1], tf.int64)
+    def add_logit_length_factor(x: dict) -> dict:
+        """Factor to multiply length of padded logits with to get length of unpadded logits."""
+        x["logit_length_factor"] = tf.cast(x["audio_length"], tf.float32) / tf.cast(tf.shape(x["audio"])[1], tf.float32)
         return x
 
     def sparse_to_dense(x: dict) -> tf.train.Example:
@@ -73,7 +71,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         dataset = dataset.batch(batch_size=batch_size)
         # Sparse to dense does padding
         dataset = dataset.map(sparse_to_dense)
-        dataset = dataset.map(add_padded_length)
+        dataset = dataset.map(add_logit_length_factor)
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.repeat()
@@ -94,14 +92,71 @@ def get_metric_ops(labels: tf.Tensor,
                                  logit_length=logit_length,
                                  blank_index=-1)
 
-    # decoded, log_prob = tf.nn.ctc_greedy_decoder(logits, tf.cast(logit_length, tf.int32))
-
-    # Inaccuracy: label error rate
-    # metric_ops["ler"] = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32),
-    #                                                    tf.sparse.from_dense(labels)))
-
-    metric_ops["avg_ctc_loss"] = tf.metrics.mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype))
+    metric_ops["ctc_loss"] = tf.metrics.mean(ctc_loss)
     return metric_ops
+
+
+def get_train_ops(features: dict,
+                  logit_length: tf.Tensor,
+                  logits: tf.Tensor,
+                  learning_rate: float,
+                  save_summaries_every: int,
+                  summary_output_dir: str):
+    ctc_loss = tf.nn.ctc_loss_v2(labels=features["label"], logits=logits,
+                                 label_length=features["label_length"],
+                                 logit_length=logit_length,
+                                 blank_index=-1)
+
+    loss_op = tf.reduce_mean(ctc_loss, name="loss_op")
+
+    decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
+        learning_rate=learning_rate,
+        global_step=tf.compat.v1.train.get_global_step(),
+        first_decay_steps=1000,
+        t_mul=2.0,
+        m_mul=1.0,
+        alpha=0.0,
+        name="learning_rate")
+
+    # Add to summary
+    tf.summary.scalar("learning_rate", decay_learning_rate)
+
+    # Add regularization
+    reg_loss = tf.compat.v1.losses.get_regularization_loss()
+    tf.summary.scalar("regularization_loss", reg_loss)
+
+    total_loss = loss_op
+    tf.summary.scalar("total_loss", total_loss)
+
+    train_op = tf.compat.v1.train.AdamOptimizer(
+        learning_rate=decay_learning_rate).minimize(
+        loss=total_loss,
+        global_step=tf.compat.v1.train.get_global_step())
+
+    final_logits = tf.transpose(logits, (1, 0, 2))
+    top_beam_search = tf.expand_dims(final_logits[0], 0)
+    top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
+    top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
+                                                          tf.cast(tf.expand_dims(logit_length[0], 0),
+                                                                  dtype=tf.int32),
+                                                          beam_width=300)
+    top_beam_search = top_beam_search[0]
+    top_beam_search = tf.sparse.to_dense(top_beam_search)
+    tf.identity(top_beam_search, name="top_beam_search")
+    tf.identity(features["label"][0], name="final_labels")
+
+    train_logging_hooks = [
+        tf.estimator.LoggingTensorHook({"loss": "loss_op",
+                                        "final_labels": "final_labels",
+                                        "top_beam_search": "top_beam_search",
+                                        }, every_n_iter=1),
+        tf.estimator.SummarySaverHook(
+            save_steps=save_summaries_every,
+            output_dir=summary_output_dir,
+            summary_op=tf.compat.v1.summary.merge_all())
+    ]
+
+    return loss_op, train_op, train_logging_hooks
 
 
 def make_model_fn(num_phonemes: int,
@@ -110,14 +165,12 @@ def make_model_fn(num_phonemes: int,
                   save_summaries_every: int = 100,
                   learning_rate: float = 0.001):
     def model_fn(features, labels, mode, config, params):
-
-        print("Features", features, "audio", features["audio"].shape, "label", features["label"].shape)
-
         audio_signal = features["audio"]
 
         # Expand single prediction to batch
         if mode == tf.estimator.ModeKeys.PREDICT:
             audio_signal = tf.expand_dims(audio_signal, 0)
+            features["logit_length_factor"] = tf.expand_dims(features["logit_length_factor"], 0)
 
         signal = audio.normalize_audio(audio_signal)
 
@@ -134,84 +187,47 @@ def make_model_fn(num_phonemes: int,
         # logits = arch.spectrogram_model_big(signal, num_phonemes=num_phonemes, mode=mode)
         logits = arch.rnn(signal, num_phonemes=num_phonemes, mode=mode)
 
-        loss_op, train_op, train_logging_hooks, eval_metric_ops = None, None, None, None
-        if mode != tf.estimator.ModeKeys.PREDICT:
-            # Make it time-major
-            logits = tf.transpose(logits, (1, 0, 2))
-            logit_length = (features["audio_length"] / features["audio_length_padded"]) * tf.cast(tf.shape(logits)[0],
-                                                                                                  tf.float64)
-            logit_length = tf.cast(logit_length, tf.int64, name="logit_length")
+        # Make it time-major
+        logits = tf.transpose(logits, (1, 0, 2))
+        # Calculate length of un-padded logit sequence
+        logit_length = features["logit_length_factor"] * tf.cast(tf.shape(logits)[0], tf.float32)
+        logit_length = tf.cast(logit_length, tf.int32, name="logit_length")
 
-            print("logits", logits, "logit_length", logit_length)
-            ctc_loss = tf.nn.ctc_loss_v2(labels=features["label"], logits=logits,
-                                         label_length=features["label_length"],
-                                         logit_length=logit_length,
-                                         blank_index=-1)
-
-            loss_op = tf.reduce_mean(ctc_loss, name="loss_op")
-            # loss_op = tf.reduce_mean(ctc_loss / tf.cast(logit_length, ctc_loss.dtype),
-            #                         name="loss_op")
-
-            decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
+        loss_op, train_op, train_logging_hooks, eval_metric_ops, predict_op = None, None, None, None, None
+        if mode == tf.estimator.ModeKeys.TRAIN:
+            loss_op, train_op, train_logging_hooks = get_train_ops(
+                features=features,
+                logit_length=logit_length,
+                logits=logits,
                 learning_rate=learning_rate,
-                global_step=tf.compat.v1.train.get_global_step(),
-                first_decay_steps=1000,
-                t_mul=2.0,
-                m_mul=1.0,
-                alpha=0.0,
-                name="learning_rate")
+                save_summaries_every=save_summaries_every,
+                summary_output_dir=summary_output_dir)
+        elif mode == tf.estimator.ModeKeys.EVAL:
+            eval_metric_ops = get_metric_ops(labels=features["label"],
+                                             logits=logits,
+                                             label_length=features["label_length"],
+                                             logit_length=logit_length,
+                                             num_phonemes=num_phonemes)
+        elif mode == tf.estimator.ModeKeys.PREDICT:
+            print("logits", logits, "logit_length", logit_length)
+            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(logits,
+                                                                  logit_length,
+                                                                  beam_width=100)
+            predict_op = tf.sparse.to_dense(top_beam_search[0])[0]
 
-            # Add to summary
-            tf.summary.scalar("learning_rate", decay_learning_rate)
+            # Useful information for when doing inference
+            tf.identity(tf.shape(predict_op), name="output_shape")
+            tf.identity(tf.squeeze(logit_length), name="output_logits_shape")
+            tf.identity(tf.squeeze(logits)[:logit_length[0]], name="output_logits")
 
-            # Add regularization
-            reg_loss = tf.compat.v1.losses.get_regularization_loss()
-            tf.summary.scalar("regularization_loss", reg_loss)
+            predict_op = tf.identity(predict_op, name="output")
 
-            total_loss = loss_op
-            tf.summary.scalar("total_loss", total_loss)
-
-            train_op = tf.compat.v1.train.AdamOptimizer(
-                learning_rate=decay_learning_rate).minimize(
-                loss=total_loss,
-                global_step=tf.compat.v1.train.get_global_step())
-
-            final_logits = tf.transpose(logits, (1, 0, 2))
-            top_beam_search = tf.expand_dims(final_logits[0], 0)
-            top_beam_search = tf.transpose(top_beam_search, (1, 0, 2))
-            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(top_beam_search,
-                                                                  tf.cast(tf.expand_dims(logit_length[0], 0),
-                                                                          dtype=tf.int32),
-                                                                  beam_width=300)
-            top_beam_search = top_beam_search[0]
-            top_beam_search = tf.sparse.to_dense(top_beam_search)
-            tf.identity(top_beam_search, name="top_beam_search")
-            tf.identity(features["label"][0], name="final_labels")
-
-            train_logging_hooks = [
-                tf.estimator.LoggingTensorHook({"loss": "loss_op",
-                                                "final_labels": "final_labels",
-                                                "top_beam_search": "top_beam_search",
-                                                }, every_n_iter=50),
-                tf.estimator.SummarySaverHook(
-                    save_steps=save_summaries_every,
-                    output_dir=summary_output_dir,
-                    summary_op=tf.compat.v1.summary.merge_all())
-            ]
-
-            if mode == tf.estimator.ModeKeys.EVAL:
-                eval_metric_ops = get_metric_ops(labels=features["label"],
-                                                 logits=logits,
-                                                 label_length=features["label_length"],
-                                                 logit_length=logit_length,
-                                                 num_phonemes=num_phonemes)
-
-        # Squeeze prediction to vector again
-        # if mode == tf.estimator.ModeKeys.PREDICT:
-        #    predict_op = tf.squeeze(predict_op, name="output")
+            pass
+        else:
+            raise Exception(f"Unknown ModeKey {mode}")
 
         return tf.estimator.EstimatorSpec(mode=mode,
-                                          predictions=None,
+                                          predictions=predict_op,
                                           loss=loss_op,
                                           train_op=train_op,
                                           training_hooks=train_logging_hooks,
@@ -321,7 +337,8 @@ def main():
                 "audio":
                     tf.compat.v1.placeholder(dtype=tf.int16,
                                              shape=[None],
-                                             name="input")
+                                             name="input"),
+                "logit_length_factor": tf.constant(1.0, dtype=tf.float32)
             }
             return tf.estimator.export.ServingInputReceiver(
                 features=inputs, receiver_tensors=inputs)
