@@ -4,7 +4,7 @@
 - [Recording Personal](#Recording-Personal)
 - [Manually Filtering a Record](#manually-filtering-a-record)
 - [Convert Text of a collection of record](#convert-text-of-a-collection-of-record)
-- [Record online evaluation datapoint](record-online-evaluation-datapoint)
+- [Record QbE task](#record-qbe-task)
 
 ---
 
@@ -15,7 +15,7 @@
 To inspect that the tfexamples contains valid voice data one can use e.g
 
 ```bash
-python3 tools/friday_inspect.py \
+paython3 tools/friday_inspect.py \
  --path=${FRIDAY_SESSION?}/EXAMPLE_FILE_HERE \
  --mode=play_audio
 ```
@@ -78,7 +78,7 @@ This assumes FRIDAY_SESSION is set, replace --text with the text you will be say
 
 Once the program starts, you press enter then you have 'clip_length' e.g 2 seconds time to speak the text. After you have spoken it will be
 repeated to you. Then press enter when you're ready to speak the same text again and repeat. Each time you press enter it will record for 2 seconds then play it back.
-Once you're done, do one keyboard interrupt and it will save your recordings into the common format.
+Once you're done, do one keyboard interrupt and it will save your recordings.
 
 ```bash
 TEXT="godmorgon"
@@ -136,9 +136,9 @@ python3 tools/convert_text.py\
   --convert_to="godnatt"
 ```
 
-### Record Online evaluation datapoint
+### Record QbE task 
 
 ```bash
-python3 tools/record/record_evaluation_datapoint.py\
+python3 tools/record/record_qbe_task.py\
   --sample_rate=8000
 ```

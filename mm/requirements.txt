@@ -10,6 +10,8 @@ cloudpickle==1.6.0
 cycler==0.10.0
 decorator==4.4.2
 dm-tree==0.1.5
+dtw==1.4.0
+fastdtw==0.3.4
 gast==0.4.0
 google-pasta==0.2.0
 grpcio==1.33.2

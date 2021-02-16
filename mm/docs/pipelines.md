@@ -20,4 +20,4 @@ mkdir -p $FRIDAY_SESSION
 
 For converting some dataset into the common format, see [ToExamples](pipelines/toExamples.md). For Adding labels, 
 phonemes or classes see [labeling](pipelines/labeling.md). For postprocessing such as shuffling, splitting see 
-corresponding pipelines/xxx file.
+corresponding pipelines/xxx file. For evaluation see [evaluation](pipelines/evaluation.md)

@@ -3,7 +3,8 @@ Tool for recording datasets used for 'online' evaluation
 This script produces a tensorflow example with the fields
 
 audio: int64list (16bit audio, each int is a whole sample)
-utterances: byteslist (a space separated list of the uttered keywords)
+sample_rate: int64list # a list containing one scalar, the sample_rate of the audio
+utterances: byteslist (a '-' separated list of the uttered keywords)
 at_time: int64list (For each entry in the list there is a utterance value signifying
 at around what 'sample' the KW was uttered)
 
@@ -59,7 +60,7 @@ def get_writer():
     file_name = f"/tmp/tfexamples.online-eval.{suffix}"
     while pathlib.Path(file_name).is_file():
         suffix = random.randint(0, 10000000)
-        file_name = f"tfexamples.personal.{suffix}"
+        file_name = f"tfexamples.online-eval.{suffix}"
 
     print("Saving too..", file_name)
     return tf.io.TFRecordWriter(path=file_name)
@@ -129,7 +130,7 @@ class DatasetRecorder:
         writer = get_writer()
         example = create_example(audio=self.audio_data,
                                  sample_rate=self.sample_rate,
-                                 utterances=" ".join(utterances),
+                                 utterances="-".join(utterances),
                                  at_time=at_time)
 
         writer.write(example.SerializeToString())

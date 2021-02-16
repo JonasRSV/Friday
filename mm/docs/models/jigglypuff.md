@@ -1,7 +1,7 @@
 
 # Jigglypuff
 
-![magikarp](jigglypuff/jigglypuff.jpeg)
+![jigglypuff](jigglypuff/jigglypuff.jpeg)
 
 Jigglypuff is an audio to phonemes model, jigglypuff supports adding custom keywords. 
 
@@ -41,5 +41,10 @@ python3 models/jigglypuff/jigglypuff.py\
     --mode="export"\
     --sample_rate=8000
     
+```
+
+QbE Evaluation
+
+```bash
 ```
 
