@@ -2,7 +2,7 @@
 
 ![ditto](ditto/ditto.png)
  
-Ditto is a model using audio matching algorithms for QbE KWS. It is inspired by DTW.
+Ditto is a model using audio matching algorithms for QbE KWS. It is basically DTW.
 
 
 - [Evaluation](#evaluation)

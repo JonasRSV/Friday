@@ -24,12 +24,3 @@ virtualenv -p python3 .venv && pip3 install -r requirements.txt
 See docs/ for how to run things
 
 
-## Roadmap
-
-- [x] Initial Pipelines
-- [x] Simple discriminative keyword-spotting model
-- [ ] Speed up (pipelines/\*)
-- [ ] Better shuffling in (pipelines/preprocess.py) or a separate shuffling pipeline
-- [ ] Handling of audio signals that are too long
-- [ ] Add more datasets (e.g libriSTT)
-- [ ] Deep Metric Learning based model
