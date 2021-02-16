@@ -32,7 +32,7 @@ A example file is a file of our main format, see [datasets](../../datasets.md)
 
 
 ### Examples
-[jigglypuff](../../models/jigglypuff.md)
-[ditto](../../models/ditto.md)
-[baseline](../../models/random.md)
+- [jigglypuff](../../models/jigglypuff.md)
+- [ditto](../../models/ditto.md)
+- [baseline](../../models/random.md)
 
