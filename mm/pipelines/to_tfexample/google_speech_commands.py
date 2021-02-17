@@ -2,9 +2,9 @@ import warnings
 import sys
 import os
 
-
-# Some systems dont use the launching directory as root
-sys.path.append(os.getcwd())
+# Some systems don't use the launching directory as root
+if os.getcwd() not in sys.path:
+    sys.path.append(os.getcwd())
 
 warnings.filterwarnings("ignore")
 import tensorflow as tf
@@ -78,10 +78,10 @@ class Job:
 def get_jobs(base_path: pathlib.Path,
              sub_paths: List[str],
              files_per_job: int = 1000):
-    id = 1
-
+    id, job_id = 1, 1
     jobs, audio_files, sentences = [], [], []
     for s_path in sub_paths:
+
         path = base_path / s_path
         for file in path.glob("*"):
             audio_files.append(str(file))
@@ -89,13 +89,23 @@ def get_jobs(base_path: pathlib.Path,
 
             if id % files_per_job == 0:
                 jobs.append(
-                    Job(id=id // files_per_job,
+                    Job(id=job_id,
                         audio_files=audio_files,
                         sentences=sentences))
 
+                job_id += 1
                 audio_files, sentences = [], []
 
             id += 1
+
+        jobs.append(
+            Job(id=job_id,
+                audio_files=audio_files,
+                sentences=sentences))
+
+        job_id += 1
+        # Jobs contains only 1 type of keyword
+        audio_files, sentences = [], []
 
     # Not using logger here because the sox library is cluttering the info logging, need to mute that somehow
     print(f"Total number of audio files: {id - 1}")
@@ -106,7 +116,7 @@ def get_jobs(base_path: pathlib.Path,
 def worker(job: Job):
     str_id = str(job.id)
     padded_id = "0" * (5 - len(str_id)) + str_id
-    sharded_file = f"{OUTPUT_PREFIX}-{OUTPUT_INFIX}-{padded_id}"
+    sharded_file = f"{OUTPUT_PREFIX}-{job.sentences[0]}-{OUTPUT_INFIX}-{padded_id}"
 
     transformer = sox.Transformer()
     with tf.io.TFRecordWriter(sharded_file) as writer:
@@ -149,7 +159,6 @@ def main(base_path: pathlib.Path):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--base_path",

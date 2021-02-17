@@ -1,4 +1,5 @@
-from pipelines.evaluate.query_by_example.metrics.metric import Metric
+from pipelines.evaluate.query_by_example.metrics.personal.metric import Metric
+
 
 class Accuracy(Metric):
     def __init__(self, window: int):

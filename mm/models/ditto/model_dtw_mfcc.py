@@ -1,7 +1,4 @@
-"""A DTW model for QbE KWS.
-
-Implementation is based on https://cs.fit.edu/~pkc/papers/tdm04.pdf (this is what the fastdtw package implements)
-"""
+"""A DTW model for QbE KWS."""
 import os
 import sys
 
@@ -12,7 +9,7 @@ if os.getcwd() not in sys.path:
 import numpy as np
 import librosa
 from dtw import dtw
-from pipelines.evaluate.query_by_example.model import Model
+from pipelines.evaluate.query_by_example.model import Model, Setting
 
 
 def euclidean(x, y):
@@ -20,16 +17,21 @@ def euclidean(x, y):
 
 
 class DTWMFCC(Model):
+    def register_setting(self, setting: Setting):
+        self.sample_rate = setting.sample_rate
+
     def __init__(self, max_distance: float):
         self.max_distance = max_distance
         self.keywords_clips = {}
         self.keyword_score = {}
 
+        self.sample_rate = None
+
     def register_keyword(self, keyword: str, utterances: np.ndarray):
         utterances = utterances / np.abs(utterances).max(axis=-1)[:, None]
 
         self.keywords_clips[keyword] = [
-            librosa.feature.mfcc(utterance, sr=8000,
+            librosa.feature.mfcc(utterance, sr=self.sample_rate,
                                  n_mfcc=40,
                                  n_fft=1024,
                                  hop_length=512,
@@ -77,6 +79,10 @@ if __name__ == "__main__":
     utterance = np.random.normal(0.0, 1, size=16000)
 
     d = DTWMFCC(1000)
+    d.register_setting(Setting(
+        sample_rate=8000,
+        sequence_length=0
+    ))
     for keyword, utterances in keyword_clips.items():
         d.register_keyword(keyword, utterances)
 

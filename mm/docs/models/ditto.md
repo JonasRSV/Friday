@@ -6,30 +6,14 @@ Ditto is a model using audio matching algorithms for QbE KWS. It is basically DT
 
 
 - [Evaluation](#evaluation)
-    - [Fast DTW](#dtw)
-    - [DTW](#dtw)
-    - [DTW + MFCC](#dtw--mfcc)
 
 ### Evaluation
 
-This shows how to run the QbE KWS evaluation pipeline with ditto.
 
-#### Fast DTW
+There are many ditto variants, open [evaluate](../../models/ditto/evaluate.py) and uncomment all but the one you want 
+to evaluate.
 
-Open [evaluate](../../models/ditto/evaluate.py) and add 'run' FastDTW, then launch evaluation with
-
-```bash
-python3 models/ditto/evaluate.py\
-  --tasks="data/evaluation/tasks/*"\
-  --examples="data/evaluation/examples/*"\
-  --window_size=2\
-  --window_stride="0.25"\
-  --sample_rate=8000
-```
-
-#### Fast DTW + MFCC
-
-Open [evaluate](../../models/ditto/evaluate.py) and uncomment 'FastDTWMFCC', then launch evaluation with
+When evaluating against the personal pipeline, use:
 
 ```bash
 python3 models/ditto/evaluate.py\
@@ -40,5 +24,13 @@ python3 models/ditto/evaluate.py\
   --sample_rate=8000
 ```
 
-#### DTW + MFCC
+When evaluating against google speech commands use:
 
+```bash 
+python3 models/ditto/evaluate.py\
+    --examples="data/speech_commands_qbe_eval/*"\
+    --window_size=2\
+    --n=3\
+    --seed=1337\
+    --sample_rate=8000
+```

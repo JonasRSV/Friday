@@ -10,7 +10,7 @@ if os.getcwd() not in sys.path:
 
 import numpy as np
 from fastdtw import fastdtw
-from pipelines.evaluate.query_by_example.model import Model
+from pipelines.evaluate.query_by_example.model import Model, Setting
 
 
 def euclidean(x, y):
@@ -18,6 +18,9 @@ def euclidean(x, y):
 
 
 class FastDTW(Model):
+    def register_setting(self, setting: Setting):
+        pass
+
     def __init__(self, max_distance: float):
         self.max_distance = max_distance
         self.keywords_clips = {}
@@ -59,6 +62,10 @@ if __name__ == "__main__":
     utterance = np.random.normal(0.5, 1, size=100)
 
     dtw = FastDTW(100)
+    dtw.register_setting(Setting(
+        sample_rate=8000,
+        sequence_length=0
+    ))
     for keyword, utterances in keyword_clips.items():
         dtw.register_keyword(keyword, utterances)
 

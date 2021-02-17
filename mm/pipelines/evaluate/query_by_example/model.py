@@ -2,7 +2,24 @@ import numpy as np
 from abc import ABC, abstractmethod
 
 
+class Setting:
+    def __init__(self, sample_rate: int, sequence_length: int):
+        self.sample_rate = sample_rate
+        self.sequence_length = sequence_length
+
+
 class Model(ABC):
+
+    @abstractmethod
+    def register_setting(self, setting: Setting):
+        """Register the setting this evaluation runs in.
+
+        This gives models access to some perhaps necessary information for preprocessing,
+        and also a chance to crash early if they are not implemented for this setting.
+
+        This function is called first, before everything else.
+        """
+        raise NotImplementedError(f"'register_setting' have not been implemented for {self.__class__}")
 
     @abstractmethod
     def register_keyword(self, keyword: str, utterances: np.ndarray):

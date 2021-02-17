@@ -1,9 +1,7 @@
-"""A DTW model for QbE KWS.
-
-Implementation is based on https://cs.fit.edu/~pkc/papers/tdm04.pdf (this is what the fastdtw package implements)
-"""
+"""A DTW model for QbE KWS."""
 import os
 import sys
+import numba
 
 # Some systems don't use the launching directory as root
 if os.getcwd() not in sys.path:
@@ -11,17 +9,19 @@ if os.getcwd() not in sys.path:
 
 import numpy as np
 import librosa
-from fastdtw import fastdtw
+from models.ditto.algorithms.odtw import ODTW
 from pipelines.evaluate.query_by_example.model import Model, Setting
 
 
+@numba.jit(nopython=True, fastmath=True)
 def euclidean(x, y):
     return np.sqrt(np.square(x - y).sum())
 
 
-class FastDTWMFCC(Model):
+class ODTWMFCC(Model):
     def register_setting(self, setting: Setting):
         self.sample_rate = setting.sample_rate
+        self.odtw = ODTW(sequence_length=len(self.mfcc_feature(np.random.rand(setting.sequence_length))))
 
     def __init__(self, max_distance: float):
         self.max_distance = max_distance
@@ -29,35 +29,37 @@ class FastDTWMFCC(Model):
         self.keyword_score = {}
 
         self.sample_rate = None
+        self.odtw = None
+
+        self.normalizing = float(2**15)
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
-        utterances = utterances / np.abs(utterances).max(axis=-1)[:, None]
+        #utterances = utterances / np.abs(utterances).max(axis=-1)[:, None]
+        utterances = utterances / self.normalizing
 
-        self.keywords_clips[keyword] = [
-            librosa.feature.mfcc(utterance, sr=self.sample_rate,
-                                 n_mfcc=40,
-                                 n_fft=1024,
-                                 hop_length=512,
-                                 win_length=1024,
-                                 n_mels=80) for utterance in utterances]
+        self.keywords_clips[keyword] = [self.mfcc_feature(utterance) for utterance in utterances]
 
         self.keyword_score[keyword] = 0
+
+    def mfcc_feature(self, utterance: np.ndarray):
+        return librosa.feature.mfcc(utterance, sr=self.sample_rate,
+                                    n_mfcc=40,
+                                    n_fft=1024,
+                                    hop_length=512,
+                                    win_length=1024,
+                                    n_mels=80)
 
     def infer(self, utterance: np.ndarray):
         for k in self.keyword_score.keys():
             self.keyword_score[k] = 0
 
-        utterance = utterance / np.abs(utterance).max()
-        utterance = librosa.feature.mfcc(utterance, sr=8000,
-                                         n_mfcc=40,
-                                         n_fft=1024,
-                                         hop_length=512,
-                                         win_length=1024,
-                                         n_mels=80)
+        #utterance = utterance / np.abs(utterance).max()
+        utterance = utterance / self.normalizing
+        utterance = self.mfcc_feature(utterance)
 
         for keyword, mfccs in self.keywords_clips.items():
             for mfcc in mfccs:
-                distance, _ = fastdtw(utterance, mfcc, dist=euclidean)
+                distance = self.odtw.distance(utterance, mfcc, distance=euclidean)
                 self.keyword_score[keyword] += (distance / len(self.keywords_clips[keyword]))
 
         scores = sorted(list(self.keyword_score.items()), key=lambda x: x[1])
@@ -69,7 +71,7 @@ class FastDTWMFCC(Model):
         return None
 
     def name(self):
-        return "DTW"
+        return "ODTW"
 
 
 if __name__ == "__main__":
@@ -81,12 +83,12 @@ if __name__ == "__main__":
 
     utterance = np.random.normal(0.0, 1, size=16000)
 
-    dtw = FastDTWMFCC(1000)
-    dtw.register_setting(Setting(
+    d = ODTWMFCC(1000)
+    d.register_setting(Setting(
         sample_rate=8000,
-        sequence_length=0
+        sequence_length=16000
     ))
     for keyword, utterances in keyword_clips.items():
-        dtw.register_keyword(keyword, utterances)
+        d.register_keyword(keyword, utterances)
 
-    print("utterance", dtw.infer(utterance))
+    print("utterance", d.infer(utterance))

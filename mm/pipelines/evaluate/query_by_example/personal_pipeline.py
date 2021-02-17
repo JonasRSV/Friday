@@ -4,7 +4,7 @@ import pathlib
 import tensorflow as tf
 import shared.tfexample_utils as tfexample_utils
 import pipelines.evaluate.query_by_example.task_tfexample_utils as task_tfexample_utils
-from pipelines.evaluate.query_by_example.metrics.accuracy import Accuracy
+from pipelines.evaluate.query_by_example.metrics.personal.accuracy import Accuracy
 import numpy as np
 from tqdm import tqdm
 
@@ -71,7 +71,7 @@ def simulate_task(model: m.Model, audio: np.ndarray, sample_rate: int, window_si
 
             if utterance:
                 utterances.append(utterance)
-                at_time.append(current_sample + window_size_samples)
+                at_time.append(current_sample + (window_size_samples / 2))
 
             current_sample += window_stride_samples
 
@@ -82,7 +82,7 @@ def simulate_task(model: m.Model, audio: np.ndarray, sample_rate: int, window_si
 
 def run_eval(model: m.Model, tasks: str, window_size: float, window_stride: float, sample_rate: int):
     metrics = [
-        Accuracy(window=int(sample_rate * window_size))
+        Accuracy(window=int(sample_rate * window_size) * 2)
     ]
 
     run_times = []
@@ -119,7 +119,8 @@ def run_eval(model: m.Model, tasks: str, window_size: float, window_stride: floa
 def run(model: m.Model):
     parser = argparse.ArgumentParser()
     parser.add_argument("--tasks", required=True, type=str, help="path to task files, e.g '../tfexample.task*'")
-    parser.add_argument("--examples", required=True, type=str, help="path to examples files, e.g '../tfexample.examples*'")
+    parser.add_argument("--examples", required=True, type=str,
+                        help="path to examples files, e.g '../tfexample.examples*'")
     parser.add_argument("--window_size", required=True, type=float, help="inference window size, in seconds.")
     parser.add_argument("--window_stride", required=True, type=float, help="inference window stride, in seconds.")
     parser.add_argument("--sample_rate", required=True, type=int, help="Expected sample_rate of audio.")
@@ -132,10 +133,15 @@ def run(model: m.Model):
     print(f"Window Stride: {args.window_stride}")
     print(f"Sample Rate: {args.sample_rate}")
 
-    model = register_keywords(model,
-                              examples=args.examples,
-                              window_size=args.window_size,
-                              base_sample_rate=args.sample_rate)
+    model.register_setting(setting=m.Setting(
+        sample_rate=args.sample_rate,
+        sequence_length=int(args.sample_rate * args.window_size)
+    ))
+
+    register_keywords(model,
+                      examples=args.examples,
+                      window_size=args.window_size,
+                      base_sample_rate=args.sample_rate)
     run_eval(model,
              tasks=args.tasks,
              window_size=args.window_size,
