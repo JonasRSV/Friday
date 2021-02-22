@@ -43,8 +43,53 @@ python3 models/jigglypuff/jigglypuff.py\
     
 ```
 
-QbE Evaluation
+### Evaluation
+
+Pick a 'Distance'
 
 ```bash
+JIGGLYPUFF_DISTANCE=BEAMODTW
+```
+
+Pick a model, it should be a path to a tensorflow 'SavedModel' export directory.
+
+```bash 
+JIGGLYPUFF_MODEL=$PWD/data/stp_model/1613990506
+```
+
+Then run the evaluate script
+
+```bash
+FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py
+```
+
+#### Evaluation examples
+
+When evaluating against the 'Personal':
+
+```bash 
+FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
+  --export_dir=${JIGGLYPUFF_MODEL?}\
+  --jigglypuff=${JIGGLYPUFF_DISTANCE?}\
+  --pipeline=P\
+  --tasks="data/evaluation/tasks/*"\
+  --examples="data/evaluation/examples/*"\
+  --window_size=2\
+  --window_stride="0.25"\
+  --sample_rate=8000
+```
+
+When evaluating against 'Google Speech Commands':
+
+```bash 
+FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
+    --export_dir=${JIGGLYPUFF_MODEL?}\
+    --jigglypuff=${JIGGLYPUFF_DISTANCE?}\
+    --pipeline=GSC\
+    --examples="data/speech_commands_qbe_eval/*"\
+    --window_size=2\
+    --n=3\
+    --seed=1337\
+    --sample_rate=8000
 ```
 

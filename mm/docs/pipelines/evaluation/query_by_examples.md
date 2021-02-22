@@ -1,13 +1,15 @@
 # Query By Examples
 
 QbE (Query by Examples) models take example utterances of keywords and use these for inference. QbE models are evaluated
-using one QbE pipeline. 
+using one QbE pipeline, results can then be visualized
 
 - [Usage](#usage)
 - [Personal Pipeline](#personal-pipeline)
     - [Examples](#personal-examples)
 - [Google Speech Commands Pipeline](#google-speech-commands-pipeline)
   - [Examples](#google-speech-examples)
+- [Visualize](#visualize)
+
 
 # Usage
 
@@ -50,3 +52,19 @@ the 'to_examples' [gsc pipeline](../../../pipelines/to_tfexample/google_speech_c
 - [ditto](../../models/ditto.md)
 
 
+## Visualize
+
+Each pipeline stores the result in some csv file under 'FRIDAY_DATA'.
+
+See all visualization options with..
+
+```bash
+python3 pipelines/evaluate/query_by_example/metrics/visualize.py
+```
+
+#### Examples
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
+  --dataset="P"\
+  --visualization="per_distance_accuracy"
+```

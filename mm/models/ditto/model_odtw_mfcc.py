@@ -31,14 +31,11 @@ class ODTWMFCC(Model):
         self.sample_rate = None
         self.odtw = None
 
-        self.normalizing = float(2**15)
+        self.normalizing = float(2 ** 15)
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
-        #utterances = utterances / np.abs(utterances).max(axis=-1)[:, None]
         utterances = utterances / self.normalizing
-
         self.keywords_clips[keyword] = [self.mfcc_feature(utterance) for utterance in utterances]
-
         self.keyword_score[keyword] = 0
 
     def mfcc_feature(self, utterance: np.ndarray):
@@ -49,11 +46,10 @@ class ODTWMFCC(Model):
                                     win_length=1024,
                                     n_mels=80)
 
-    def infer(self, utterance: np.ndarray):
+    def _infer_average_score(self, utterance: np.ndarray):
         for k in self.keyword_score.keys():
             self.keyword_score[k] = 0
 
-        #utterance = utterance / np.abs(utterance).max()
         utterance = utterance / self.normalizing
         utterance = self.mfcc_feature(utterance)
 
@@ -66,12 +62,33 @@ class ODTWMFCC(Model):
         best = scores[0]
 
         if best[1] < self.max_distance:
-            return best[0]
+            return best[0], best[0], best[1]
 
-        return None
+        return None, best[0], best[1]
+
+    def _infer_min_example(self, utterance: np.ndarray):
+        utterance = utterance / self.normalizing
+        utterance = self.mfcc_feature(utterance)
+
+        min_distance, keyword = 1e9, None
+        for kw, mfccs in self.keywords_clips.items():
+            for mfcc in mfccs:
+                distance = self.odtw.distance(utterance, mfcc, distance=euclidean)
+                if distance < min_distance:
+                    min_distance = distance
+                    keyword = kw
+
+        if min_distance < self.max_distance:
+            return keyword, keyword, min_distance
+
+        return None, keyword, min_distance
+
+    def infer(self, utterance: np.ndarray):
+        # return self._infer_average_score(utterance)
+        return self._infer_min_example(utterance)
 
     def name(self):
-        return "ODTW"
+        return "ODTWMFCC-min"
 
 
 if __name__ == "__main__":

@@ -10,13 +10,23 @@ Ditto is a model using audio matching algorithms for QbE KWS. It is basically DT
 ### Evaluation
 
 
-There are many ditto variants, open [evaluate](../../models/ditto/evaluate.py) and uncomment all but the one you want 
-to evaluate.
-
-When evaluating against the personal pipeline, use:
+There are many ditto variants, first pick one to evaluate.
 
 ```bash
-python3 models/ditto/evaluate.py\
+DITTO_MODEL=FASTDTW
+DITTO_MODEL=FASTDTWMFCC
+DITTO_MODEL=DTWMFCC
+DITTO_MODEL=ODTWMFCC
+```
+
+Then,
+
+When evaluating against the 'Personal':
+
+```bash 
+FRIDAY_DATA=data python3 models/ditto/evaluate.py\
+  --ditto=${DITTO_MODEL?}\
+  --pipeline=P\
   --tasks="data/evaluation/tasks/*"\
   --examples="data/evaluation/examples/*"\
   --window_size=2\
@@ -24,10 +34,12 @@ python3 models/ditto/evaluate.py\
   --sample_rate=8000
 ```
 
-When evaluating against google speech commands use:
+When evaluating against 'Google Speech Commands':
 
 ```bash 
-python3 models/ditto/evaluate.py\
+FRIDAY_DATA=data python3 models/ditto/evaluate.py\
+    --ditto=${DITTO_MODEL?}\
+    --pipeline=GSC\
     --examples="data/speech_commands_qbe_eval/*"\
     --window_size=2\
     --n=3\

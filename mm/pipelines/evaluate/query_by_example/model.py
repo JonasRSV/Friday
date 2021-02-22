@@ -37,7 +37,10 @@ class Model(ABC):
         utterance: A N-vector containing the 16bit samples.
 
         Returns
-            the 'keyword' identifier provided to 'register_keyword' or 'None' if no known keyword is present.
+            (A, B, C)
+            A: the 'keyword' identifier provided to 'register_keyword' or 'None' if no known keyword is present.
+            B: the 'keyword' closest to the utterance
+            C: the distance to the keyword closest to the utterance
         """
         raise NotImplementedError(f"'infer' have not been implemented for {self.__class__}")
 

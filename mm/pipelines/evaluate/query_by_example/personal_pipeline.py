@@ -1,10 +1,9 @@
 """QbE Evaluation Pipeline."""
 import time
-import pathlib
+import pandas as pd
 import tensorflow as tf
-import shared.tfexample_utils as tfexample_utils
 import pipelines.evaluate.query_by_example.task_tfexample_utils as task_tfexample_utils
-from pipelines.evaluate.query_by_example.metrics.personal.accuracy import Accuracy
+from pipelines.evaluate.query_by_example import core
 import numpy as np
 from tqdm import tqdm
 
@@ -12,108 +11,171 @@ tf.compat.v1.enable_eager_execution()
 
 import argparse
 from pipelines.evaluate.query_by_example import model as m
-from typing import Iterable
 
 
-def example_it(examples: str) -> Iterable[tf.train.Example]:
-    path_components = examples.split("/")
-    suffix = path_components[-1]
+def simulate_task(model: m.Model,
+                  audio: np.ndarray,
+                  sample_rate: int,
+                  window_size: float,
+                  window_stride: float):
+    """Simulate running the model on audio of the task file.
 
-    path = "/".join(path_components[:-1])
-    files = list(pathlib.Path(path).glob(suffix))
-
-    for file in tqdm(files):
-        for example in tf.data.TFRecordDataset(filenames=[str(file)]):
-            example = example.numpy()
-            yield tf.train.Example.FromString(example)
-
-
-def register_keywords(model: m.Model, examples: str, window_size: int, base_sample_rate: int):
-    keywords_audio = {}
-    for example in example_it(examples):
-        audio = tfexample_utils.get_audio(example)
-        text = tfexample_utils.get_text(example)
-        sample_rate = tfexample_utils.get_sample_rate(example)
-
-        # Pad audio files to window_size
-        padded_audio_length = int(window_size * sample_rate)
-        audio = audio[:padded_audio_length]
-        audio = audio + [0] * (len(audio) - padded_audio_length)
-
-        if text not in keywords_audio:
-            keywords_audio[text] = []
-
-        keywords_audio[text].append(audio)
-
-        # If audio files got different sample_rates the pipeline gets UB, here we crash instead.
-        if base_sample_rate != sample_rate:
-            raise Exception(f"Files contain different sample rates {base_sample_rate} != {sample_rate}")
-
-    for keyword, audio in keywords_audio.items():
-        audio = np.array(audio)
-        print(f"{model.name()} registering {keyword} - {audio.shape}")
-
-        model.register_keyword(keyword, audio)
-
-    return model
-
-
-def simulate_task(model: m.Model, audio: np.ndarray, sample_rate: int, window_size: float, window_stride: float):
+    Returns:
+        For each instance the predicted label or 'None' and the sample in the middle of the prediction window.
+    """
     window_size_samples = int(window_size * sample_rate)
     window_stride_samples = int(window_stride * sample_rate)
 
-    utterances, at_time = [], []
-    current_sample, total_predictions = 0, 0
+    utterances, at_time, closest_keywords, distances, latency = [], [], [], [], []
     with tqdm(total=audio.size) as progress_bar:
+        current_sample = 0
         while current_sample + window_size_samples < audio.size:
-            total_predictions += 1
-            utterance = model.infer(audio[current_sample: current_sample + window_size_samples])
+            timestamp = time.time()
+            utterance, closest_keyword, distance = model.infer(audio[current_sample:
+                                                                     current_sample + window_size_samples])
 
-            if utterance:
-                utterances.append(utterance)
-                at_time.append(current_sample + (window_size_samples / 2))
+            closest_keywords.append(closest_keyword)
+            distances.append(distance)
+            latency.append(time.time() - timestamp)
+
+            utterances.append(utterance)
+            at_time.append(current_sample + (window_size_samples / 2))
 
             current_sample += window_stride_samples
-
             progress_bar.update(window_stride_samples)
 
-    return utterances, at_time, total_predictions
+    return utterances, at_time, closest_keywords, distances, latency
 
 
-def run_eval(model: m.Model, tasks: str, window_size: float, window_stride: float, sample_rate: int):
-    metrics = [
-        Accuracy(window=int(sample_rate * window_size) * 2)
-    ]
+def align_labels(task: str,
+                 keywords: [str],
+                 pred_ut: [str],
+                 pred_at_time: [int],
+                 ut: [str],
+                 at_time: [int],
+                 window: float):
+    """Aligns predictions and labels into two dataframes
 
-    run_times = []
-    for task in example_it(tasks):
+    Given two sequences
+
+    (hello, 1), (cool, 100), (well, 129)
+    (hello, 10), (well, 128)
+
+    and a window size
+
+    a utterance is considered correct if there is a utterance of the same keyword in the labels within 'window'
+
+
+    Returns:
+        P, L
+
+        P: pd.DataFrame
+        L: pd.DataFrame
+
+
+        P: (len(pred_ut) x (len(keywords) + 4))
+        L: (len(ut) x (len(keywords) + 4))
+
+        + 4 because we're adding 'None' label, task-id, time and 'label'
+
+
+    Each dataframe contains
+    'id' 'utterance' 'time' '{keyword_1}' '{keyword_2}' .. '{keyword_m}'
+
+    where the number at entry '{keyword_x}' is the number of times it was predicted in the window of 'utterance'
+
+
+    The first contains it for the predictions, the second for the labels.
+    """
+    # Add None label
+    keywords = [k for k in keywords] + ['None']
+    pred_ut = list(map(str, pred_ut))
+    ut = list(map(str, ut))
+
+    p_len = len(pred_ut)
+    l_len = len(ut)
+
+    # Dynamic typing ftw
+    P = [[task] + [pred_ut[p]] + [pred_at_time[p]] + ([0] * len(keywords)) for p in range(p_len)]
+    L = [[task] + [ut[l]] + [at_time[l]] + ([0] * len(keywords)) for l in range(l_len)]
+
+    for p in range(p_len):
+        for l in range(l_len):
+            matches_time = abs(pred_at_time[p] - at_time[l]) < window
+
+            if matches_time:
+                P[p][keywords.index(ut[l]) + 3] += 1
+                L[l][keywords.index(pred_ut[p]) + 3] += 1
+            else:
+                P[p][keywords.index('None') + 3] += 1
+
+    return (pd.DataFrame(P, columns=["id", "utterance", "time"] + keywords),
+            pd.DataFrame(L, columns=["id", "utterance", "time"] + keywords))
+
+
+def filter_labels(keywords: [str], ut: [str], at_time: [str]):
+    """Filter ut and at_time to only contain occurrences in keywords."""
+    k = set(keywords)
+
+    ut_n, at_time_n = [], []
+    for i in range(len(ut)):
+        if ut[i] in k:
+            ut_n.append(ut[i])
+            at_time_n.append(at_time[i])
+
+    return ut_n, at_time_n
+
+
+def run_eval(model: m.Model,
+             keywords: [str],
+             tasks: str,
+             window_size: float,
+             window_stride: float,
+             model_sample_rate: int):
+    """Run model evaluation on all tasks"""
+    pred_data, label_data = [], []
+    for task_id, task in enumerate(core.example_it(tasks)):
         audio = np.array(task_tfexample_utils.get_audio(task))
         utterances = task_tfexample_utils.get_utterances(task).split("-")
         at_time = task_tfexample_utils.get_at_time(task)
-        sr = task_tfexample_utils.get_sample_rate(task)
+        sample_rate = task_tfexample_utils.get_sample_rate(task)
+
+        utterances, at_time = filter_labels(keywords, ut=utterances, at_time=at_time)
 
         # If audio files got different sample_rates the pipeline gets UB, here we crash instead.
-        if sr != sample_rate:
-            raise Exception(f"Files contain different sample rates {sr} != {sample_rate}")
+        if sample_rate != model_sample_rate:
+            raise Exception(f"Files contain different sample rates {sample_rate} != {model_sample_rate}")
 
-        timestamp = time.time()
-        pred_utterances, pred_at_time, total_predictions = simulate_task(model,
-                                                                         audio,
-                                                                         sample_rate,
-                                                                         window_size,
-                                                                         window_stride)
+        pred_utterances, pred_at_time, closest_keywords, distances, latency = simulate_task(model,
+                                                                                            audio,
+                                                                                            sample_rate,
+                                                                                            window_size,
+                                                                                            window_stride)
 
-        time_normalizing = len(audio) / (sample_rate * window_stride)
-        run_times.append((time.time() - timestamp) / time_normalizing)
+        p, l = align_labels(task=str(task_id),
+                            keywords=keywords,
+                            pred_ut=pred_utterances,
+                            pred_at_time=pred_at_time,
+                            ut=utterances,
+                            at_time=at_time,
+                            window=window_size * model_sample_rate)
 
-        for x in metrics:
-            x.update(pred_utterances=pred_utterances, pred_at_time=pred_at_time,
-                     utterances=utterances, at_time=at_time, total=total_predictions)
+        p["latency"] = latency
+        p["model"] = model.name()
+        p["closest_keyword"] = closest_keywords
+        p["distance"] = distances
+        p["dataset"] = core.Pipelines.PERSONAL.value
+        p["time"] = time.time()
 
-    run_times = np.array(run_times)
-    print(f"average run-time = {run_times.mean()}")
-    for x in metrics:
-        x.summarize()
+        l["model"] = model.name()
+        l["dataset"] = core.Pipelines.PERSONAL.value
+        l["time"] = time.time()
+
+        pred_data.append(p)
+        label_data.append(l)
+
+    return pd.concat(pred_data), pd.concat(label_data)
+
 
 
 def run(model: m.Model):
@@ -125,7 +187,7 @@ def run(model: m.Model):
     parser.add_argument("--window_stride", required=True, type=float, help="inference window stride, in seconds.")
     parser.add_argument("--sample_rate", required=True, type=int, help="Expected sample_rate of audio.")
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     print(f"Tasks: {args.tasks}")
     print(f"Examples: {args.examples}")
@@ -138,12 +200,16 @@ def run(model: m.Model):
         sequence_length=int(args.sample_rate * args.window_size)
     ))
 
-    register_keywords(model,
-                      examples=args.examples,
-                      window_size=args.window_size,
-                      base_sample_rate=args.sample_rate)
-    run_eval(model,
-             tasks=args.tasks,
-             window_size=args.window_size,
-             window_stride=args.window_stride,
-             sample_rate=args.sample_rate)
+    keywords = core.register_keywords(
+        model=model,
+        ex_it=core.example_it(args.examples),
+        keyword_audio_size=args.window_size,
+        keyword_audio_sample_rate=args.sample_rate
+    )
+
+    return run_eval(model,
+                    keywords=keywords,
+                    tasks=args.tasks,
+                    window_size=args.window_size,
+                    window_stride=args.window_stride,
+                    model_sample_rate=args.sample_rate), keywords

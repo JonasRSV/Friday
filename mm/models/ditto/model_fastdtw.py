@@ -44,12 +44,12 @@ class FastDTW(Model):
         best = scores[0]
 
         if best[1] < self.max_distance:
-            return best[0]
+            return best[0], best[0], best[1]
 
-        return None
+        return None, best[0], best[1]
 
     def name(self):
-        return "DTW"
+        return "FASTDTW"
 
 
 if __name__ == "__main__":

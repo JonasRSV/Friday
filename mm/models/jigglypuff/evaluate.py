@@ -6,11 +6,7 @@ import argparse
 if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
 
-import model_fastdtw
-import model_fastdtw_mfcc
-import model_dtw_mfcc
-import model_odtw_mfcc
-
+from models.jigglypuff.distances.beam_odtw import BeamODTW
 from enum import Enum
 
 from pipelines.evaluate.query_by_example.metrics import personal
@@ -21,11 +17,8 @@ from pipelines.evaluate.query_by_example.personal_pipeline import run as persona
 from pipelines.evaluate.query_by_example.google_speech_commands_pipeline import run as google_run
 
 
-class Ditto(Enum):
-    FASTDTW = "FASTDTW"
-    FASTDTWMFCC = "FASTDTWMFCC"
-    DTWMFCC = "DTWMFCC"
-    ODTWMFCC = "ODTWMFCC"
+class Jigglypuff(Enum):
+    BEAMODTW = "BEAMODTW"
 
 
 def run_google_speech_commands_pipeline(model):
@@ -45,7 +38,6 @@ def run_personal_pipeline(model):
     append("mpd.csv", df)
     distance.metrics(a, keywords=keywords)
 
-    print("b", b)
     df = personal.main(df=b, keywords=keywords)
     df["model"] = model.name()
     append("personal.csv", df)
@@ -56,18 +48,19 @@ def run_personal_pipeline(model):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--pipeline", type=str, choices=[v.value for v in Pipelines])
-    parser.add_argument("--ditto", type=str, choices=[v.value for v in Ditto])
+    parser.add_argument("--jigglypuff", type=str, choices=[v.value for v in Jigglypuff])
+    parser.add_argument("--export_dir", type=str, required=True)
     args, _ = parser.parse_known_args()
 
     model = {
-        Ditto.FASTDTW.value: model_fastdtw.FastDTW(max_distance=2000000),
-        Ditto.FASTDTWMFCC.value: model_fastdtw_mfcc.FastDTWMFCC(max_distance=1900),
-        Ditto.DTWMFCC.value: model_dtw_mfcc.DTWMFCC(max_distance=2050),
-        Ditto.ODTWMFCC.value: model_odtw_mfcc.ODTWMFCC(max_distance=2050),
+        Jigglypuff.BEAMODTW.value: BeamODTW(export_dir=args.export_dir, max_distance=1000)
     }
 
-    if args.pipeline == Pipelines.PERSONAL.value:
-        run_personal_pipeline(model[args.ditto])
+    print([v.value for v in Jigglypuff])
+    print(args.jigglypuff)
 
-    if args.pipeline == Pipelines.GOOGLE_SPEECH_COMMANDS.value:
-        run_google_speech_commands_pipeline(model[args.ditto])
+    {
+        Pipelines.PERSONAL.value: run_personal_pipeline,
+        Pipelines.GOOGLE_SPEECH_COMMANDS.value: run_google_speech_commands_pipeline,
+    }[args.pipeline](model[args.jigglypuff])
+

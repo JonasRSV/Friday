@@ -6,6 +6,11 @@ from typing import Callable
 
 @numba.jit(nopython=True, fastmath=True)
 def dtw(x, template, mem, template_length, sequence_length, distance):
+    """Implementation of open-ended DTW.
+
+    template_length = sequence_length + 2, the additional two tokens in template are 0 cost padding tokens,
+    one for the start of the sequence and one for the end.
+    """
     for j in range(1, template_length - 1):
         mem[0, j] = mem[0, j - 1] + distance(x[0], template[j - 1])
 

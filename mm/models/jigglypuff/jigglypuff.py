@@ -209,18 +209,18 @@ def make_model_fn(num_phonemes: int,
                                                       logit_length=logit_length,
                                                       num_phonemes=num_phonemes)
         elif mode == tf.estimator.ModeKeys.PREDICT:
-            print("logits", logits, "logit_length", logit_length)
             top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(logits,
                                                                   logit_length,
                                                                   beam_width=100)
             predict_op = tf.sparse.to_dense(top_beam_search[0])[0]
 
             # Useful information for when doing inference
-            tf.identity(tf.shape(predict_op), name="output_shape")
-            tf.identity(tf.squeeze(logit_length), name="output_logits_shape")
-            tf.identity(tf.squeeze(logits)[:logit_length[0]], name="output_logits")
+
+            logits = tf.identity(tf.squeeze(logits)[:logit_length[0]], name="logits")
+            tf.identity(tf.shape(logits), name="logits_shape")
 
             predict_op = tf.identity(predict_op, name="output")
+            tf.identity(tf.shape(predict_op), name="output_shape")
         else:
             raise Exception(f"Unknown ModeKey {mode}")
 
@@ -336,6 +336,7 @@ def main():
                     tf.compat.v1.placeholder(dtype=tf.int16,
                                              shape=[None],
                                              name="input"),
+                # We have no padding when serving.
                 "logit_length_factor": tf.constant(1.0, dtype=tf.float32)
             }
             return tf.estimator.export.ServingInputReceiver(
