@@ -81,6 +81,22 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
     return input_fn
 
 
+def get_predict_ops(logits: tf.Tensor, logit_length: tf.Tensor, labels: tf.Tensor):
+    top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(logits,
+                                                          logit_length,
+                                                          beam_width=100)
+
+    ctc_loss = tf.nn.ctc_loss_v2(labels=labels, logits=logits,
+                                 label_length=tf.expand_dims(tf.shape(labels)[1], 0),
+                                 logit_length=logit_length,
+                                 blank_index=-1)
+
+    predict_op = tf.squeeze(tf.sparse.to_dense(top_beam_search[0])[0])
+    logits = tf.squeeze(logits)[:logit_length[0]]
+
+    return predict_op, tf.shape(predict_op), logits, tf.shape(logits), -tf.squeeze(ctc_loss)
+
+
 def get_metric_ops(labels: tf.Tensor,
                    logits: tf.Tensor,
                    label_length: tf.Tensor,
@@ -170,6 +186,7 @@ def make_model_fn(num_phonemes: int,
         # Expand single prediction to batch
         if mode == tf.estimator.ModeKeys.PREDICT:
             audio_signal = tf.expand_dims(audio_signal, 0)
+            features["label"] = tf.expand_dims(features["label"], 0)
             features["logit_length_factor"] = tf.expand_dims(features["logit_length_factor"], 0)
 
         signal = audio.normalize_audio(audio_signal)
@@ -209,18 +226,17 @@ def make_model_fn(num_phonemes: int,
                                                       logit_length=logit_length,
                                                       num_phonemes=num_phonemes)
         elif mode == tf.estimator.ModeKeys.PREDICT:
-            top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(logits,
-                                                                  logit_length,
-                                                                  beam_width=100)
-            predict_op = tf.sparse.to_dense(top_beam_search[0])[0]
+            predict_op, predict_shape, logits_op, logits_shape, ctc_op = get_predict_ops(
+                logits=logits,
+                logit_length=logit_length,
+                labels=features["label"]
+            )
 
-            # Useful information for when doing inference
-
-            logits = tf.identity(tf.squeeze(logits)[:logit_length[0]], name="logits")
-            tf.identity(tf.shape(logits), name="logits_shape")
-
-            predict_op = tf.identity(predict_op, name="output")
-            tf.identity(tf.shape(predict_op), name="output_shape")
+            tf.identity(predict_op, name="output")
+            tf.identity(predict_shape, name="output_shape")
+            tf.identity(logits_op, name="logits")
+            tf.identity(logits_shape, name="logits_shape")
+            tf.identity(ctc_op, name="log_prob")
         else:
             raise Exception(f"Unknown ModeKey {mode}")
 
@@ -336,6 +352,10 @@ def main():
                     tf.compat.v1.placeholder(dtype=tf.int16,
                                              shape=[None],
                                              name="input"),
+                "label":
+                    tf.compat.v1.placeholder(dtype=tf.int32,
+                                             shape=[None],
+                                             name="labels"),
                 # We have no padding when serving.
                 "logit_length_factor": tf.constant(1.0, dtype=tf.float32)
             }

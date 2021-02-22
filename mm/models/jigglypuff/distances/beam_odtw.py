@@ -30,7 +30,38 @@ class BeamODTW(base.Base):
 
         print(self.keyword_phoneme_seq)
 
-    def infer(self, utterance: np.ndarray):
+    def infer_min_avg_distance(self, utterance: np.ndarray):
+        min_distance, keyword = 1e9, None
+        ut_seq, _ = self.get_output(utterance)
+
+        for kw, seqs in self.keyword_phoneme_seq.items():
+            score = 0
+            for seq in seqs:
+                x = ut_seq
+                template = seq
+                sequence_length = len(x)
+                template_length = len(template) + 2
+                mem = np.zeros((sequence_length, template_length))
+
+                distance = dtw(x=x,
+                               template=template,
+                               mem=mem,
+                               sequence_length=sequence_length,
+                               template_length=template_length,
+                               distance=discrete)
+
+                score += distance
+
+            if score < min_distance:
+                min_distance = score
+                keyword = kw
+
+        if min_distance < self.max_distance:
+            return keyword, keyword, min_distance
+
+        return None, keyword, min_distance
+
+    def infer_min_distance(self, utterance: np.ndarray):
         min_distance, keyword = 1e9, None
         ut_seq, _ = self.get_output(utterance)
         logits, _ = self.get_logits(utterance)
@@ -59,6 +90,10 @@ class BeamODTW(base.Base):
 
         return None, keyword, min_distance
 
+    def infer(self, utterance: np.ndarray):
+        #return self.infer_min_avg_distance(utterance)
+        return self.infer_min_distance(utterance)
+
     def name(self):
         return "Jigglypuff BeamODTW"
 
@@ -67,10 +102,11 @@ class BeamODTW(base.Base):
 
 
 if __name__ == "__main__":
-    model = BeamODTW(export_dir=f"{os.getenv('FRIDAY_ROOT')}/mm/data/stp_model/1613990506",
+    model = BeamODTW(export_dir=f"{os.getenv('FRIDAY_ROOT')}/mm/data/stp_model/1614012997",
                      max_distance=1000)
 
     mock_audio = (np.random.rand(16000) * 30000).astype(np.int16)
+    mock_labels = np.array([10, 20, 0, 10, 10, 20, 0, 10, 12])
     output, output_shape = model.get_output(mock_audio)
 
     print("output_shape", output_shape)
@@ -81,3 +117,7 @@ if __name__ == "__main__":
     print("logits_shape", logits_shape)
     print("logits", logits)
     print("logits", logits.shape)
+
+    log_prob = model.get_log_prob(mock_audio, labels=mock_labels)
+
+    print(log_prob)
