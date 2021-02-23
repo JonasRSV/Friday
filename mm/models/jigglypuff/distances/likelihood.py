@@ -5,20 +5,8 @@ import models.jigglypuff.distances.base as base
 from pipelines.evaluate.query_by_example.model import Setting
 from typing import List
 
-
-def softmax(x: np.ndarray):
-    e = np.exp(x - np.max(x, axis=-1)[:, np.newaxis])
-    return e / e.sum(axis=-1)[:, np.newaxis]
-
-
-def logits_to_logprob(x: np.ndarray):
-    """Converts logits to log probabilities."""
-    return np.log(softmax(x))
-
-
-
-
 class Likelihood(base.Base):
+
     def __init__(self, export_dir: str, max_distance: float):
         base.Base.__init__(self, export_dir=export_dir)
 
@@ -43,7 +31,7 @@ class Likelihood(base.Base):
         for kw, seqs in self.keyword_phoneme_seq.items():
             score = 0.0
             for seq in seqs:
-                distance = likelihood_distance(seq, logits)
+                distance = -self.get_log_prob(utterance, seq)
                 score += distance / len(seqs)
 
             if score < min_distance:
@@ -61,7 +49,7 @@ class Likelihood(base.Base):
 
         for kw, seqs in self.keyword_phoneme_seq.items():
             for seq in seqs:
-                distance = likelihood_distance(seq, logits)
+                distance = -self.get_log_prob(utterance, seq)
 
                 if distance < min_distance:
                     min_distance = distance
@@ -73,23 +61,24 @@ class Likelihood(base.Base):
         return None, keyword, min_distance
 
     def infer(self, utterance: np.ndarray):
-        # self.infer_average_score(utterance)
-        return self.infer_most_likely(utterance)
+        return self.infer_average_score(utterance)
+        #return self.infer_most_likely(utterance)
 
     def name(self):
-        return "Jigglypuff Likelihood"
+        return "Jigglypuff Likelihood Avg"
 
     def register_setting(self, setting: Setting):
         pass
 
 
 if __name__ == "__main__":
-    model = Likelihood(export_dir=f"{os.getenv('FRIDAY_ROOT')}/mm/data/stp_model/1613990506",
+    model = Likelihood(export_dir=f"{os.getenv('FRIDAY_ROOT')}/mm/data/stp_model/1614070522",
                        max_distance=1000)
 
-    mock_audio_0 = (np.random.rand(16000) * 30000).astype(np.int16)
-    mock_audio_1 = (np.random.rand(16000) * 30000).astype(np.int16)
+    mock_audio_0 = (np.random.normal(-1, 1, 16000) * 10000).astype(np.int16)
+    mock_audio_1 = (np.random.normal(1, 1, 16000) * 10000).astype(np.int16)
 
     model.register_keyword("hi", np.array([mock_audio_0]))
 
     print(model.infer(mock_audio_1))
+    print(model.infer(mock_audio_0))

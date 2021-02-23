@@ -3,7 +3,8 @@
 
 ![jigglypuff](jigglypuff/jigglypuff.jpeg)
 
-Jigglypuff is an audio to phonemes model, jigglypuff supports adding custom keywords. 
+Jigglypuff is an audio to phonemes model, jigglypuff supports adding custom keywords. Jigglypuff depends on the output
+of the [phonemes labeling](../pipelines/labeling.md)
 
 This document explains how to train the Jigglypuff keyword spotting model. First set the
 model output directory
@@ -49,12 +50,14 @@ Pick a 'Distance'
 
 ```bash
 JIGGLYPUFF_DISTANCE=BEAMODTW
+JIGGLYPUFF_DISTANCE=LIKELIHOOD
+JIGGLYPUFF_DISTANCE=PosteriogramsODTW
 ```
 
 Pick a model, it should be a path to a tensorflow 'SavedModel' export directory.
 
 ```bash 
-JIGGLYPUFF_MODEL=$PWD/data/stp_model/1613990506
+JIGGLYPUFF_MODEL=$PWD/data/stp_model/1614070522
 ```
 
 Then run the evaluate script

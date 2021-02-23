@@ -7,6 +7,8 @@ if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
 
 from models.jigglypuff.distances.beam_odtw import BeamODTW
+from models.jigglypuff.distances.likelihood import Likelihood
+from models.jigglypuff.distances.posteriograms_odtw import PosteriogramsODTW
 from enum import Enum
 
 from pipelines.evaluate.query_by_example.metrics import personal
@@ -19,6 +21,8 @@ from pipelines.evaluate.query_by_example.google_speech_commands_pipeline import 
 
 class Jigglypuff(Enum):
     BEAMODTW = "BEAMODTW"
+    LIKELIHOOD = "LIKELIHOOD"
+    PosteriogramsODTW = "PosteriogramsODTW"
 
 
 def run_google_speech_commands_pipeline(model):
@@ -41,8 +45,8 @@ def run_personal_pipeline(model):
     df = personal.main(df=b, keywords=keywords)
     df["model"] = model.name()
     append("personal.csv", df)
-
     print(df)
+    print("b", b)
 
 
 if __name__ == "__main__":
@@ -53,11 +57,10 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     model = {
-        Jigglypuff.BEAMODTW.value: BeamODTW(export_dir=args.export_dir, max_distance=1000)
+        Jigglypuff.BEAMODTW.value: BeamODTW(export_dir=args.export_dir, max_distance=1000),
+        Jigglypuff.LIKELIHOOD.value: Likelihood(export_dir=args.export_dir, max_distance=14.2),
+        Jigglypuff.PosteriogramsODTW.value: PosteriogramsODTW(export_dir=args.export_dir, max_distance=200),
     }
-
-    print([v.value for v in Jigglypuff])
-    print(args.jigglypuff)
 
     {
         Pipelines.PERSONAL.value: run_personal_pipeline,

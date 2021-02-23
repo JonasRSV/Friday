@@ -22,8 +22,7 @@ python3 pipelines/preprocess.py \
 
 ## Phonemes
 
-This pipelines adds labels using a word to phoneme dictionary - this pipeline will also print 'longest_audio_sequence' and
-'longest_phoneme_sequence', remembering these values is useful for the training pipeline
+This pipelines adds labels using a word to phoneme dictionary.
 
 ```bash
 PHONEME_DICTIONARY_PATH=${FRIDAY_DATA?}/librispeech/word_phoneme_lexicon.txt
@@ -35,3 +34,7 @@ python3 pipelines/preprocess_phoneme.py \
   --expected_output_file_size=100\
   --maximum_clip_length=20 
 ```
+
+## Hash
+
+This pipeline adds labels based on a hash of the text.

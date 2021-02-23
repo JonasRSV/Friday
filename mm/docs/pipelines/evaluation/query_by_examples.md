@@ -50,6 +50,7 @@ the 'to_examples' [gsc pipeline](../../../pipelines/to_tfexample/google_speech_c
 ### Google Speech Examples
 - [baseline](../../models/random.md)
 - [ditto](../../models/ditto.md)
+- [jigglypuff](../../models/jigglypuff.md)
 
 
 ## Visualize

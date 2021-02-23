@@ -22,14 +22,24 @@ class Base(m.Model, ABC):
         print(self.log_prob, self.labels)
 
     def get_output(self, audio: np.ndarray):
-        return self.session.run((self.output, self.output_shape), feed_dict={
+        output, shape = self.session.run((self.output, self.output_shape), feed_dict={
             self.input: audio
         })
 
+        if output.ndim == 0:
+            return np.array([output]), [1]
+
+        return output, shape
+
     def get_logits(self, audio: np.ndarray):
-        return self.session.run((self.logits, self.logits_shape), feed_dict={
+        logits, shape = self.session.run((self.logits, self.logits_shape), feed_dict={
             self.input: audio
         })
+
+        if logits.ndim == 0:
+            return np.array([logits]), [1]
+
+        return logits, shape
 
     def get_log_prob(self, audio: np.ndarray, labels: np.ndarray):
         return self.session.run((self.log_prob), feed_dict={
