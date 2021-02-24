@@ -38,3 +38,12 @@ python3 pipelines/preprocess_phoneme.py \
 ## Hash
 
 This pipeline adds labels based on a hash of the text.
+
+```bash
+python3 pipelines/preprocess_hash.py \
+ "--source=${FRIDAY_SESSION?}/tfexamples*" \
+  --sink_prefix=${FRIDAY_SESSION?}/ptfexamples \
+  --expected_output_file_size=100\
+  --maximum_clip_length=2\
+  --chunk_stride=2
+```

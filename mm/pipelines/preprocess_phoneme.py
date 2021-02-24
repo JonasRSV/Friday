@@ -1,4 +1,4 @@
-http://192.168.1.21.8888/import sys
+import sys
 import os
 
 # Some systems dont use the launching directory as root

@@ -5,6 +5,7 @@ import os
 sys.path.append(os.getcwd())
 
 import models.shared.augmentation as augmentation
+import models.shared.augmentations as a
 import simpleaudio
 import tensorflow as tf
 import argparse
@@ -53,6 +54,7 @@ def play_audio(file: str, *_):
         audio = np.array(tfexample_utils.get_audio(example), dtype=np.int16)
         sample_rate = tfexample_utils.get_sample_rate(example)
 
+        print("playing..")
         simpleaudio.play_buffer(audio, 1, 2,
                                 sample_rate=sample_rate).wait_done()
 
@@ -65,17 +67,39 @@ def play_audio_with_augmentation(file: str, *_):
     if not file_path.is_file():
         raise InvalidFileError(f"{file} is not a valid file")
 
+    augmenter = augmentation.create_audio_augmentations([
+        a.TimeStretch(min_rate=0.93, max_rate=0.98),
+        a.PitchShift(min_semitones=-2, max_semitones=3),
+        a.Shift(min_rate=-500, max_rate=500),
+        a.Gain(min_gain=0.2, max_gain=2.0),
+        a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
+                     sample_rate=8000,
+                     min_voice_factor=0.5,
+                     max_voice_factor=0.8),
+        a.GaussianNoise(loc=0, stddev=100)
+    ],
+        p=[
+            0.5,
+            0.5,
+            0.3,
+            0.1,
+            1.0,
+            0.5
+           ]
+    )
+
     dataset = tf.data.TFRecordDataset([file])
     for serialized_example in dataset.take(100):
         example = tf.train.Example()
         example.ParseFromString(serialized_example.numpy())
 
         sample_rate = tfexample_utils.get_sample_rate(example)
-        audio = tf.constant(tfexample_utils.get_audio(example), dtype=tf.int16)
+        audio = np.array(tfexample_utils.get_audio(example))
 
-        audio = augmentation.randomly_apply_augmentations(sample_rate=sample_rate)({"audio": audio})["audio"]
+        audio = augmenter(audio, sample_rate)
         audio = np.array(audio, dtype=np.int16)
 
+        print(audio.shape)
         simpleaudio.play_buffer(audio, 1, 2,
                                 sample_rate=sample_rate).wait_done()
 
