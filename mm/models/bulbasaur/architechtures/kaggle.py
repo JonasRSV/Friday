@@ -6,7 +6,7 @@ def kaggle_cnn(x: tf.Tensor,
                embedding_dim: int,
                mode: tf.estimator.ModeKeys,
                regularization: float = 1e-6) -> tf.Tensor:
-    with tf.variable_scope('kaggle_cnn', reuse=True):
+    with tf.variable_scope('kaggle_cnn', reuse=tf.AUTO_REUSE):
         x = tf.expand_dims(x, -1)
         x = tf.compat.v1.layers.Conv2D(filters=64,
                                        kernel_size=(7, 3),

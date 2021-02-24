@@ -9,6 +9,9 @@ import tensorflow as tf
 import models.shared.audio as audio
 import argparse
 import models.bulbasaur.architechtures as arch
+import numpy as np
+import models.shared.augmentation as augmentation
+import models.shared.augmentations as a
 from enum import Enum
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
@@ -22,18 +25,56 @@ class Mode(Enum):
 def create_input_fn(mode: tf.estimator.ModeKeys,
                     input_prefix: str,
                     audio_length: int,
+                    sample_rate: int,
                     parallel_reads: int = 5,
                     batch_size: int = 32):
     feature_description = {
-        'label': tf.io.FixedLenFeature(tf.int64, [1]),
-        'audio': tf.io.FixedLenFeature(tf.int64, [audio_length]),
+        'label': tf.io.FixedLenFeature([], tf.int64),
+        'audio': tf.io.FixedLenFeature([audio_length], tf.int64),
     }
 
-    def decode_example(x: tf.train.Example) -> tf.train.Example:
+    def decode_example(x):
         return tf.io.parse_single_example(x, feature_description)
 
-    def cast_to_int16(x: tf.train.Example) -> tf.train.Example:
+    def cast_to_int16(x):
         x["audio"] = tf.cast(x["audio"], tf.int16)
+        return x
+
+    augmenter = augmentation.create_audio_augmentations([
+        a.TimeStretch(min_rate=0.93, max_rate=0.98),
+        a.PitchShift(min_semitones=-2, max_semitones=3),
+        a.Shift(min_rate=-500, max_rate=500),
+        a.Gain(min_gain=0.2, max_gain=2.0),
+        a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
+                     sample_rate=8000,
+                     min_voice_factor=0.5,
+                     max_voice_factor=0.8),
+        a.GaussianNoise(loc=0, stddev=100)
+    ],
+        p=[
+            0.5,
+            0.5,
+            0.3,
+            0.1,
+            1.0,
+            0.5
+        ]
+    )
+
+    def numpy_augment_audio(sounds: np.ndarray):
+        augmented_sounds = []
+        for sound in sounds:
+            augmented_sounds.append(augmenter(sound, sample_rate=sample_rate))
+
+        return np.array(augmented_sounds, dtype=np.int16)
+
+    def create_right_left(x):
+        x["left_audio"] = tf.numpy_function(numpy_augment_audio, inp=[x["audio"]], Tout=tf.int16)
+        x["right_audio"] = tf.numpy_function(numpy_augment_audio, inp=[x["audio"]], Tout=tf.int16)
+
+        x["left_audio"] = tf.reshape(x["left_audio"], [-1, audio_length])
+        x["right_audio"] = tf.reshape(x["right_audio"], [-1, audio_length])
+
         return x
 
     def input_fn():
@@ -49,17 +90,38 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         dataset = dataset.map(cast_to_int16)
 
         if mode == tf.estimator.ModeKeys.TRAIN:
+            # If we train we do data augmentation
             dataset = dataset.shuffle(buffer_size=100)
 
         dataset = dataset.batch(batch_size=batch_size)
-        # Sparse to dense does padding
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.repeat()
 
+        dataset = dataset.map(create_right_left)
+
         return dataset
 
     return input_fn
+
+
+def sim_siam_loss(left_embeddings: tf.Tensor,
+                  right_embeddings: tf.Tensor,
+                  embedding_dim: int):
+    """Algorithm is described in 'Algorithm 1' of https://arxiv.org/pdf/2011.10566.pdf"""
+    left_projection = arch.projection_head(left_embeddings, embedding_dim, mode=tf.estimator.ModeKeys.TRAIN)
+    right_projection = arch.projection_head(right_embeddings, embedding_dim, mode=tf.estimator.ModeKeys.TRAIN)
+
+    def D(p: tf.Tensor, z: tf.Tensor):
+        """Loss from simSiam paper"""
+        z = tf.stop_gradient(z)
+
+        p = tf.linalg.l2_normalize(p, axis=1)
+        z = tf.linalg.l2_normalize(z, axis=1)
+
+        return -tf.reduce_mean(tf.reduce_sum(p * z, axis=1))
+
+    return (D(left_projection, right_embeddings) + D(right_projection, left_embeddings)) / 2
 
 
 def get_predict_ops(stored_embeddings: tf.Tensor,
@@ -73,19 +135,23 @@ def get_predict_ops(stored_embeddings: tf.Tensor,
 
 def get_metric_ops(left_embeddings: tf.Tensor,
                    right_embeddings: tf.Tensor,
+                   embedding_dim: int,
                    labels: tf.Tensor):
     metric_ops = {}
+    loss_op = sim_siam_loss(left_embeddings, right_embeddings, embedding_dim)
 
-    return metric_ops
+    return loss_op, metric_ops
 
 
 def get_train_ops(left_embeddings: tf.Tensor,
                   right_embeddings: tf.Tensor,
                   labels: tf.Tensor,
+                  embedding_dim: int,
                   learning_rate: float,
                   save_summaries_every: int,
                   summary_output_dir: str):
-    loss_op = tf.constant(0)
+    loss_op = sim_siam_loss(left_embeddings, right_embeddings, embedding_dim)
+
     decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
         learning_rate=learning_rate,
         global_step=tf.compat.v1.train.get_global_step(),
@@ -110,10 +176,12 @@ def get_train_ops(left_embeddings: tf.Tensor,
         loss=total_loss,
         global_step=tf.compat.v1.train.get_global_step())
 
+    loss_op = tf.identity(loss_op, name="loss_op")
+
     train_logging_hooks = [
         tf.estimator.LoggingTensorHook(
             {"loss": "loss_op"},
-            every_n_iter=50),
+            every_n_iter=1),
         tf.estimator.SummarySaverHook(
             save_steps=save_summaries_every,
             output_dir=summary_output_dir,
@@ -137,6 +205,7 @@ def extract_mfcc(signal: tf.Tensor, sample_rate: int):
 
 def get_embedding(audio_signal: tf.Tensor, sample_rate: int, embedding_dim: int, mode: tf.estimator.ModeKeys):
     signal = extract_mfcc(signal=audio.normalize_audio(audio_signal), sample_rate=sample_rate)
+    print("signal", signal)
     return arch.kaggle_cnn(signal, embedding_dim=embedding_dim, mode=mode)
 
 
@@ -146,6 +215,7 @@ def make_model_fn(embedding_dim: int,
                   save_summaries_every: int = 100,
                   learning_rate: float = 0.001):
     def model_fn(features, labels, mode, config, params):
+        print("features", features)
         loss_op, train_op, train_logging_hooks, eval_metric_ops, predict_op = None, None, None, None, None
         if mode == tf.estimator.ModeKeys.TRAIN:
             left_embeddings = get_embedding(features["left_audio"],
@@ -161,6 +231,7 @@ def make_model_fn(embedding_dim: int,
                 left_embeddings=left_embeddings,
                 right_embeddings=right_embeddings,
                 labels=features["label"],
+                embedding_dim=embedding_dim,
                 learning_rate=learning_rate,
                 save_summaries_every=save_summaries_every,
                 summary_output_dir=summary_output_dir)
@@ -176,6 +247,7 @@ def make_model_fn(embedding_dim: int,
 
             loss_op, eval_metric_ops = get_metric_ops(left_embeddings=left_embeddings,
                                                       right_embeddings=right_embeddings,
+                                                      embedding_dim=embedding_dim,
                                                       labels=features["label"])
         elif mode == tf.estimator.ModeKeys.PREDICT:
             predict_op, similarities_op = get_predict_ops(
@@ -281,6 +353,7 @@ def main():
             input_fn=create_input_fn(mode=tf.estimator.ModeKeys.TRAIN,
                                      input_prefix=args.train_prefix,
                                      audio_length=int(args.clip_length * args.sample_rate),
+                                     sample_rate=args.sample_rate,
                                      parallel_reads=args.parallel_reads,
                                      batch_size=args.batch_size),
             max_steps=args.max_steps,
@@ -291,6 +364,7 @@ def main():
             input_fn=create_input_fn(mode=tf.estimator.ModeKeys.EVAL,
                                      input_prefix=args.train_prefix,
                                      audio_length=int(args.clip_length * args.sample_rate),
+                                     sample_rate=args.sample_rate,
                                      parallel_reads=args.parallel_reads,
                                      batch_size=args.batch_size),
             throttle_secs=5,

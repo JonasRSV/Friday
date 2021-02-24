@@ -11,3 +11,31 @@ model output directory. Bulbasaur depends on the output of the [hash labeling](.
 EXPERIMENT_NAME=bulbasaur.$(date | tr " " "_")
 MODEL_OUTPUT=/tmp/$EXPERIMENT_NAME
 ```
+
+Then for training launch
+
+```bash
+python3 models/bulbasaur/bulbasaur.py\
+    "--train_prefix=${FRIDAY_SESSION?}/ptfexamples.train*"\
+    "--eval_prefix=${FRIDAY_SESSION?}/ptfexamples.valid*"\
+    --embedding_dim=256\
+    --clip_length=2\
+    --model_directory=$MODEL_OUTPUT\
+    --mode="train_eval"\
+    --sample_rate=8000\
+    --batch_size=32\
+    --start_learning_rate=0.0005\
+    --max_steps=1000000\
+    --save_summary_every=200\
+    --eval_every=200\
+    --parallel_reads=5
+```
+
+To Export after training run
+```bash
+python3 models/bulbasaur/bulbasaur.py\
+    --model_directory=$MODEL_OUTPUT\
+    --mode="export"\
+    --sample_rate=8000
+    
+```

@@ -44,7 +44,6 @@ class Background(Augmentation):
             raise Exception(f"Background noise mismatching sample rate {sample_rate} != {self.sample_rate}")
 
         voice_factor = np.random.uniform(self.min_voice_factor, self.max_voice_factor)
-        print("voice factor", voice_factor)
         clip = self.noises[np.random.choice(self.clips, p=self.density)]
 
         if len(clip) > len(audio):
