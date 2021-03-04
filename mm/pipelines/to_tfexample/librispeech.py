@@ -60,6 +60,7 @@ def convert_chapter(chapter_root: pathlib.Path,
 
 def convert_speaker(speaker_root: pathlib.Path, prefix: str, config: Config, suffix: str):
     transformer = sox.Transformer()
+    transformer.set_output_format(rate=config.sample_rate, channels=1)
     with tf.io.TFRecordWriter(f"{prefix}.{suffix}") as writer:
         for chapter_id in speaker_root.glob("*"):
             if chapter_id.stem.isnumeric():

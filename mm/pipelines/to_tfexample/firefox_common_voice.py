@@ -86,6 +86,7 @@ def worker(job: Job):
     sharded_file = f"{OUTPUT_PREFIX}-{OUTPUT_INFIX}-{padded_id}"
 
     transformer = sox.Transformer()
+    transformer.set_output_format(rate=SAMPLE_RATE, channels=1)
     with tf.io.TFRecordWriter(sharded_file) as writer:
         for audio_file, sentence in zip(job.audio_files, job.sentences):
             resampled_audio = transformer.build_array(
