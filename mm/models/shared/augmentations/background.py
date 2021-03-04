@@ -26,10 +26,11 @@ class Background(Augmentation):
         self.noises, self.density = [], []
 
         transformer = sox.Transformer()
+        transformer.set_output_format(rate=sample_rate, channels=1)
         for file in background_noises.glob("*.mp3"):
             print(f"Loading background noise {file}")
             resampled_audio = transformer.build_array(
-                input_filepath=str(file), sample_rate_in=sample_rate)
+                input_filepath=str(file), sample_rate_in=sample_rate, )
 
             self.noises.append(resampled_audio)
             self.density.append(len(resampled_audio))
