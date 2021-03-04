@@ -42,21 +42,21 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
 
     augmenter = augmentation.create_audio_augmentations([
         a.TimeStretch(min_rate=0.93, max_rate=0.98),
-        a.PitchShift(min_semitones=-2, max_semitones=3),
-        a.Shift(min_rate=-500, max_rate=500),
-        a.Gain(min_gain=0.2, max_gain=2.0),
-        a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
-                     sample_rate=8000,
-                     min_voice_factor=0.5,
-                     max_voice_factor=0.8),
+        #a.PitchShift(min_semitones=-2, max_semitones=3),
+        #a.Shift(min_rate=-500, max_rate=500),
+        #a.Gain(min_gain=0.2, max_gain=2.0),
+        #a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
+        #             sample_rate=8000,
+        #             min_voice_factor=0.5,
+        #             max_voice_factor=0.8),
         a.GaussianNoise(loc=0, stddev=100)
     ],
         p=[
             0.5,
-            0.5,
-            0.3,
-            0.1,
-            1.0,
+            #0.5,
+            #0.3,
+            #0.1,
+            #1.0,
             0.5
         ]
     )
@@ -124,9 +124,29 @@ def sim_siam_loss(left_embeddings: tf.Tensor,
     return (D(left_projection, right_embeddings) + D(right_projection, left_embeddings)) / 2
 
 
+def contrastive_loss(left_embeddings: tf.Tensor,
+                     right_embeddings: tf.Tensor,
+                     embedding_dim: int):
+    """Algorithm similar to the one in https://arxiv.org/pdf/2002.05709.pdf"""
+    left_projection = arch.projection_head(left_embeddings, embedding_dim, mode=tf.estimator.ModeKeys.TRAIN)
+    right_projection = arch.projection_head(right_embeddings, embedding_dim, mode=tf.estimator.ModeKeys.TRAIN)
+
+    def similarity_loss(a: tf.Tensor, b: tf.Tensor):
+        a = tf.linalg.l2_normalize(a, axis=1)
+        b = tf.linalg.l2_normalize(b, axis=1)
+
+        similarities = 1 + tf.matmul(a, b, transpose_b=True)
+        similarity_trace = tf.linalg.trace(similarities)
+        similarity_sum = tf.reduce_sum(similarities)
+
+        return -(similarity_trace / similarity_sum)
+
+    return similarity_loss(left_embeddings, right_embeddings)
+    #return (similarity_loss(left_embeddings, right_projection) + similarity_loss(right_embeddings, left_projection)) / 2
+
+
 def get_predict_ops(stored_embeddings: tf.Tensor,
                     signal_embeddings: tf.Tensor):
-
     stored_embeddings = tf.linalg.l2_normalize(stored_embeddings, axis=1)
     signal_embeddings = tf.linalg.l2_normalize(signal_embeddings, axis=1)
 
@@ -140,7 +160,7 @@ def get_metric_ops(left_embeddings: tf.Tensor,
                    embedding_dim: int,
                    labels: tf.Tensor):
     metric_ops = {}
-    loss_op = sim_siam_loss(left_embeddings, right_embeddings, embedding_dim)
+    loss_op = contrastive_loss(left_embeddings, right_embeddings, embedding_dim)
 
     return loss_op, metric_ops
 
@@ -152,7 +172,7 @@ def get_train_ops(left_embeddings: tf.Tensor,
                   learning_rate: float,
                   save_summaries_every: int,
                   summary_output_dir: str):
-    loss_op = sim_siam_loss(left_embeddings, right_embeddings, embedding_dim)
+    loss_op = contrastive_loss(left_embeddings, right_embeddings, embedding_dim)
 
     decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
         learning_rate=learning_rate,
@@ -183,7 +203,7 @@ def get_train_ops(left_embeddings: tf.Tensor,
     train_logging_hooks = [
         tf.estimator.LoggingTensorHook(
             {"loss": "loss_op"},
-            every_n_iter=10),
+            every_n_iter=1),
         tf.estimator.SummarySaverHook(
             save_steps=save_summaries_every,
             output_dir=summary_output_dir,
@@ -273,12 +293,15 @@ def make_model_fn(embedding_dim: int,
         else:
             raise Exception(f"Unknown ModeKey {mode}")
 
+        print('global vars', tf.global_variables())
+        print('global vars', len(tf.global_variables()))
         return tf.estimator.EstimatorSpec(mode=mode,
                                           predictions=predict_op,
                                           loss=loss_op,
                                           train_op=train_op,
                                           training_hooks=train_logging_hooks,
                                           eval_metric_ops=eval_metric_ops)
+
 
     return model_fn
 
