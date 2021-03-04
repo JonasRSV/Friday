@@ -23,7 +23,7 @@ python3 models/bulbasaur/bulbasaur.py\
     --model_directory=$MODEL_OUTPUT\
     --mode="train_eval"\
     --sample_rate=8000\
-    --batch_size=32\
+    --batch_size=128\
     --start_learning_rate=0.0005\
     --max_steps=1000000\
     --save_summary_every=200\
