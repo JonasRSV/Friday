@@ -7,6 +7,8 @@ def projection_head(x: tf.Tensor,
                     mode: tf.estimator.ModeKeys,
                     regularization: float = 1e-6) -> tf.Tensor:
     with tf.variable_scope('projection_head', reuse=tf.AUTO_REUSE):
+        #x = tf.compat.v1.layers.BatchNormalization()(x)
+        x = tf.nn.relu(x)
         x = tf.compat.v1.layers.Dense(embedding_dim, activation="relu", name="projection_head_1")(x)
         x = tf.compat.v1.layers.Dense(embedding_dim, activation="relu", name="projection_head_2")(x)
         embedding = tf.compat.v1.layers.Dense(embedding_dim, activation=None, name="projection_head_3")(x)

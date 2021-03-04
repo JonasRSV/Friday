@@ -42,21 +42,21 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
 
     augmenter = augmentation.create_audio_augmentations([
         a.TimeStretch(min_rate=0.93, max_rate=0.98),
-        # a.PitchShift(min_semitones=-2, max_semitones=3),
-        # a.Shift(min_rate=-500, max_rate=500),
-        # a.Gain(min_gain=0.2, max_gain=2.0),
-        # a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
-        #             sample_rate=8000,
-        #             min_voice_factor=0.5,
-        #             max_voice_factor=0.8),
+        a.PitchShift(min_semitones=-2, max_semitones=3),
+        a.Shift(min_rate=-500, max_rate=500),
+        a.Gain(min_gain=0.2, max_gain=2.0),
+        a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
+                    sample_rate=8000,
+                    min_voice_factor=0.5,
+                    max_voice_factor=0.8),
         a.GaussianNoise(loc=0, stddev=100)
     ],
         p=[
             0.5,
-            # 0.5,
-            # 0.3,
-            # 0.1,
-            # 1.0,
+            0.5,
+            0.3,
+            0.1,
+            1.0,
             0.5
         ]
     )
@@ -145,8 +145,8 @@ def contrastive_loss(left_embeddings: tf.Tensor,
 
         return -tf.log(tf.reduce_mean(diagonal_entropy / normalizing_entropy))
 
-    return similarity_loss(left_embeddings, right_embeddings)
-    # return (similarity_loss(left_embeddings, right_projection) + similarity_loss(right_embeddings, left_projection)) / 2
+    #return similarity_loss(left_embeddings, right_embeddings)
+    return (similarity_loss(left_embeddings, right_projection) + similarity_loss(right_embeddings, left_projection)) / 2
 
 
 def get_predict_ops(stored_embeddings: tf.Tensor,
