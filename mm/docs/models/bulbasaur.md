@@ -36,6 +36,8 @@ To Export after training run
 python3 models/bulbasaur/bulbasaur.py\
     --model_directory=$MODEL_OUTPUT\
     --mode="export"\
+    --embedding_dim=256\
+    --clip_length=2\
     --sample_rate=8000
     
 ```

@@ -125,11 +125,13 @@ def sim_siam_loss(left_embeddings: tf.Tensor,
 
 
 def get_predict_ops(stored_embeddings: tf.Tensor,
-                    signal: tf.Tensor,
-                    sample_rate: int,
-                    embedding_dim: int):
-    similarities = tf.constant(1)
-    predict_op = tf.constant(1)
+                    signal_embeddings: tf.Tensor):
+
+    stored_embeddings = tf.linalg.l2_normalize(stored_embeddings, axis=1)
+    signal_embeddings = tf.linalg.l2_normalize(signal_embeddings, axis=1)
+
+    similarities = tf.reduce_sum(stored_embeddings * signal_embeddings, axis=1)
+    predict_op = tf.argmax(similarities)
     return predict_op, similarities
 
 
@@ -205,7 +207,6 @@ def extract_mfcc(signal: tf.Tensor, sample_rate: int):
 
 def get_embedding(audio_signal: tf.Tensor, sample_rate: int, embedding_dim: int, mode: tf.estimator.ModeKeys):
     signal = extract_mfcc(signal=audio.normalize_audio(audio_signal), sample_rate=sample_rate)
-    print("signal", signal)
     return arch.kaggle_cnn(signal, embedding_dim=embedding_dim, mode=mode)
 
 
@@ -250,15 +251,25 @@ def make_model_fn(embedding_dim: int,
                                                       embedding_dim=embedding_dim,
                                                       labels=features["label"])
         elif mode == tf.estimator.ModeKeys.PREDICT:
+            embeddings = get_embedding(tf.expand_dims(features["audio"], 0),
+                                       sample_rate=sample_rate,
+                                       embedding_dim=embedding_dim,
+                                       mode=mode)
             predict_op, similarities_op = get_predict_ops(
                 stored_embeddings=features["embeddings"],
-                signal=features["audio"],
-                sample_rate=sample_rate,
-                embedding_dim=embedding_dim
+                signal_embeddings=embeddings,
             )
+
+            project_op = tf.squeeze(embeddings)
+
+            tf.identity(project_op, name="project")
+            tf.identity(tf.shape(project_op), name="project_shape")
 
             tf.identity(predict_op, name="output")
             tf.identity(tf.shape(predict_op), name="output_shape")
+
+            tf.identity(similarities_op, name="similarities")
+            tf.identity(tf.shape(similarities_op), name="similarities_shape")
         else:
             raise Exception(f"Unknown ModeKey {mode}")
 
@@ -375,7 +386,12 @@ def main():
     elif args.mode == Mode.export.value:
 
         def serving_input_receiver_fn():
-            inputs = {}
+            audio_length = int(args.clip_length * args.sample_rate)
+            inputs = {
+                "audio": tf.placeholder(shape=[audio_length], dtype=tf.int16, name="audio"),
+                "embeddings": tf.placeholder(shape=[None, args.embedding_dim], dtype=tf.float32, name="embeddings"),
+
+            }
             return tf.estimator.export.ServingInputReceiver(
                 features=inputs, receiver_tensors=inputs)
 

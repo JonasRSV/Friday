@@ -16,7 +16,8 @@ def softmax(x):
 
 @numba.jit(nopython=True, fastmath=True)
 def entropy(x, y):
-    """A measure of relative entropy of the two distributions x and y."""
+    """A measure of entropy of the two distributions x and y."""
+    # TODO: KL Divergence
     return -(np.log(softmax(x)) * softmax(y)).sum()
     #return np.sqrt(np.square(x - y).sum())
 

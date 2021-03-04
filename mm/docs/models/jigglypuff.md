@@ -50,7 +50,8 @@ Pick a 'Distance'
 
 ```bash
 JIGGLYPUFF_DISTANCE=BEAMODTW
-JIGGLYPUFF_DISTANCE=LIKELIHOOD
+JIGGLYPUFF_DISTANCE=ExampleLikelihood
+JIGGLYPUFF_DISTANCE=SampleLikelihood
 JIGGLYPUFF_DISTANCE=PosteriogramsODTW
 ```
 
@@ -75,8 +76,8 @@ FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
   --export_dir=${JIGGLYPUFF_MODEL?}\
   --jigglypuff=${JIGGLYPUFF_DISTANCE?}\
   --pipeline=P\
-  --tasks="data/evaluation/tasks/*"\
-  --examples="data/evaluation/examples/*"\
+  --tasks="${FRIDAY_DATA}/evaluation/tasks/*"\
+  --examples="${FRIDAY_DATA}/evaluation/examples/*"\
   --window_size=2\
   --window_stride="0.25"\
   --sample_rate=8000

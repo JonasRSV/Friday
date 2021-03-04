@@ -7,7 +7,8 @@ if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
 
 from models.jigglypuff.distances.beam_odtw import BeamODTW
-from models.jigglypuff.distances.likelihood import Likelihood
+from models.jigglypuff.distances.example_likelihood import ExampleLikelihood
+from models.jigglypuff.distances.sample_likelihood import SampleLikelihood
 from models.jigglypuff.distances.posteriograms_odtw import PosteriogramsODTW
 from enum import Enum
 
@@ -21,7 +22,8 @@ from pipelines.evaluate.query_by_example.google_speech_commands_pipeline import 
 
 class Jigglypuff(Enum):
     BEAMODTW = "BEAMODTW"
-    LIKELIHOOD = "LIKELIHOOD"
+    ExampleLikelihood = "ExampleLikelihood"
+    SampleLikelihood = "SampleLikelihood"
     PosteriogramsODTW = "PosteriogramsODTW"
 
 
@@ -58,7 +60,8 @@ if __name__ == "__main__":
 
     model = {
         Jigglypuff.BEAMODTW.value: BeamODTW(export_dir=args.export_dir, max_distance=1000),
-        Jigglypuff.LIKELIHOOD.value: Likelihood(export_dir=args.export_dir, max_distance=14.2),
+        Jigglypuff.ExampleLikelihood.value: ExampleLikelihood(export_dir=args.export_dir, max_distance=14.2),
+        Jigglypuff.SampleLikelihood.value: SampleLikelihood(export_dir=args.export_dir, max_distance=14.2),
         Jigglypuff.PosteriogramsODTW.value: PosteriogramsODTW(export_dir=args.export_dir, max_distance=200),
     }
 
