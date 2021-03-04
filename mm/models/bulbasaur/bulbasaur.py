@@ -42,10 +42,10 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
 
     augmenter = augmentation.create_audio_augmentations([
         a.TimeStretch(min_rate=0.93, max_rate=0.98),
-        #a.PitchShift(min_semitones=-2, max_semitones=3),
-        #a.Shift(min_rate=-500, max_rate=500),
-        #a.Gain(min_gain=0.2, max_gain=2.0),
-        #a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
+        # a.PitchShift(min_semitones=-2, max_semitones=3),
+        # a.Shift(min_rate=-500, max_rate=500),
+        # a.Gain(min_gain=0.2, max_gain=2.0),
+        # a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
         #             sample_rate=8000,
         #             min_voice_factor=0.5,
         #             max_voice_factor=0.8),
@@ -53,10 +53,10 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
     ],
         p=[
             0.5,
-            #0.5,
-            #0.3,
-            #0.1,
-            #1.0,
+            # 0.5,
+            # 0.3,
+            # 0.1,
+            # 1.0,
             0.5
         ]
     )
@@ -126,7 +126,8 @@ def sim_siam_loss(left_embeddings: tf.Tensor,
 
 def contrastive_loss(left_embeddings: tf.Tensor,
                      right_embeddings: tf.Tensor,
-                     embedding_dim: int):
+                     embedding_dim: int,
+                     temperature=0.2):
     """Algorithm similar to the one in https://arxiv.org/pdf/2002.05709.pdf"""
     left_projection = arch.projection_head(left_embeddings, embedding_dim, mode=tf.estimator.ModeKeys.TRAIN)
     right_projection = arch.projection_head(right_embeddings, embedding_dim, mode=tf.estimator.ModeKeys.TRAIN)
@@ -135,14 +136,17 @@ def contrastive_loss(left_embeddings: tf.Tensor,
         a = tf.linalg.l2_normalize(a, axis=1)
         b = tf.linalg.l2_normalize(b, axis=1)
 
-        similarities = 1 + tf.matmul(a, b, transpose_b=True)
-        similarity_trace = tf.linalg.trace(similarities)
-        similarity_sum = tf.reduce_sum(similarities)
+        distances = tf.matmul(a, b, transpose_b=True)
 
-        return -(similarity_trace / similarity_sum)
+        entropy = tf.exp(distances / temperature)
+
+        diagonal_entropy = tf.linalg.diag_part(entropy)
+        normalizing_entropy = tf.reduce_sum(entropy, axis=1) - tf.linalg.diag_part(entropy)
+
+        return -tf.log(tf.reduce_mean(diagonal_entropy / normalizing_entropy))
 
     return similarity_loss(left_embeddings, right_embeddings)
-    #return (similarity_loss(left_embeddings, right_projection) + similarity_loss(right_embeddings, left_projection)) / 2
+    # return (similarity_loss(left_embeddings, right_projection) + similarity_loss(right_embeddings, left_projection)) / 2
 
 
 def get_predict_ops(stored_embeddings: tf.Tensor,
@@ -301,7 +305,6 @@ def make_model_fn(embedding_dim: int,
                                           train_op=train_op,
                                           training_hooks=train_logging_hooks,
                                           eval_metric_ops=eval_metric_ops)
-
 
     return model_fn
 
