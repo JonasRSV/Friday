@@ -52,6 +52,7 @@ tensorflow==1.14.0
 tensorflow-estimator==1.14.0
 tensorflow-probability==0.7.0
 termcolor==1.1.0
+TextGrid==1.5
 threadpoolctl==2.1.0
 tqdm==4.54.0
 urllib3==1.26.2

@@ -116,7 +116,7 @@ def get_jobs(base_path: pathlib.Path,
 def worker(job: Job):
     str_id = str(job.id)
     padded_id = "0" * (5 - len(str_id)) + str_id
-    sharded_file = f"{OUTPUT_PREFIX}-{job.sentences[0]}-{OUTPUT_INFIX}-{padded_id}"
+    sharded_file = f"{OUTPUT_PREFIX}.{job.sentences[0]}.{OUTPUT_INFIX}-{padded_id}"
 
     transformer = sox.Transformer()
     transformer.set_output_format(rate=SAMPLE_RATE, channels=1)

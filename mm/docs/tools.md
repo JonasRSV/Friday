@@ -1,6 +1,7 @@
 # Docs for shared tools
 
 - [Inspect](#Inspect)
+  - [Inspect DML](#inspect-dml)
 - [Recording Personal](#Recording-Personal)
 - [Manually Filtering a Record](#manually-filtering-a-record)
 - [Convert Text of a collection of record](#convert-text-of-a-collection-of-record)
@@ -15,7 +16,7 @@
 To inspect that the tfexamples contains valid voice data one can use e.g
 
 ```bash
-paython3 tools/friday_inspect.py \
+python3 tools/friday_inspect.py \
  --path=${FRIDAY_SESSION?}/EXAMPLE_FILE_HERE \
  --mode=play_audio
 ```
@@ -68,6 +69,15 @@ To get longest audio length and longest phoneme length
 python3 tools/friday_inspect.py \
  --path="${FRIDAY_SESSION?}/ptfexamples*" \
  --mode=sequence_lengths
+```
+
+### Inspect DML
+
+To play random DML triplets to verify their content use:
+
+```bash
+python3 tools/friday_inspect_dml.py \
+  --prefix=${FRIDAY_SESSION?}
 ```
 
 ## Recording Personal
