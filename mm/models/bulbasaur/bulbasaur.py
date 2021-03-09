@@ -43,7 +43,6 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         x["negative"] = tf.cast(x["negative"], tf.int16)
         return x
 
-    """
     augmenter = augmentation.create_audio_augmentations([
         a.TimeStretch(min_rate=0.93, max_rate=0.98),
         a.PitchShift(min_semitones=-2, max_semitones=3),
@@ -64,23 +63,24 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
             0.5
         ]
     )
+
     def numpy_augment_audio(sounds: np.ndarray):
         augmented_sounds = []
         for sound in sounds:
             augmented_sounds.append(augmenter(sound, sample_rate=sample_rate))
 
-       return np.array(augmented_sounds, dtype=np.int16)
-       
-    def create_right_left(x):
-        x["left_audio"] = tf.numpy_function(numpy_augment_audio, inp=[x["audio"]], Tout=tf.int16)
-        x["right_audio"] = tf.numpy_function(numpy_augment_audio, inp=[x["audio"]], Tout=tf.int16)
+        return np.array(augmented_sounds, dtype=np.int16)
 
-        x["left_audio"] = tf.reshape(x["left_audio"], [-1, audio_length])
-        x["right_audio"] = tf.reshape(x["right_audio"], [-1, audio_length])
+    def augment_sounds(x):
+        x["anchor"] = tf.numpy_function(numpy_augment_audio, inp=[x["anchor"]], Tout=tf.int16)
+        x["positive"] = tf.numpy_function(numpy_augment_audio, inp=[x["positive"]], Tout=tf.int16)
+        x["negative"] = tf.numpy_function(numpy_augment_audio, inp=[x["negative"]], Tout=tf.int16)
+
+        x["anchor"] = tf.reshape(x["anchor"], [-1, audio_length])
+        x["positive"] = tf.reshape(x["positive"], [-1, audio_length])
+        x["negative"] = tf.reshape(x["negative"], [-1, audio_length])
 
         return x
-    """
-
     def input_fn():
         entries = input_prefix.split("/")
         path = "/".join(entries[:-1])
@@ -101,6 +101,8 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.repeat()
+
+            dataset = dataset.map(augment_sounds)
 
         return dataset
 
@@ -128,8 +130,6 @@ def triplet_loss(anchor_embeddings: tf.Tensor,
 
 def get_predict_ops(stored_embeddings: tf.Tensor,
                     signal_embeddings: tf.Tensor):
-    stored_embeddings = tf.linalg.l2_normalize(stored_embeddings, axis=1)
-    signal_embeddings = tf.linalg.l2_normalize(signal_embeddings, axis=1)
 
     similarities = 1 - cosine_distance(stored_embeddings, signal_embeddings)
     predict_op = tf.argmax(similarities)
@@ -270,6 +270,9 @@ def make_model_fn(embedding_dim: int,
                                        sample_rate=sample_rate,
                                        embedding_dim=embedding_dim,
                                        mode=mode)
+
+            embeddings = tf.linalg.l2_normalize(embeddings, axis=1)
+
             predict_op, similarities_op = get_predict_ops(
                 stored_embeddings=features["embeddings"],
                 signal_embeddings=embeddings,

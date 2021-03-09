@@ -93,7 +93,7 @@ python3 pipelines/to_tfexample/record_your_own_website.py \
 
 ### ASR to Word
 
-By using forced alignment we can great word datasets from ASR datasets. It involves quite a few steps but here goes:
+By using forced alignment we can create word datasets from ASR datasets. It involves quite a few steps but here goes:
 
 Any dataset that can be force-aligned using the [montreal forced aligner](https://montreal-forced-aligner.readthedocs.io/en/latest/)
 is usable with ASR to Word, for example [librispeech](#librispeech). First we need to convert the dataset into the MFA
@@ -166,5 +166,5 @@ python3 pipelines/to_tfexample/montreal_forced_aligner.py \
   --min_occurrences=10 \
   --min_word_length=5 \
   --target_occurrences=100 \
-  --words_per_pass=6
+  --words_per_pass=500
 ```

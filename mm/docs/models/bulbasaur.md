@@ -21,21 +21,21 @@ python3 models/bulbasaur/bulbasaur.py\
     --margin=1.0\
     --embedding_dim=256\
     --clip_length=2\
-    --model_directory=$MODEL_OUTPUT\
+    --model_directory=${MODEL_OUTPUT?}\
     --mode="train_eval"\
     --sample_rate=8000\
     --batch_size=128\
-    --start_learning_rate=0.0005\
+    --start_learning_rate=0.005\
     --max_steps=1000000\
-    --save_summary_every=50\
-    --eval_every=50\
+    --save_summary_every=25\
+    --eval_every=25\
     --parallel_reads=5
 ```
 
 To Export after training run
 ```bash
 python3 models/bulbasaur/bulbasaur.py\
-    --model_directory=$MODEL_OUTPUT\
+    --model_directory=${MODEL_OUTPUT?}\
     --mode="export"\
     --margin=1.0\
     --embedding_dim=256\
