@@ -189,7 +189,7 @@ def get_train_ops(anchor_embeddings: tf.Tensor,
     train_logging_hooks = [
         tf.estimator.LoggingTensorHook(
             {"loss": "loss_op"},
-            every_n_iter=1),
+            every_n_iter=25),
         tf.estimator.SummarySaverHook(
             save_steps=save_summaries_every,
             output_dir=summary_output_dir,
