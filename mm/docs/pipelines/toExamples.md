@@ -113,7 +113,7 @@ python3 scripts/librispeech_to_mfa.py \
   --prefix=libri-360
 ```
 
-Then we use the MFA forced alignmer, begin with downloading it [montreal forced aligner](https://montreal-forced-aligner.readthedocs.io/en/latest/)
+Then we use the MFA forced aligner, begin with downloading it [montreal forced aligner](https://montreal-forced-aligner.readthedocs.io/en/latest/)
 from its [release page](https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner/releases)
 
 ##### Linux
@@ -156,7 +156,10 @@ Once downloaded alignin a mfa dataset with
   -t /tmp
 ```
 
-Then convert into common format with the following script.
+Then convert into common format with the following script, before running it make sure you max out your systems allowed
+open file handles: See https://access.redhat.com/solutions/61334 for how to do it. You need at least around 20K handles
+the reason for this hacky solution is to preserve performance. [TFRecords does not support appending to files](https://github.com/tensorflow/tensorflow/issues/31738) so
+to avoid taking a performance hit the workaround is to open all files at once.. which means one file per word. 
 
 ```bash
 python3 pipelines/to_tfexample/montreal_forced_aligner.py \
@@ -165,6 +168,13 @@ python3 pipelines/to_tfexample/montreal_forced_aligner.py \
   --sink=${FRIDAY_SESSION?} \
   --min_occurrences=10 \
   --min_word_length=5 \
-  --target_occurrences=100 \
-  --words_per_pass=500
+  --target_occurrences=100 
 ```
+
+This script takes quite some time, if you stop it mid-way use 
+
+```bash
+python3 scripts/remove_truncated_records.py --source=${FRIDAY_SESSION?} 
+```
+
+to remove corrupted records.

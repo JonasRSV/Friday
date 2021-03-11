@@ -31,8 +31,6 @@ def alignments_pass(alignments: pathlib.Path) -> Alignments:
             for grid in speaker.glob("*.TextGrid"):
                 tg = textgrid.TextGrid.fromFile(grid)
                 for interval in tg[0]:
-                    start_time = interval.minTime
-                    end_time = interval.maxTime
                     text = interval.mark
 
                     if text:
@@ -138,7 +136,7 @@ def sample_pass(transformer: sox.Transformer,
     """
     word_probability = {word: probability for word, probability in zip(words, probabilities)}
 
-    for speaker in tqdm(list(alignments.glob("*")), desc="Alignment Pass"):
+    for speaker in tqdm(list(alignments.glob("*")), desc="Dataset Pass"):
 
         # To ignore hidden files etc.
         if str(speaker.stem).isnumeric():
@@ -161,8 +159,6 @@ if __name__ == "__main__":
                         help="Minimum length of word")
     parser.add_argument("--target_occurrences", type=int, required=True,
                         help="Number of times we aim for a word to occur")
-    parser.add_argument("--words_per_pass", type=int, default=100,
-                        help="Number of word-files to create per pass")
     parser.add_argument("--sample_rate", type=int, default=8000,
                         help="Sample rate to convert data to.")
 
@@ -175,21 +171,19 @@ if __name__ == "__main__":
     print(f"N words: {len(words)} ")
     probabilities = get_word_probabilities(meta, words, args.target_occurrences)
 
-    iterators = [zip(words, probabilities)] * args.words_per_pass
-    batches = zip(*iterators)
+    words = words
+    probabilities = probabilities
 
     transformer = sox.Transformer()
     transformer.set_output_format(rate=args.sample_rate, channels=1)
-    for batch in tqdm(list(batches), desc="Sample Pass"):
-        words, probabilities = zip(*batch)
 
-        writers = Writers(args.sink, words)
+    writers = Writers(args.sink, words)
 
-        sample_pass(
-            transformer=transformer,
-            writers=writers,
-            words=words,
-            probabilities=probabilities,
-            audio=args.audio,
-            alignments=args.alignments
-        )
+    sample_pass(
+        transformer=transformer,
+        writers=writers,
+        words=words,
+        probabilities=probabilities,
+        audio=args.audio,
+        alignments=args.alignments
+    )

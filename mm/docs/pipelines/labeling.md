@@ -68,7 +68,7 @@ sample_rate: int64 # This should pretty much always be 8kHz or 16kHz
 ```
 
 This pipeline operates on tfexamples of the 'common format' that follows the following naming convention "tfexamples.$UTTERANCE.*"
-meaning files should contain in the name the kind of recordings they contain. This pipeline will then sample tripples
+meaning files should contain in the name the kind of recordings they contain. This pipeline will then sample triples
 from such a dataset until the target dataset reaches a provided size.
 
 ```bash
