@@ -43,6 +43,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         x["negative"] = tf.cast(x["negative"], tf.int16)
         return x
 
+    """
     augmenter = augmentation.create_audio_augmentations([
         a.TimeStretch(min_rate=0.93, max_rate=0.98),
         a.PitchShift(min_semitones=-2, max_semitones=3),
@@ -81,6 +82,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         x["negative"] = tf.reshape(x["negative"], [-1, audio_length])
 
         return x
+    """
     def input_fn():
         entries = input_prefix.split("/")
         path = "/".join(entries[:-1])
@@ -102,7 +104,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.repeat()
 
-            dataset = dataset.map(augment_sounds)
+            #dataset = dataset.map(augment_sounds)
 
         return dataset
 
