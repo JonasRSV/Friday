@@ -10,8 +10,8 @@ import models.shared.audio as audio
 import argparse
 import models.bulbasaur.architechtures as arch
 import numpy as np
-#import models.shared.augmentation as augmentation
-#import models.shared.augmentations as a
+import models.shared.augmentation as augmentation
+import models.shared.augmentations as a
 from enum import Enum
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
@@ -43,16 +43,15 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         x["negative"] = tf.cast(x["negative"], tf.int16)
         return x
 
-    """
     augmenter = augmentation.create_audio_augmentations([
         a.TimeStretch(min_rate=0.93, max_rate=0.98),
         a.PitchShift(min_semitones=-2, max_semitones=3),
         a.Shift(min_rate=-500, max_rate=500),
         a.Gain(min_gain=0.2, max_gain=2.0),
-        a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
-                     sample_rate=8000,
-                     min_voice_factor=0.5,
-                     max_voice_factor=0.8),
+        #a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
+        #             sample_rate=8000,
+        #             min_voice_factor=0.5,
+        #             max_voice_factor=0.8),
         a.GaussianNoise(loc=0, stddev=100)
     ],
         p=[
@@ -60,7 +59,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
             0.5,
             0.3,
             0.1,
-            1.0,
+        #    1.0,
             0.5
         ]
     )
@@ -82,7 +81,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         x["negative"] = tf.reshape(x["negative"], [-1, audio_length])
 
         return x
-    """
+
     def input_fn():
         entries = input_prefix.split("/")
         path = "/".join(entries[:-1])
@@ -104,7 +103,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.repeat()
 
-            #dataset = dataset.map(augment_sounds)
+            dataset = dataset.map(augment_sounds)
 
         return dataset
 

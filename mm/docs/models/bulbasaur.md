@@ -25,10 +25,10 @@ python3 models/bulbasaur/bulbasaur.py\
     --mode="train_eval"\
     --sample_rate=8000\
     --batch_size=128\
-    --start_learning_rate=0.005\
+    --start_learning_rate=0.0001\
     --max_steps=1000000\
-    --save_summary_every=25\
-    --eval_every=25\
+    --save_summary_every=300\
+    --eval_every=300\
     --parallel_reads=5
 ```
 
