@@ -48,10 +48,10 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         a.PitchShift(min_semitones=-2, max_semitones=3),
         a.Shift(min_rate=-500, max_rate=500),
         a.Gain(min_gain=0.2, max_gain=2.0),
-        #a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
-        #             sample_rate=8000,
-        #             min_voice_factor=0.5,
-        #             max_voice_factor=0.8),
+        a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
+                     sample_rate=8000,
+                     min_voice_factor=0.5,
+                     max_voice_factor=0.8),
         a.GaussianNoise(loc=0, stddev=100)
     ],
         p=[
@@ -59,7 +59,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
             0.5,
             0.3,
             0.1,
-        #    1.0,
+            1.0,
             0.5
         ]
     )
