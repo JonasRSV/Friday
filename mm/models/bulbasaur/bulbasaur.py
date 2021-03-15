@@ -43,45 +43,6 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         x["negative"] = tf.cast(x["negative"], tf.int16)
         return x
 
-    augmenter = augmentation.create_audio_augmentations([
-        a.TimeStretch(min_rate=0.93, max_rate=0.98),
-        a.PitchShift(min_semitones=-2, max_semitones=3),
-        a.Shift(min_rate=-500, max_rate=500),
-        a.Gain(min_gain=0.2, max_gain=2.0),
-        a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
-                     sample_rate=8000,
-                     min_voice_factor=0.5,
-                     max_voice_factor=0.8),
-        a.GaussianNoise(loc=0, stddev=100)
-    ],
-        p=[
-            0.5,
-            0.5,
-            0.3,
-            0.1,
-            1.0,
-            0.5
-        ]
-    )
-
-    def numpy_augment_audio(sounds: np.ndarray):
-        augmented_sounds = []
-        for sound in sounds:
-            augmented_sounds.append(augmenter(sound, sample_rate=sample_rate))
-
-        return np.array(augmented_sounds, dtype=np.int16)
-
-    def augment_sounds(x):
-        x["anchor"] = tf.numpy_function(numpy_augment_audio, inp=[x["anchor"]], Tout=tf.int16)
-        x["positive"] = tf.numpy_function(numpy_augment_audio, inp=[x["positive"]], Tout=tf.int16)
-        x["negative"] = tf.numpy_function(numpy_augment_audio, inp=[x["negative"]], Tout=tf.int16)
-
-        x["anchor"] = tf.reshape(x["anchor"], [-1, audio_length])
-        x["positive"] = tf.reshape(x["positive"], [-1, audio_length])
-        x["negative"] = tf.reshape(x["negative"], [-1, audio_length])
-
-        return x
-
     def input_fn():
         entries = input_prefix.split("/")
         path = "/".join(entries[:-1])
@@ -102,8 +63,6 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             dataset = dataset.repeat()
-
-            dataset = dataset.map(augment_sounds)
 
         return dataset
 
@@ -131,7 +90,6 @@ def triplet_loss(anchor_embeddings: tf.Tensor,
 
 def get_predict_ops(stored_embeddings: tf.Tensor,
                     signal_embeddings: tf.Tensor):
-
     similarities = 1 - cosine_distance(stored_embeddings, signal_embeddings)
     predict_op = tf.argmax(similarities)
     return predict_op, similarities

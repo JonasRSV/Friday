@@ -75,7 +75,7 @@ from such a dataset until the target dataset reaches a provided size.
 python3 pipelines/preprocess_dml.py \
   --source=${FRIDAY_SESSION?} \
   --sink_prefix=${FRIDAY_SESSION}/ptfexamples \
-  --expected_file_size=500 \
-  --expected_total_size=150000 \
+  --expected_file_size=50 \
+  --expected_total_size=150 \
   --samples_per_instance=5 
 ```

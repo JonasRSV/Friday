@@ -18,6 +18,7 @@ class Visualizations(Enum):
 
 
 def per_distance_accuracy(df: pd.DataFrame, dataset: str):
+    df = df.loc[df["dataset"] == dataset]
     plt.figure(figsize=(10, 6))
     sb.set_style("whitegrid")
     for model, df in df.groupby(by="model"):
@@ -26,12 +27,16 @@ def per_distance_accuracy(df: pd.DataFrame, dataset: str):
             print(f"This is incompatible with the 'per_distance_accuracy'... skipping.")
             continue
 
-        accuracy = (df["caught"] + df["avoided"]) / (df["caught"] + df["avoided"] + df["missed"] + df["got_wrong"])
+        # accuracy = (df["caught"]) / (df["caught"] + df["missed"] + df["got_wrong"])
 
-        sb.lineplot(df["norm_distance"], accuracy, label=model)
+        # sb.lineplot(df["norm_distance"], accuracy, label=model)
+        sb.lineplot(df["false_positive_rate"], df["sometime_accuracy"], label=model)
+        #sb.lineplot(df["false_positive_rate"], df["realistic_accuracy"], label=model)
 
+    plt.xlim([0, 1])
+    plt.ylim([0, 1])
     plt.ylabel("accuracy", fontsize=16)
-    plt.xlabel("distance", fontsize=16)
+    plt.xlabel("fp rate", fontsize=16)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
     plt.legend(fontsize=16)

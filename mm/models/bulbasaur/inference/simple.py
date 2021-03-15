@@ -14,24 +14,47 @@ class Simple(Base):
         self.embeddings = []
 
     def name(self):
-        return "Bulbasaur Simple"
+        return "Bulbasaur Simple Avg"
 
     def infer_most_likely(self, utterance: np.ndarray):
-        print("embeddings", self.embeddings.shape)
         similarities, _ = self.get_similarities(self.embeddings, utterance)
-
-        print("similarities", similarities)
 
         distance = 1 - np.max(similarities)
         prediction = self.keywords[np.argmax(similarities)]
 
         if distance < self.max_distance:
-            return prediction, distance, prediction
+            return prediction, prediction, distance
 
-        return None, distance, prediction
+        return None, prediction, distance
+
+    def infer_average(self, utterance: np.ndarray):
+        similarities, _ = self.get_similarities(self.embeddings, utterance)
+        distances = 1 - similarities
+
+        kw_distances = {}
+        for i, kw in enumerate(self.keywords):
+            if kw not in kw_distances:
+                kw_distances[kw] = {
+                    "count": 0,
+                    "value": 0
+                }
+
+            kw_distances[kw]["value"] += distances[i]
+            kw_distances[kw]["count"] += 1
+
+        ranking = [(kw, distance["value"] / distance["count"]) for kw, distance in kw_distances.items()]
+        ranking.sort(key=lambda x: x[1])
+
+        prediction, distance = ranking[0]
+
+        if distance < self.max_distance:
+            return prediction, prediction, distance
+
+        return None, prediction, distance
 
     def infer(self, utterance: np.ndarray):
-        return self.infer_most_likely(utterance)
+        return self.infer_average(utterance)
+        #return self.infer_most_likely(utterance)
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
         self.embeddings = list(self.embeddings)
@@ -56,6 +79,7 @@ if __name__ == "__main__":
     mock_audio_2 = (np.random.normal(10, 1, 16000) * 1000).astype(np.int16)
 
     model.register_keyword("hi", np.array([mock_audio_0, mock_audio_1]))
+    model.register_keyword("ho", np.array([mock_audio_2]))
 
     print(model.infer(mock_audio_0))
     print(model.infer(mock_audio_1))

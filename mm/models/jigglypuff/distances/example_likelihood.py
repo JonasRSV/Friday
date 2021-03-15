@@ -5,6 +5,19 @@ import models.jigglypuff.distances.base as base
 from pipelines.evaluate.query_by_example.model import Setting
 
 
+def strip_zeros(arr):
+    start = 0
+    end = len(arr) - 1
+
+    while arr[start] == 0:
+        start += 1
+
+    while arr[end] == 0:
+        end -= 1
+
+    return arr[start:end + 1]
+
+
 class ExampleLikelihood(base.Base):
 
     def __init__(self, export_dir: str, max_distance: float):
@@ -63,7 +76,7 @@ class ExampleLikelihood(base.Base):
         # return self.infer_most_likely(utterance)
 
     def name(self):
-        return "Jigglypuff Example Likelihood Avg"
+        return "Jigglypuff Example Likelihood"
 
     def register_setting(self, setting: Setting):
         pass
@@ -71,7 +84,7 @@ class ExampleLikelihood(base.Base):
 
 if __name__ == "__main__":
     model = ExampleLikelihood(export_dir=f"{os.getenv('FRIDAY_ROOT')}/mm/data/stp_model/1614070522",
-                       max_distance=1000)
+                              max_distance=1000)
 
     mock_audio_0 = (np.random.normal(-1, 1, 16000) * 10000).astype(np.int16)
     mock_audio_1 = (np.random.normal(1, 1, 16000) * 10000).astype(np.int16)

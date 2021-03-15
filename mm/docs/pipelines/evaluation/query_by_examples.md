@@ -37,6 +37,7 @@ A example file is a file of our main format, see [datasets](../../datasets.md)
 
 
 ### Personal Examples
+- [bulbasaur](../../models/bulbasaur.md)
 - [jigglypuff](../../models/jigglypuff.md)
 - [ditto](../../models/ditto.md)
 - [baseline](../../models/random.md)
@@ -48,6 +49,7 @@ The [gsc pipeline](../../../pipelines/evaluate/query_by_example/personal_pipelin
 the 'to_examples' [gsc pipeline](../../../pipelines/to_tfexample/google_speech_commands.py)
 
 ### Google Speech Examples
+- [bulbasaur](../../models/bulbasaur.md)
 - [baseline](../../models/random.md)
 - [ditto](../../models/ditto.md)
 - [jigglypuff](../../models/jigglypuff.md)
@@ -64,8 +66,15 @@ python3 pipelines/evaluate/query_by_example/metrics/visualize.py
 ```
 
 #### Examples
+
 ```bash
 FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
   --dataset="P"\
+  --visualization="per_distance_accuracy"
+```
+
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
+  --dataset="GSC"\
   --visualization="per_distance_accuracy"
 ```

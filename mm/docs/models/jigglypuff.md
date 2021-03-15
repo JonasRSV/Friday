@@ -76,9 +76,9 @@ FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
   --export_dir=${JIGGLYPUFF_MODEL?}\
   --jigglypuff=${JIGGLYPUFF_DISTANCE?}\
   --pipeline=P\
-  --tasks="${FRIDAY_DATA}/evaluation/tasks/*"\
-  --examples="${FRIDAY_DATA}/evaluation/examples/*"\
-  --window_size=2\
+  --tasks="${FRIDAY_DATA?}/evaluation/tasks/*"\
+  --examples="${FRIDAY_DATA?}/evaluation/examples/*"\
+  --window_size=2.0\
   --window_stride="0.25"\
   --sample_rate=8000
 ```

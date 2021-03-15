@@ -12,6 +12,7 @@ from pipelines.preprocessing.abstract_preprocess_fn import PreprocessFn
 from pipelines.preprocessing.uppercase_text import TextUpperCase
 from pipelines.preprocessing.filter_on_length import LengthFilter
 from pipelines.preprocessing.random_bipadding import RandomBiPadding
+from pipelines.preprocessing.audio_augmentations import AudioAugmentations
 from tqdm import tqdm
 from typing import Dict, List
 from pathlib import Path
@@ -138,7 +139,8 @@ if __name__ == '__main__':
     map_fns = [
         LengthFilter(max_length=args.clip_length, min_length=0.0),
         TextUpperCase(),
-        RandomBiPadding(length=args.clip_length)
+        RandomBiPadding(length=args.clip_length),
+        AudioAugmentations()
     ]
 
     utterances = meta_pass(args.source)

@@ -43,3 +43,54 @@ python3 models/bulbasaur/bulbasaur.py\
     --sample_rate=8000
     
 ```
+
+### Evaluation
+
+Pick a 'Inference' type
+
+```bash
+BULBASAUR_INFERENCE=Simple
+```
+
+Pick a model, it should be a path to a tensorflow 'SavedModel' export directory.
+
+```bash 
+BULBASAUR_MODEL=$PWD/data/bulbasaur_model/ddl_model
+```
+
+Then run the evaluate script
+
+```bash
+FRIDAY_DATA=data python3 models/bulbasaur/evaluate.py
+```
+
+#### Evaluation examples
+
+When evaluating against the 'Personal':
+
+```bash 
+FRIDAY_DATA=data python3 models/bulbasaur/evaluate.py\
+  --export_dir=${BULBASAUR_MODEL?}\
+  --bulbasaur=${BULBASAUR_INFERENCE?}\
+  --pipeline=P\
+  --tasks="${FRIDAY_DATA?}/evaluation/tasks/*"\
+  --examples="${FRIDAY_DATA?}/evaluation/examples/*"\
+  --window_size=2\
+  --window_stride="0.25"\
+  --sample_rate=8000
+```
+
+When evaluating against 'Google Speech Commands':
+
+```bash 
+FRIDAY_DATA=data python3 models/bulbasaur/evaluate.py\
+    --export_dir=${BULBASAUR_MODEL?}\
+    --bulbasaur=${BULBASAUR_INFERENCE?}\
+    --pipeline=GSC\
+    --examples="data/speech_commands_qbe_eval/*"\
+    --window_size=2\
+    --n=3\
+    --seed=1337\
+    --sample_rate=8000
+```
+

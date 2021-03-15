@@ -109,8 +109,20 @@ def align_labels(task: str,
             else:
                 P[p][keywords.index('None') + 3] += 1
 
-    return (pd.DataFrame(P, columns=["id", "utterance", "time"] + keywords),
-            pd.DataFrame(L, columns=["id", "utterance", "time"] + keywords))
+    p_df = pd.DataFrame(P, columns=["id", "prediction", "time"] + keywords)
+
+    best_guess_utterances = []
+    for i in range(p_len):
+        all_but_none = keywords[:-1]
+        occurrences = p_df[all_but_none].iloc[i]
+        if np.max(occurrences) > 0:
+            best_guess_utterances.append(keywords[np.argmax(occurrences)])
+        else:
+            best_guess_utterances.append("None")
+
+    p_df["utterance"] = best_guess_utterances
+
+    return p_df, pd.DataFrame(L, columns=["id", "utterance", "time"] + keywords)
 
 
 def filter_labels(keywords: [str], ut: [str], at_time: [str]):
@@ -158,8 +170,9 @@ def run_eval(model: m.Model,
                             pred_at_time=pred_at_time,
                             ut=utterances,
                             at_time=at_time,
-                            window=window_size * model_sample_rate)
+                            window=1 * model_sample_rate)
 
+        p["task"] = task
         p["latency"] = latency
         p["model"] = model.name()
         p["closest_keyword"] = closest_keywords
@@ -175,7 +188,6 @@ def run_eval(model: m.Model,
         label_data.append(l)
 
     return pd.concat(pred_data), pd.concat(label_data)
-
 
 
 def run(model: m.Model):
