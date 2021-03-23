@@ -62,6 +62,7 @@ class ExampleLikelihood(base.Base):
             for seq in seqs:
                 distance = -self.get_log_prob(utterance, seq)
 
+                print(kw, distance)
                 if distance < min_distance:
                     min_distance = distance
                     keyword = kw
@@ -72,8 +73,8 @@ class ExampleLikelihood(base.Base):
         return None, keyword, min_distance
 
     def infer(self, utterance: np.ndarray):
-        return self.infer_average_score(utterance)
-        # return self.infer_most_likely(utterance)
+        #return self.infer_average_score(utterance)
+        return self.infer_most_likely(utterance)
 
     def name(self):
         return "Jigglypuff Example Likelihood"

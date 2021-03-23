@@ -28,15 +28,15 @@ class DTWMFCC(Model):
         self.sample_rate = None
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
-        utterances = utterances / np.abs(utterances).max(axis=-1)[:, None]
+        utterances = utterances / 2**15
 
         self.keywords_clips[keyword] = [
             librosa.feature.mfcc(utterance, sr=self.sample_rate,
-                                 n_mfcc=40,
-                                 n_fft=1024,
-                                 hop_length=512,
-                                 win_length=1024,
-                                 n_mels=80) for utterance in utterances]
+                                 n_mfcc=13,
+                                 n_fft=2048,
+                                 hop_length=1024,
+                                 win_length=2048,
+                                 n_mels=128) for utterance in utterances]
 
         self.keyword_score[keyword] = 0
 
@@ -44,13 +44,13 @@ class DTWMFCC(Model):
         for k in self.keyword_score.keys():
             self.keyword_score[k] = 0
 
-        utterance = utterance / np.abs(utterance).max()
+        utterance = utterance / 2**15
         utterance = librosa.feature.mfcc(utterance, sr=8000,
-                                         n_mfcc=40,
-                                         n_fft=1024,
-                                         hop_length=512,
-                                         win_length=1024,
-                                         n_mels=80)
+                                         n_mfcc=13,
+                                         n_fft=2048,
+                                         hop_length=1024,
+                                         win_length=2048,
+                                         n_mels=128)
 
         for keyword, mfccs in self.keywords_clips.items():
             for mfcc in mfccs:
@@ -66,7 +66,7 @@ class DTWMFCC(Model):
         return None, best[0], best[1]
 
     def name(self):
-        return "DTWMFCC"
+        return "DTW-MFCC-EU"
 
 
 if __name__ == "__main__":

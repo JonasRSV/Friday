@@ -68,10 +68,10 @@ def play_audio_with_augmentation(file: str, *_):
         raise InvalidFileError(f"{file} is not a valid file")
 
     augmenter = augmentation.create_audio_augmentations([
-        a.TimeStretch(min_rate=0.93, max_rate=0.98),
-        a.PitchShift(min_semitones=-2, max_semitones=3),
-        a.Shift(min_rate=-500, max_rate=500),
-        a.Gain(min_gain=0.2, max_gain=2.0),
+        #a.TimeStretch(min_rate=0.93, max_rate=0.98),
+        #a.PitchShift(min_semitones=-1, max_semitones=1),
+        #a.Shift(min_rate=-500, max_rate=500),
+        a.Gain(min_gain=0.7, max_gain=1.3),
         a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
                      sample_rate=8000,
                      min_voice_factor=0.5,
@@ -79,12 +79,12 @@ def play_audio_with_augmentation(file: str, *_):
         a.GaussianNoise(loc=0, stddev=100)
     ],
         p=[
+            #0.5,
             0.5,
-            0.5,
-            0.3,
+            #0.3,
             0.1,
-            1.0,
-            0.5
+            0.8,
+            0.2
            ]
     )
 

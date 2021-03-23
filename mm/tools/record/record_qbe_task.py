@@ -145,7 +145,7 @@ class DatasetRecorder:
                                     num_channels=1,
                                     bytes_per_sample=2,
                                     sample_rate=self.sample_rate)
-            time.sleep(3)
+            time.sleep(2)
 
         print("All done@")
 
@@ -155,12 +155,22 @@ if __name__ == "__main__":
     parser.add_argument("--sample_rate", type=int, default=8000)
 
     args = parser.parse_args()
+
+    #keywords = [
+    #    "tänd ljuset",
+    #    "släck ljuset",
+    #    "sluta",
+    #    "friday",
+    #    "vad är klockan"
+    #]
+
     keywords = [
-        "tänd ljuset",
-        "släck ljuset",
-        "sluta",
-        "friday",
-        "vad är klockan"
+            "time",
+            "stop",
+            "night",
+            "morning",
+            "illuminate",
+            "alarm"
     ]
 
     DatasetRecorder(sample_rate=args.sample_rate).run(keywords)

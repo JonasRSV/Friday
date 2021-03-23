@@ -14,13 +14,16 @@ class Simple(Base):
         self.embeddings = []
 
     def name(self):
-        return "Bulbasaur Simple Avg"
+        return "Bulbasaur Simple"
 
     def infer_most_likely(self, utterance: np.ndarray):
         similarities, _ = self.get_similarities(self.embeddings, utterance)
 
         distance = 1 - np.max(similarities)
         prediction = self.keywords[np.argmax(similarities)]
+
+        #for sim, kw in zip(similarities, self.keywords):
+        #    print(kw, sim)
 
         if distance < self.max_distance:
             return prediction, prediction, distance
@@ -53,8 +56,8 @@ class Simple(Base):
         return None, prediction, distance
 
     def infer(self, utterance: np.ndarray):
-        return self.infer_average(utterance)
-        #return self.infer_most_likely(utterance)
+        #return self.infer_average(utterance)
+        return self.infer_most_likely(utterance)
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
         self.embeddings = list(self.embeddings)

@@ -13,10 +13,10 @@ class AudioAugmentations(PreprocessFn):
 
     def __init__(self):
         self.augmenter = augmentation.create_audio_augmentations([
-            a.TimeStretch(min_rate=0.95, max_rate=0.98),
-            a.PitchShift(min_semitones=-1, max_semitones=2),
+            #a.TimeStretch(min_rate=0.98, max_rate=0.99),
+            #a.PitchShift(min_semitones=-1, max_semitones=2),
             #a.Shift(min_rate=-500, max_rate=500),
-            a.Gain(min_gain=0.5, max_gain=1.5),
+            a.Gain(min_gain=0.7, max_gain=1.3),
             a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
                          sample_rate=8000,
                          min_voice_factor=0.6,
@@ -24,10 +24,10 @@ class AudioAugmentations(PreprocessFn):
             a.GaussianNoise(loc=0, stddev=100)
         ],
             p=[
-                0.3,
-                0.3,
+                #0.3,
+                #0.3,
                 0.25,
-                1.0,
+                0.95,
                 0.3
             ]
         )

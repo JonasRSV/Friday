@@ -3,8 +3,10 @@ import time
 import pandas as pd
 import tensorflow as tf
 import pipelines.evaluate.query_by_example.task_tfexample_utils as task_tfexample_utils
+import simpleaudio
 from pipelines.evaluate.query_by_example import core
 import numpy as np
+from collections import Counter
 from tqdm import tqdm
 
 tf.compat.v1.enable_eager_execution()
@@ -26,20 +28,27 @@ def simulate_task(model: m.Model,
     window_size_samples = int(window_size * sample_rate)
     window_stride_samples = int(window_stride * sample_rate)
 
+    audio = np.array(audio, dtype=np.int16)
+
     utterances, at_time, closest_keywords, distances, latency = [], [], [], [], []
     with tqdm(total=audio.size) as progress_bar:
         current_sample = 0
         while current_sample + window_size_samples < audio.size:
             timestamp = time.time()
-            utterance, closest_keyword, distance = model.infer(audio[current_sample:
-                                                                     current_sample + window_size_samples])
+            audio_in_window = audio[current_sample: current_sample + window_size_samples]
+
+            utterance, closest_keyword, distance = model.infer(audio_in_window)
+
+            #print("start", current_sample, "middle", current_sample + window_size_samples / 2,"end", current_sample + window_size_samples, "prediction", utterance, "closest", closest_keyword, "distance", distance)
+            #simpleaudio.play_buffer(audio_in_window, num_channels=1, bytes_per_sample=2, sample_rate=sample_rate).wait_done()
+            #time.sleep(0.25)
 
             closest_keywords.append(closest_keyword)
             distances.append(distance)
             latency.append(time.time() - timestamp)
 
             utterances.append(utterance)
-            at_time.append(current_sample + (window_size_samples / 2))
+            at_time.append(current_sample + window_size_samples / 2)
 
             current_sample += window_stride_samples
             progress_bar.update(window_stride_samples)
@@ -76,11 +85,11 @@ def align_labels(task: str,
         P: (len(pred_ut) x (len(keywords) + 4))
         L: (len(ut) x (len(keywords) + 4))
 
-        + 4 because we're adding 'None' label, task-id, time and 'label'
+        + 4 because we're adding 'None' label, task-id, 'sample' and 'label'
 
 
     Each dataframe contains
-    'id' 'utterance' 'time' '{keyword_1}' '{keyword_2}' .. '{keyword_m}'
+    'id' 'utterance' 'sample' '{keyword_1}' '{keyword_2}' .. '{keyword_m}'
 
     where the number at entry '{keyword_x}' is the number of times it was predicted in the window of 'utterance'
 
@@ -96,8 +105,8 @@ def align_labels(task: str,
     l_len = len(ut)
 
     # Dynamic typing ftw
-    P = [[task] + [pred_ut[p]] + [pred_at_time[p]] + ([0] * len(keywords)) for p in range(p_len)]
-    L = [[task] + [ut[l]] + [at_time[l]] + ([0] * len(keywords)) for l in range(l_len)]
+    P = [[task, pred_ut[p], pred_at_time[p]] + ([0] * len(keywords)) for p in range(p_len)]
+    L = [[task, ut[l], at_time[l]] + ([0] * len(keywords)) for l in range(l_len)]
 
     for p in range(p_len):
         for l in range(l_len):
@@ -109,7 +118,7 @@ def align_labels(task: str,
             else:
                 P[p][keywords.index('None') + 3] += 1
 
-    p_df = pd.DataFrame(P, columns=["id", "prediction", "time"] + keywords)
+    p_df = pd.DataFrame(P, columns=["id", "prediction", "sample"] + keywords)
 
     best_guess_utterances = []
     for i in range(p_len):
@@ -122,7 +131,7 @@ def align_labels(task: str,
 
     p_df["utterance"] = best_guess_utterances
 
-    return p_df, pd.DataFrame(L, columns=["id", "utterance", "time"] + keywords)
+    return p_df, pd.DataFrame(L, columns=["id", "utterance", "sample"] + keywords)
 
 
 def filter_labels(keywords: [str], ut: [str], at_time: [str]):
@@ -145,6 +154,8 @@ def run_eval(model: m.Model,
              window_stride: float,
              model_sample_rate: int):
     """Run model evaluation on all tasks"""
+    all_utterances = []
+
     pred_data, label_data = [], []
     for task_id, task in enumerate(core.example_it(tasks)):
         audio = np.array(task_tfexample_utils.get_audio(task))
@@ -153,6 +164,9 @@ def run_eval(model: m.Model,
         sample_rate = task_tfexample_utils.get_sample_rate(task)
 
         utterances, at_time = filter_labels(keywords, ut=utterances, at_time=at_time)
+
+        #for ut, at in zip(utterances, at_time):
+        #   print(at, ut)
 
         # If audio files got different sample_rates the pipeline gets UB, here we crash instead.
         if sample_rate != model_sample_rate:
@@ -170,22 +184,24 @@ def run_eval(model: m.Model,
                             pred_at_time=pred_at_time,
                             ut=utterances,
                             at_time=at_time,
-                            window=1 * model_sample_rate)
+                            window=1.5 * model_sample_rate)
 
-        p["task"] = task
+        p["task"] = task_id
         p["latency"] = latency
         p["model"] = model.name()
         p["closest_keyword"] = closest_keywords
         p["distance"] = distances
         p["dataset"] = core.Pipelines.PERSONAL.value
-        p["time"] = time.time()
 
         l["model"] = model.name()
         l["dataset"] = core.Pipelines.PERSONAL.value
-        l["time"] = time.time()
 
         pred_data.append(p)
         label_data.append(l)
+        all_utterances.extend(task_tfexample_utils.get_utterances(task).split("-"))
+
+    for k, v in Counter(all_utterances).items():
+        print(k, v)
 
     return pd.concat(pred_data), pd.concat(label_data)
 

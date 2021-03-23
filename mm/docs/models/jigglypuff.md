@@ -29,8 +29,8 @@ python3 models/jigglypuff/jigglypuff.py\
     --batch_size=32\
     --start_learning_rate=0.0005\
     --max_steps=1000000\
-    --save_summary_every=200\
-    --eval_every=200\
+    --save_summary_every=300\
+    --eval_every=300\
     --parallel_reads=5
 ```
 
@@ -76,8 +76,8 @@ FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
   --export_dir=${JIGGLYPUFF_MODEL?}\
   --jigglypuff=${JIGGLYPUFF_DISTANCE?}\
   --pipeline=P\
-  --tasks="${FRIDAY_DATA?}/evaluation/tasks/*"\
-  --examples="${FRIDAY_DATA?}/evaluation/examples/*"\
+  --tasks="${FRIDAY_DATA?}/evaluation/tasks/tfexamples.easy*"\
+  --examples="${FRIDAY_DATA?}/evaluation/examples/tfexamples.en*"\
   --window_size=2.0\
   --window_stride="0.25"\
   --sample_rate=8000

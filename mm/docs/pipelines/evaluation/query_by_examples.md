@@ -70,11 +70,29 @@ python3 pipelines/evaluate/query_by_example/metrics/visualize.py
 ```bash
 FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
   --dataset="P"\
-  --visualization="per_distance_accuracy"
+  --visualization="efficacy"
+```
+
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
+  --dataset="P"\
+  --visualization="false_positive_rate"
+```
+
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
+  --dataset="P"\
+  --visualization="accuracies"
+```
+
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
+  --dataset="P"\
+  --visualization="confusion"
 ```
 
 ```bash
 FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
   --dataset="GSC"\
-  --visualization="per_distance_accuracy"
+  --visualization="efficacy"
 ```

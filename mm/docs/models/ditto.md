@@ -27,8 +27,8 @@ When evaluating against the 'Personal':
 FRIDAY_DATA=data python3 models/ditto/evaluate.py\
   --ditto=${DITTO_MODEL?}\
   --pipeline=P\
-  --tasks="data/evaluation/tasks/*"\
-  --examples="data/evaluation/examples/*"\
+  --tasks="data/evaluation/tasks/tfexamples.en-hard-jonas-*"\
+  --examples="data/evaluation/examples/tfexamples.en*"\
   --window_size=2\
   --window_stride="0.25"\
   --sample_rate=8000

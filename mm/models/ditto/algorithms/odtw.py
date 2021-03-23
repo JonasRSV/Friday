@@ -24,7 +24,7 @@ def dtw(x, template, mem, template_length, sequence_length, distance):
         mem[i, template_length - 1] = min(mem[i, template_length - 2], mem[i - 1, template_length - 1],
                                           mem[i - 1, template_length - 2])
 
-    return mem[sequence_length - 1, template_length - 1]
+    return mem[sequence_length - 1, template_length - 1] / sequence_length
 
 
 class ODTW:

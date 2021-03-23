@@ -14,8 +14,26 @@ from pipelines.evaluate.query_by_example.model import Model, Setting
 
 
 @numba.jit(nopython=True, fastmath=True)
-def euclidean(x, y):
-    return np.sqrt(np.square(x - y).sum())
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
+
+@numba.jit(nopython=True, fastmath=True)
+def distance_fn(x, y):
+    # return np.sum(np.square(x - y) / (2 * (x + y)))
+    # return np.abs(x - y).sum()
+    # return np.sqrt(np.sqrt(np.square(np.square(x - y)).sum()))
+    # return -(np.log(softmax(x)) * softmax(y)).sum()
+    #x_norm = x / np.sqrt(x @ x)
+    #y_norm = y / np.sqrt(y @ y)
+
+    #return 1 - x_norm @ y_norm
+    #return np.sqrt(np.square(x - y).sum())
+    #return np.sqrt(np.sqrt(np.sqrt(np.square(np.square(np.square(x - y)).sum()))))
+
+    return np.abs(x - y).max()
 
 
 class ODTWMFCC(Model):
@@ -40,11 +58,11 @@ class ODTWMFCC(Model):
 
     def mfcc_feature(self, utterance: np.ndarray):
         return librosa.feature.mfcc(utterance, sr=self.sample_rate,
-                                    n_mfcc=40,
-                                    n_fft=1024,
-                                    hop_length=512,
-                                    win_length=1024,
-                                    n_mels=80)
+                                    n_mfcc=13,
+                                    n_fft=2048,
+                                    hop_length=1024,
+                                    win_length=2048,
+                                    n_mels=128)
 
     def _infer_average_score(self, utterance: np.ndarray):
         for k in self.keyword_score.keys():
@@ -55,7 +73,7 @@ class ODTWMFCC(Model):
 
         for keyword, mfccs in self.keywords_clips.items():
             for mfcc in mfccs:
-                distance = self.odtw.distance(utterance, mfcc, distance=euclidean)
+                distance = self.odtw.distance(utterance, mfcc, distance=distance_fn)
                 self.keyword_score[keyword] += (distance / len(self.keywords_clips[keyword]))
 
         scores = sorted(list(self.keyword_score.items()), key=lambda x: x[1])
@@ -73,7 +91,8 @@ class ODTWMFCC(Model):
         min_distance, keyword = 1e9, None
         for kw, mfccs in self.keywords_clips.items():
             for mfcc in mfccs:
-                distance = self.odtw.distance(utterance, mfcc, distance=euclidean)
+                distance = self.odtw.distance(utterance, mfcc, distance=distance_fn)
+                # print(kw, distance)
                 if distance < min_distance:
                     min_distance = distance
                     keyword = kw
@@ -84,11 +103,11 @@ class ODTWMFCC(Model):
         return None, keyword, min_distance
 
     def infer(self, utterance: np.ndarray):
-        # return self._infer_average_score(utterance)
+        #return self._infer_average_score(utterance)
         return self._infer_min_example(utterance)
 
     def name(self):
-        return "ODTWMFCC-min"
+        return "Ghost-DTW-MFCC-CHEBYSHEV"
 
 
 if __name__ == "__main__":

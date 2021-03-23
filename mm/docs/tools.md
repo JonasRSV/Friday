@@ -91,7 +91,7 @@ repeated to you. Then press enter when you're ready to speak the same text again
 Once you're done, do one keyboard interrupt and it will save your recordings.
 
 ```bash
-TEXT="godmorgon"
+TEXT="time"
 
 # use arecord -L to list devices
 
