@@ -128,9 +128,9 @@ def get_train_ops(features: dict,
     decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
         learning_rate=learning_rate,
         global_step=tf.compat.v1.train.get_global_step(),
-        first_decay_steps=1000,
-        t_mul=2.0,
-        m_mul=1.0,
+        first_decay_steps=10000,
+        t_mul=1.0,
+        m_mul=0.9,
         alpha=0.0,
         name="learning_rate")
 
