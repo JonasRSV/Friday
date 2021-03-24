@@ -84,7 +84,7 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
 def get_predict_ops(logits: tf.Tensor, logit_length: tf.Tensor, labels: tf.Tensor):
     top_beam_search, _ = tf.nn.ctc_beam_search_decoder_v2(logits,
                                                           logit_length,
-                                                          beam_width=300)
+                                                          beam_width=600)
 
     ctc_loss = tf.nn.ctc_loss_v2(labels=labels, logits=logits,
                                  label_length=tf.expand_dims(tf.shape(labels)[1], 0),
