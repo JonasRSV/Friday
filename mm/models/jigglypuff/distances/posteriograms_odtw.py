@@ -2,6 +2,7 @@ import os
 import numpy as np
 import numba
 from models.ditto.algorithms.odtw import dtw
+from models.jigglypuff.distances.preprocess import fix_loudness
 
 import models.jigglypuff.distances.base as base
 from pipelines.evaluate.query_by_example.model import Setting
@@ -17,9 +18,48 @@ def softmax(x):
 @numba.jit(nopython=True, fastmath=True)
 def entropy(x, y):
     """A measure of entropy of the two distributions x and y."""
-    # TODO: KL Divergence
-    return -(np.log(softmax(x)) * softmax(y)).sum()
-    #return np.sqrt(np.square(x - y).sum())
+    # KL Divergence
+    # Good
+    return (np.log(softmax(y) / softmax(x)) * softmax(y)).sum()
+
+    # Same as Gaussian PosterioGrams DTW paper https://www.researchgate.net/profile/James-Glass-3/publication/224096804_Unsupervised_spoken_keyword_spotting_via_segmental_DTW_on_Gaussian_Posteriorgrams/links/02e7e53b41b829dc8d000000/Unsupervised-spoken-keyword-spotting-via-segmental-DTW-on-Gaussian-Posteriorgrams.pdf
+    #return -np.log(softmax(x) @ softmax(y))
+    # No good :I
+    #return (np.log(softmax(x) / softmax(y)) * softmax(x)).sum()
+
+    # Jensen Shannon Distance (Maybe)
+    #x = softmax(x)
+    #y = softmax(y)
+    #m = (x + y) / 2
+
+    #a = (np.log(y / m) * y).sum()
+    #b = (np.log(x / m) * x).sum()
+
+    #return a + b
+
+    ## Total Variation Distance (Nah)
+    #x = softmax(x)
+    #y = softmax(y)
+
+    #x[-1] = 0
+    #y[-1] = 0
+
+    #x[0] = 0
+    #y[0] = 0
+
+    # return np.abs(x - y).max()
+
+    # return np.sqrt(np.square(x - y).sum())
+    # return (x - y).min()
+
+    # Cosine
+    # x_norm = x / np.sqrt(x @ x)
+    # y_norm = y / np.sqrt(y @ y)
+
+    # return 1 - x_norm @ y_norm
+
+
+
 
 
 class PosteriogramsODTW(base.Base):
@@ -30,6 +70,7 @@ class PosteriogramsODTW(base.Base):
         self.keyword_logitss = {}
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
+        utterances = fix_loudness(utterances)
         if keyword not in self.keyword_logitss:
             self.keyword_logitss[keyword] = []
 
@@ -88,7 +129,7 @@ class PosteriogramsODTW(base.Base):
                                mem=mem,
                                sequence_length=sequence_length,
                                template_length=template_length,
-                               distance=entropy)
+                               distance=entropy) / len(kw)
 
                 if distance < min_distance:
                     min_distance = distance
@@ -100,11 +141,12 @@ class PosteriogramsODTW(base.Base):
         return None, keyword, min_distance
 
     def infer(self, utterance: np.ndarray):
+        utterance = fix_loudness(utterance)
         #return self.infer_min_avg_distance(utterance)
         return self.infer_min_distance(utterance)
 
     def name(self):
-        return "Jigglypuff PosteriogramsODTW"
+        return "STP-PKL"
 
     def register_setting(self, setting: Setting):
         pass

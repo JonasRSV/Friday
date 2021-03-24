@@ -39,9 +39,10 @@ def simulate_task(model: m.Model,
 
             utterance, closest_keyword, distance = model.infer(audio_in_window)
 
-            #print("start", current_sample, "middle", current_sample + window_size_samples / 2,"end", current_sample + window_size_samples, "prediction", utterance, "closest", closest_keyword, "distance", distance)
-            #simpleaudio.play_buffer(audio_in_window, num_channels=1, bytes_per_sample=2, sample_rate=sample_rate).wait_done()
-            #time.sleep(0.25)
+            #if current_sample > 430000:
+            #    print("start", current_sample, "middle", current_sample + window_size_samples / 2,"end", current_sample + window_size_samples, "prediction", utterance, "closest", closest_keyword, "distance", distance)
+            #    simpleaudio.play_buffer(audio_in_window, num_channels=1, bytes_per_sample=2, sample_rate=sample_rate).wait_done()
+            #    time.sleep(0.25)
 
             closest_keywords.append(closest_keyword)
             distances.append(distance)
@@ -184,7 +185,7 @@ def run_eval(model: m.Model,
                             pred_at_time=pred_at_time,
                             ut=utterances,
                             at_time=at_time,
-                            window=1.5 * model_sample_rate)
+                            window=2.5 * model_sample_rate)
 
         p["task"] = task_id
         p["latency"] = latency

@@ -1,6 +1,7 @@
 import os
 import numpy as np
 
+from models.jigglypuff.distances.preprocess import fix_loudness
 import models.jigglypuff.distances.base as base
 from pipelines.evaluate.query_by_example.model import Setting
 
@@ -14,6 +15,7 @@ class SampleLikelihood(base.Base):
         self.keyword_audio = {}
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
+        utterances = fix_loudness(utterances)
         if keyword not in self.keyword_audio:
             self.keyword_audio[keyword] = []
 
@@ -57,6 +59,7 @@ class SampleLikelihood(base.Base):
         return None, keyword, min_distance
 
     def infer(self, utterance: np.ndarray):
+        utterance = fix_loudness(utterance)
         #return self.infer_average_score(utterance)
         return self.infer_most_likely(utterance)
 

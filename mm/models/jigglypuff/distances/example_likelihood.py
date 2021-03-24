@@ -3,6 +3,7 @@ import numpy as np
 
 import models.jigglypuff.distances.base as base
 from pipelines.evaluate.query_by_example.model import Setting
+from models.jigglypuff.distances.preprocess import fix_loudness
 
 
 def strip_zeros(arr):
@@ -27,6 +28,8 @@ class ExampleLikelihood(base.Base):
         self.keyword_phoneme_seq = {}
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
+        utterances = fix_loudness(utterances)
+
         if keyword not in self.keyword_phoneme_seq:
             self.keyword_phoneme_seq[keyword] = []
 
@@ -62,7 +65,6 @@ class ExampleLikelihood(base.Base):
             for seq in seqs:
                 distance = -self.get_log_prob(utterance, seq)
 
-                print(kw, distance)
                 if distance < min_distance:
                     min_distance = distance
                     keyword = kw
@@ -73,6 +75,7 @@ class ExampleLikelihood(base.Base):
         return None, keyword, min_distance
 
     def infer(self, utterance: np.ndarray):
+        utterance = fix_loudness(utterance)
         #return self.infer_average_score(utterance)
         return self.infer_most_likely(utterance)
 

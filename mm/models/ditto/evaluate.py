@@ -42,9 +42,9 @@ def run_google_speech_commands_pipeline(model):
 def run_personal_pipeline(model):
     (a, b), keywords = personal_run(model)
 
-    df = distance.metrics_per_distance(a, 100, len(b), keywords)
+    #df = distance.metrics_per_distance(a, 100, len(b), keywords)
     #append("metrics_per_distance.csv", df)
-    distance.metrics(a, keywords=keywords)
+    #distance.metrics(a, keywords=keywords)
 
     b["timestamp"] = time.time()
     print("b", b)
@@ -66,8 +66,8 @@ if __name__ == "__main__":
     model = {
         Ditto.FASTDTW.value: model_fastdtw.FastDTW(max_distance=2000000),
         Ditto.FASTDTWMFCC.value: model_fastdtw_mfcc.FastDTWMFCC(max_distance=1900),
-        Ditto.DTWMFCC.value: model_dtw_mfcc.DTWMFCC(max_distance=750),
-        Ditto.ODTWMFCC.value: model_odtw_mfcc.ODTWMFCC(max_distance=30),
+        Ditto.DTWMFCC.value: model_dtw_mfcc.DTWMFCC(max_distance=730),
+        Ditto.ODTWMFCC.value: model_odtw_mfcc.ODTWMFCC(max_distance=0.169),
     }
 
     if args.pipeline == Pipelines.PERSONAL.value:

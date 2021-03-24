@@ -18,16 +18,36 @@ def metrics(df: pd.DataFrame, keywords: [str]):
 def realistic_metrics(df: pd.DataFrame, distance: float, total: int, keywords: [str]):
     """Calculate metrics relevant in a realistic scenario.
 
+    To whomever reads this function.. I'm sorry.
+
+
     E.g first keyword keyword prediction for a keyword
     """
 
-    active_keywords = {kw: False for kw in keywords}
+    active_keywords = {kw: 0 for kw in keywords}
     predicted_keywords = {kw: False for kw in keywords}
     been_correct_at_some_point = {kw: False for kw in keywords}
     majority_vote = {kw: [0] * len(keywords) for kw in keywords}
 
     false_positives, total_none, correct_at_some_point, correct_as_majority, correct_at_first = 0, 0, 0, 0, 0
+
+    current_task = 0
     for _, row in df.iterrows():
+
+        # Reset cause we're entering a new task
+        if row["task"] != current_task:
+            current_task = row["task"]
+
+            for key in active_keywords.keys():
+                if active_keywords[key]:
+                    correct_as_majority += keywords[np.argmax(majority_vote[key])] == key
+                    correct_at_some_point += been_correct_at_some_point[key]
+
+            active_keywords = {kw: 0 for kw in keywords}
+            predicted_keywords = {kw: False for kw in keywords}
+            been_correct_at_some_point = {kw: False for kw in keywords}
+            majority_vote = {kw: [0] * len(keywords) for kw in keywords}
+
         # Ignore all occurrences after first prediction of a keyword
         # Only first prediction is used in the real setting
         is_correct = (row[row["closest_keyword"]] > 0)
@@ -74,9 +94,9 @@ def realistic_metrics(df: pd.DataFrame, distance: float, total: int, keywords: [
             correct_as_majority += keywords[np.argmax(majority_vote[key])] == key
             correct_at_some_point += been_correct_at_some_point[key]
 
-    # print("correct", correct_at_first, "total", total, "correct_at_some_point",
-    #       correct_at_some_point, "majority_vote", correct_as_majority, "fp", false_positives, "total_none",
-    #       total_none)
+    #print("correct", correct_at_first, "total", total, "correct_at_some_point",
+    #      correct_at_some_point, "majority_vote", correct_as_majority, "fp", false_positives, "total_none",
+    #      total_none)
 
     return correct_at_first / total, correct_at_some_point / total, correct_as_majority / total, false_positives / (
             total_none + epsilon)
@@ -94,6 +114,7 @@ def metrics_per_distance(df: pd.DataFrame, n: int, total: int, keywords: [str]):
         DF with metric per distance
     """
 
+    print("df", df.head(60))
     print("df", df.tail(60))
 
     min_distance = df["distance"].min()
@@ -101,7 +122,7 @@ def metrics_per_distance(df: pd.DataFrame, n: int, total: int, keywords: [str]):
 
     distance_step = (max_distance - min_distance) / n
 
-    distances = np.array([min_distance + i * distance_step for i in range(n)])
+    distances = np.array([min_distance + i * distance_step for i in range(n)] + [max_distance + 0.000001])
 
     caughts, got_wrongs, misseds, avoideds = [], [], [], []
     accuracies_as_first, accuracies_as_some_point, accuracies_as_majority, realistic_false_positive_rate = [], [], [], []

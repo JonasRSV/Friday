@@ -1,7 +1,9 @@
 import os
 import numpy as np
 import numba
+import random
 from models.ditto.algorithms.odtw import dtw
+from models.jigglypuff.distances.preprocess import fix_loudness
 
 import models.jigglypuff.distances.base as base
 from pipelines.evaluate.query_by_example.model import Setting
@@ -20,6 +22,8 @@ class BeamODTW(base.Base):
         self.keyword_phoneme_seq = {}
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
+        utterances = fix_loudness(utterances)
+
         if keyword not in self.keyword_phoneme_seq:
             self.keyword_phoneme_seq[keyword] = []
 
@@ -28,6 +32,7 @@ class BeamODTW(base.Base):
 
             self.keyword_phoneme_seq[keyword].append(seq)
 
+        self.keywords = list(self.keyword_phoneme_seq.keys())
         print(self.keyword_phoneme_seq)
 
     def infer_min_avg_distance(self, utterance: np.ndarray):
@@ -64,6 +69,10 @@ class BeamODTW(base.Base):
     def infer_min_distance(self, utterance: np.ndarray):
         min_distance, keyword = 1e9, None
         ut_seq, _ = self.get_output(utterance)
+        #print("utseq", ut_seq)
+
+        if len(ut_seq) == 0:
+            return None, random.choice(self.keywords), 1.1
 
         for kw, seqs in self.keyword_phoneme_seq.items():
             for seq in seqs:
@@ -78,7 +87,7 @@ class BeamODTW(base.Base):
                                mem=mem,
                                sequence_length=sequence_length,
                                template_length=template_length,
-                               distance=discrete)
+                               distance=discrete) / len(seq)
 
                 if distance < min_distance:
                     min_distance = distance
@@ -90,11 +99,12 @@ class BeamODTW(base.Base):
         return None, keyword, min_distance
 
     def infer(self, utterance: np.ndarray):
+        utterance = fix_loudness(utterance)
         #return self.infer_min_avg_distance(utterance)
         return self.infer_min_distance(utterance)
 
     def name(self):
-        return "Jigglypuff BeamODTW"
+        return "STP-BS"
 
     def register_setting(self, setting: Setting):
         pass

@@ -33,22 +33,28 @@ def efficacy(df: pd.DataFrame, dataset: str):
         for index, plot_name in enumerate(plots, 1):
             plt.subplot(1, 3, index)
             eff = df[plot_name] / (df["false_positive_rate"] + 0.01)
-            sb.lineplot(df["norm_distance"], eff, label=name)
 
-    anchors = [(0.95, 0.9), (0.9, 0.96), (0.92, 0.92)]
+            if index == 3:
+                sb.lineplot(df["norm_distance"], eff, label=name)
+            else:
+                sb.lineplot(df["norm_distance"], eff)
+
+    #anchors = [(0.8, 0.9), (0.9, 0.96), (0.92, 0.92)]
     for index, plot_name in enumerate(plots, 1):
         plt.subplot(1, 3, index)
 
-        optimal_eff = 1.0 / (np.zeros_like(df["false_positive_rate"]) + 0.01)
+        #optimal_eff = 1.0 / (np.zeros_like(df["false_positive_rate"]) + 0.01)
 
-        sb.lineplot(df["norm_distance"], optimal_eff, label="optimal")
+        #sb.lineplot(df["norm_distance"], optimal_eff, label="optimal")
 
         plt.title(plot_name, fontsize=12)
         plt.ylabel("efficacy", fontsize=12)
         plt.xlabel("distance", fontsize=12)
+        plt.ylim([0, 100])
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
-        plt.legend(fontsize=10, bbox_to_anchor=anchors[index - 1])
+
+    plt.legend(fontsize=12, bbox_to_anchor=(-0.3, -0.2))
 
     plt.savefig(get_plot_dir() / f"efficacy.png", bbox_inches="tight")
     plt.show()

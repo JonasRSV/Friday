@@ -24,6 +24,7 @@ import alsaaudio
 import simpleaudio
 import time
 from typing import List
+from queue import Queue, Empty
 
 tf.compat.v1.enable_eager_execution()
 
@@ -76,6 +77,8 @@ class DatasetRecorder:
         self.recording = False
 
         self.audio_data = None
+        self.listening_terminal = False
+
 
     def run_recording(self):
         print("Starting recording")
@@ -108,23 +111,49 @@ class DatasetRecorder:
         self.recording_thread = threading.Thread(target=self.run_recording)
         self.recording_thread.start()
 
+        char_queue = Queue()
+
+        def fill_queue():
+            while self.listening_terminal:
+                ch = getch()
+                char_queue.put(ch)
+
+                if not ch.isnumeric():
+                    break
+
+        self.listening_terminal = True
+        self.term_input_thread = threading.Thread(target=fill_queue)
+        self.term_input_thread.start()
+
         utterances = []
         at_time = []
 
+        timestamp, last_word = time.time(), ""
         while True:
-            inp = getch()
 
-            if inp.isnumeric():
-                utterances.append(keywords[int(inp)])
-                at_time.append(self.current_sample)
+            try:
+                inp = char_queue.get(block=True, timeout=1)
 
-                print("Registered", keywords[int(inp)], end="            \r")
-            else:
-                print("Quitting")
-                break
+                if inp.isnumeric():
+                    utterances.append(keywords[int(inp)])
+                    at_time.append(self.current_sample)
+
+                    print("Registered", keywords[int(inp)], end="                                    \r")
+
+                    last_word = keywords[int(inp)]
+                    timestamp = time.time()
+                else:
+                    print("Quitting")
+                    break
+            except Empty:
+                print("Registered", last_word, int(time.time() - timestamp), "seconds ago",
+                      end="                                                     \r")
 
         self.recording = False
         self.recording_thread.join()
+
+        self.listening_terminal = False
+        self.term_input_thread.join()
 
         print("Writing to file...")
         writer = get_writer()
@@ -156,21 +185,21 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    #keywords = [
+    # keywords = [
     #    "tänd ljuset",
     #    "släck ljuset",
     #    "sluta",
     #    "friday",
     #    "vad är klockan"
-    #]
+    # ]
 
     keywords = [
-            "time",
-            "stop",
-            "night",
-            "morning",
-            "illuminate",
-            "alarm"
+        "time",
+        "stop",
+        "night",
+        "morning",
+        "illuminate",
+        "alarm"
     ]
 
     DatasetRecorder(sample_rate=args.sample_rate).run(keywords)

@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import time
 
 # Some systems don't use the launching directory as root
 if os.getcwd() not in sys.path:
@@ -32,23 +33,27 @@ def run_google_speech_commands_pipeline(model):
 
     a = google_run(model, keywords=keywords)
 
-    df = distance.metrics_per_distance(a, 100)
-    append("mpd.csv", df)
-    distance.metrics(a, keywords=keywords)
+    #df = distance.metrics_per_distance(a, 100)
+    #append("mpd.csv", df)
+    #distance.metrics(a, keywords=keywords)
 
 
 def run_personal_pipeline(model):
     (a, b), keywords = personal_run(model)
 
-    df = distance.metrics_per_distance(a, 100)
-    append("mpd.csv", df)
+    df = distance.metrics_per_distance(a, 100, len(b), keywords)
+    append("metrics_per_distance.csv", df)
     distance.metrics(a, keywords=keywords)
 
-    df = personal.main(df=b, keywords=keywords)
-    df["model"] = model.name()
-    append("personal.csv", df)
-    print(df)
+    b["timestamp"] = time.time()
     print("b", b)
+
+    #append("confusion-matrix.csv", b)
+    #df = personal.main(df=b, keywords=keywords)
+    #df["model"] = model.name()
+    #append("personal.csv", df)
+
+    #print(df)
 
 
 if __name__ == "__main__":
@@ -62,7 +67,7 @@ if __name__ == "__main__":
         Jigglypuff.BEAMODTW.value: BeamODTW(export_dir=args.export_dir, max_distance=1000),
         Jigglypuff.ExampleLikelihood.value: ExampleLikelihood(export_dir=args.export_dir, max_distance=14.2),
         Jigglypuff.SampleLikelihood.value: SampleLikelihood(export_dir=args.export_dir, max_distance=14.2),
-        Jigglypuff.PosteriogramsODTW.value: PosteriogramsODTW(export_dir=args.export_dir, max_distance=200),
+        Jigglypuff.PosteriogramsODTW.value: PosteriogramsODTW(export_dir=args.export_dir, max_distance=0.005),
     }
 
     {

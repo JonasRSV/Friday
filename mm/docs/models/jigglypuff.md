@@ -59,6 +59,8 @@ Pick a model, it should be a path to a tensorflow 'SavedModel' export directory.
 
 ```bash 
 JIGGLYPUFF_MODEL=$PWD/data/stp_model/1614070522
+JIGGLYPUFF_MODEL=$PWD/data/stp_model/stp-no-noise
+
 ```
 
 Then run the evaluate script
@@ -76,8 +78,8 @@ FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
   --export_dir=${JIGGLYPUFF_MODEL?}\
   --jigglypuff=${JIGGLYPUFF_DISTANCE?}\
   --pipeline=P\
-  --tasks="${FRIDAY_DATA?}/evaluation/tasks/tfexamples.easy*"\
-  --examples="${FRIDAY_DATA?}/evaluation/examples/tfexamples.en*"\
+  --tasks="data/evaluation/tasks/tfexamples.en-easy-jonas-*"\
+  --examples="data/evaluation/examples/tfexamples.en*"\
   --window_size=2.0\
   --window_stride="0.25"\
   --sample_rate=8000
