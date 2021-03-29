@@ -106,6 +106,7 @@ def accuracies(df: pd.DataFrame, dataset: str):
 def confusion_matrix(df: pd.DataFrame, dataset: str):
     df = df.loc[df["dataset"] == dataset]
 
+    print(df.columns)
     keywords = list(df.columns[3: list(df.columns).index("None") + 1])
 
     groups = list(df.groupby(by=["model", "timestamp"]))

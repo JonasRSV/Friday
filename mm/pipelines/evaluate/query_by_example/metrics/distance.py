@@ -15,6 +15,35 @@ def metrics(df: pd.DataFrame, keywords: [str]):
     print("caught", caught)
 
 
+def b_from_a(df: pd.DataFrame, keywords: [str], distance: float):
+    """..."""
+
+    def get_new_row(id: int, utterance: int, sample: int, model: str, dataset: str):
+        return ([id, utterance, sample] + [0] * (len(keywords) + 1)) + [model, dataset]
+
+    active_keyword, active_row, rows = None, None, []
+
+    for _, row in df.iterrows():
+
+        if row["utterance"] in keywords:
+            if not active_row:
+                active_row = get_new_row(row["id"], row["utterance"], row["sample"], row["model"], row["dataset"])
+
+            if row["distance"] <= distance:
+                active_row[3 + keywords.index(row["closest_keyword"])] += 1
+            else:
+                active_row[3 + len(keywords)] += 1
+
+        elif active_row:
+            rows.append(active_row)
+            active_row = None
+
+    if active_row:
+        rows.append(active_row)
+
+    return pd.DataFrame(rows, columns=["id", "utterance", "sample"] + keywords + ["None", "model", "dataset"])
+
+
 def realistic_metrics(df: pd.DataFrame, distance: float, total: int, keywords: [str]):
     """Calculate metrics relevant in a realistic scenario.
 
@@ -94,7 +123,7 @@ def realistic_metrics(df: pd.DataFrame, distance: float, total: int, keywords: [
             correct_as_majority += keywords[np.argmax(majority_vote[key])] == key
             correct_at_some_point += been_correct_at_some_point[key]
 
-    #print("correct", correct_at_first, "total", total, "correct_at_some_point",
+    # print("correct", correct_at_first, "total", total, "correct_at_some_point",
     #      correct_at_some_point, "majority_vote", correct_as_majority, "fp", false_positives, "total_none",
     #      total_none)
 
@@ -124,6 +153,7 @@ def metrics_per_distance(df: pd.DataFrame, n: int, total: int, keywords: [str]):
 
     distances = np.array([min_distance + i * distance_step for i in range(n)] + [max_distance + 0.000001])
 
+    efficacies = []
     caughts, got_wrongs, misseds, avoideds = [], [], [], []
     accuracies_as_first, accuracies_as_some_point, accuracies_as_majority, realistic_false_positive_rate = [], [], [], []
     for d in tqdm(distances):
@@ -154,7 +184,10 @@ def metrics_per_distance(df: pd.DataFrame, n: int, total: int, keywords: [str]):
         accuracies_as_majority.append(accuracy_as_majority)
         realistic_false_positive_rate.append(false_positive_rate)
 
+        efficacies.append(accuracy_as_majority / (false_positive_rate + 0.01))
+
     n_df = pd.DataFrame({
+        "efficacy": efficacies,
         "caught": caughts,
         "got_wrong": got_wrongs,
         "missed": misseds,

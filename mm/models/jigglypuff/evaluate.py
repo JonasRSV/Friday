@@ -43,18 +43,27 @@ def run_personal_pipeline(model):
 
     df = distance.metrics_per_distance(a, 100, len(b), keywords)
     append("metrics_per_distance.csv", df)
-    distance.metrics(a, keywords=keywords)
+    # distance.metrics(a, keywords=keywords)
 
+    print("max efficacy", df["efficacy"].max())
+    distance_maximizing_efficacy = df.iloc[df["efficacy"].argmax()]["distance"]
+    print("best distance", distance_maximizing_efficacy)
+    print(a)
+
+    b = distance.b_from_a(a, keywords, distance_maximizing_efficacy)
     b["timestamp"] = time.time()
-    print("b", b)
+    # print("b\n", b)
+    # print("b from a\n", distance.b_from_a(a, keywords, distance_maximizing_efficacy))
 
-    #append("confusion-matrix.csv", b)
-    #df = personal.main(df=b, keywords=keywords)
-    #df["model"] = model.name()
-    #append("personal.csv", df)
+    append("confusion-matrix.csv", b)
+    # df = personal.main(df=b, keywords=keywords)
+    # df["model"] = model.name()
+    # append("personal.csv", df)
 
-    #print(df)
+    print(df)
 
+
+# log(exp(- log(x)) / y) = -log(x) - log y
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -64,10 +73,10 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     model = {
-        Jigglypuff.BEAMODTW.value: BeamODTW(export_dir=args.export_dir, max_distance=1000),
-        Jigglypuff.ExampleLikelihood.value: ExampleLikelihood(export_dir=args.export_dir, max_distance=14.2),
-        Jigglypuff.SampleLikelihood.value: SampleLikelihood(export_dir=args.export_dir, max_distance=14.2),
-        Jigglypuff.PosteriogramsODTW.value: PosteriogramsODTW(export_dir=args.export_dir, max_distance=0.005),
+        Jigglypuff.BEAMODTW.value: BeamODTW(export_dir=args.export_dir, max_distance=0.0),
+        Jigglypuff.ExampleLikelihood.value: ExampleLikelihood(export_dir=args.export_dir, max_distance=-1),
+        Jigglypuff.SampleLikelihood.value: SampleLikelihood(export_dir=args.export_dir, max_distance=-2.85),
+        Jigglypuff.PosteriogramsODTW.value: PosteriogramsODTW(export_dir=args.export_dir, max_distance=0.09),
     }
 
     {

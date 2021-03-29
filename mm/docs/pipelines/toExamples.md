@@ -167,7 +167,7 @@ python3 pipelines/to_tfexample/montreal_forced_aligner.py \
   --audio=${FRIDAY_DATA?}/mfa_data\
   --sink=${FRIDAY_SESSION?} \
   --min_occurrences=10 \
-  --min_word_length=5 \
+  --min_word_length=3 \
   --target_occurrences=100 
 ```
 

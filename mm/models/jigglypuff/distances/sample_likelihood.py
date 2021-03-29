@@ -47,7 +47,7 @@ class SampleLikelihood(base.Base):
 
         for kw, audios in self.keyword_audio.items():
             for audio in audios:
-                distance = -self.get_log_prob(audio, labels)
+                distance = -self.get_log_prob(audio, labels) - len(kw) - len(labels)
 
                 if distance < min_distance:
                     min_distance = distance
@@ -64,7 +64,7 @@ class SampleLikelihood(base.Base):
         return self.infer_most_likely(utterance)
 
     def name(self):
-        return "Jigglypuff Sample Likelihood"
+        return "STP-SL"
 
     def register_setting(self, setting: Setting):
         pass

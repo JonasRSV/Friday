@@ -77,7 +77,7 @@ def get_words_to_convert(meta: Alignments,
     return [word for word, occurrences in meta.word_counts.items()
             if occurrences >= min_occurrences
             and word != "<unk>"
-            and len(word) > min_word_length
+            and len(word) >= min_word_length
             ]
 
 

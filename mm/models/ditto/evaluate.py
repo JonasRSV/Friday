@@ -42,17 +42,24 @@ def run_google_speech_commands_pipeline(model):
 def run_personal_pipeline(model):
     (a, b), keywords = personal_run(model)
 
-    #df = distance.metrics_per_distance(a, 100, len(b), keywords)
-    #append("metrics_per_distance.csv", df)
-    #distance.metrics(a, keywords=keywords)
+    df = distance.metrics_per_distance(a, 100, len(b), keywords)
+    append("metrics_per_distance.csv", df)
+    # distance.metrics(a, keywords=keywords)
 
+    print("max efficacy", df["efficacy"].max())
+    distance_maximizing_efficacy = df.iloc[df["efficacy"].argmax()]["distance"]
+    print("best distance", distance_maximizing_efficacy)
+    print(a)
+
+    b = distance.b_from_a(a, keywords, distance_maximizing_efficacy)
     b["timestamp"] = time.time()
-    print("b", b)
+    # print("b\n", b)
+    # print("b from a\n", distance.b_from_a(a, keywords, distance_maximizing_efficacy))
 
     append("confusion-matrix.csv", b)
-    df = personal.main(df=b, keywords=keywords)
-    df["model"] = model.name()
-    append("personal.csv", df)
+    # df = personal.main(df=b, keywords=keywords)
+    # df["model"] = model.name()
+    # append("personal.csv", df)
 
     print(df)
 
@@ -67,7 +74,7 @@ if __name__ == "__main__":
         Ditto.FASTDTW.value: model_fastdtw.FastDTW(max_distance=2000000),
         Ditto.FASTDTWMFCC.value: model_fastdtw_mfcc.FastDTWMFCC(max_distance=1900),
         Ditto.DTWMFCC.value: model_dtw_mfcc.DTWMFCC(max_distance=730),
-        Ditto.ODTWMFCC.value: model_odtw_mfcc.ODTWMFCC(max_distance=0.169),
+        Ditto.ODTWMFCC.value: model_odtw_mfcc.ODTWMFCC(max_distance=0.15119559229102886),
     }
 
     if args.pipeline == Pipelines.PERSONAL.value:

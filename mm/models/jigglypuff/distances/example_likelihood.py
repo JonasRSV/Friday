@@ -5,20 +5,6 @@ import models.jigglypuff.distances.base as base
 from pipelines.evaluate.query_by_example.model import Setting
 from models.jigglypuff.distances.preprocess import fix_loudness
 
-
-def strip_zeros(arr):
-    start = 0
-    end = len(arr) - 1
-
-    while arr[start] == 0:
-        start += 1
-
-    while arr[end] == 0:
-        end -= 1
-
-    return arr[start:end + 1]
-
-
 class ExampleLikelihood(base.Base):
 
     def __init__(self, export_dir: str, max_distance: float):
@@ -63,7 +49,7 @@ class ExampleLikelihood(base.Base):
 
         for kw, seqs in self.keyword_phoneme_seq.items():
             for seq in seqs:
-                distance = -self.get_log_prob(utterance, seq)
+                distance = -self.get_log_prob(utterance, seq) - len(kw)
 
                 if distance < min_distance:
                     min_distance = distance
@@ -80,7 +66,7 @@ class ExampleLikelihood(base.Base):
         return self.infer_most_likely(utterance)
 
     def name(self):
-        return "Jigglypuff Example Likelihood"
+        return "STP-EL"
 
     def register_setting(self, setting: Setting):
         pass
