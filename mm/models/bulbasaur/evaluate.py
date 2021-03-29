@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import time
 
 # Some systems don't use the launching directory as root
 if os.getcwd() not in sys.path:
@@ -34,15 +35,26 @@ def run_google_speech_commands_pipeline(model):
 def run_personal_pipeline(model):
     (a, b), keywords = personal_run(model)
 
-    df = distance.metrics_per_distance(a, 100)
-    append("mpd.csv", df)
-    distance.metrics(a, keywords=keywords)
+    df = distance.metrics_per_distance(a, 100, len(b), keywords)
+    append("metrics_per_distance.csv", df)
+    # distance.metrics(a, keywords=keywords)
 
-    df = personal.main(df=b, keywords=keywords)
-    df["model"] = model.name()
-    append("personal.csv", df)
+    print("max efficacy", df["efficacy"].max())
+    distance_maximizing_efficacy = df.iloc[df["efficacy"].argmax()]["distance"]
+    print("best distance", distance_maximizing_efficacy)
+    print(a)
+
+    b = distance.b_from_a(a, keywords, distance_maximizing_efficacy)
+    b["timestamp"] = time.time()
+    # print("b\n", b)
+    # print("b from a\n", distance.b_from_a(a, keywords, distance_maximizing_efficacy))
+
+    append("confusion-matrix.csv", b)
+    # df = personal.main(df=b, keywords=keywords)
+    # df["model"] = model.name()
+    # append("personal.csv", df)
+
     print(df)
-    print("b", b)
 
 
 if __name__ == "__main__":

@@ -49,7 +49,7 @@ class ExampleLikelihood(base.Base):
 
         for kw, seqs in self.keyword_phoneme_seq.items():
             for seq in seqs:
-                distance = -self.get_log_prob(utterance, seq) - len(kw)
+                distance = -self.get_log_prob(utterance, seq) - len(seq)
 
                 if distance < min_distance:
                     min_distance = distance

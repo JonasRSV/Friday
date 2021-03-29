@@ -22,6 +22,11 @@ class Mode(Enum):
     export = "export"
 
 
+class Distance(Enum):
+    COSINE = "cosine"
+    EUCLIDEAN = "euclidean"
+
+
 def create_input_fn(mode: tf.estimator.ModeKeys,
                     input_prefix: str,
                     audio_length: int,
@@ -73,10 +78,24 @@ def cosine_distance(a: tf.Tensor, b: tf.Tensor):
     return 1 - tf.reduce_sum(a * b, axis=-1)
 
 
-def triplet_loss(anchor_embeddings: tf.Tensor,
-                 positive_embeddings: tf.Tensor,
-                 negative_embeddings: tf.Tensor,
-                 margin=1.0):
+def cosine_triplet_loss(anchor_embeddings: tf.Tensor,
+                        positive_embeddings: tf.Tensor,
+                        negative_embeddings: tf.Tensor,
+                        margin=1.0):
+    anchor_embeddings = tf.linalg.l2_normalize(anchor_embeddings, axis=1)
+    positive_embeddings = tf.linalg.l2_normalize(positive_embeddings, axis=1)
+    negative_embeddings = tf.linalg.l2_normalize(negative_embeddings, axis=1)
+
+    triplet = tf.nn.relu(cosine_distance(anchor_embeddings, positive_embeddings) -
+                         cosine_distance(anchor_embeddings, negative_embeddings) + margin)
+
+    # return similarity_loss(left_embeddings, right_embeddings)
+    return tf.reduce_sum(triplet)
+
+def euclidean_triplet_loss(anchor_embeddings: tf.Tensor,
+                        positive_embeddings: tf.Tensor,
+                        negative_embeddings: tf.Tensor,
+                        margin=1.0):
     anchor_embeddings = tf.linalg.l2_normalize(anchor_embeddings, axis=1)
     positive_embeddings = tf.linalg.l2_normalize(positive_embeddings, axis=1)
     negative_embeddings = tf.linalg.l2_normalize(negative_embeddings, axis=1)
@@ -90,32 +109,34 @@ def triplet_loss(anchor_embeddings: tf.Tensor,
 
 def get_predict_ops(stored_embeddings: tf.Tensor,
                     signal_embeddings: tf.Tensor):
-    similarities = 1 - cosine_distance(stored_embeddings, signal_embeddings)
-    predict_op = tf.argmax(similarities)
-    return predict_op, similarities
+    distance = cosine_distance(stored_embeddings, signal_embeddings)
+    predict_op = tf.argmin(distance)
+    return predict_op, distance
 
 
-def get_metric_ops(anchor_embeddings: tf.Tensor,
+def get_metric_ops(distance: Distance,
+                   anchor_embeddings: tf.Tensor,
                    positive_embeddings: tf.Tensor,
                    negative_embeddings: tf.Tensor,
                    margin: float):
     metric_ops = {}
-    loss_op = triplet_loss(anchor_embeddings, positive_embeddings, negative_embeddings, margin)
+    loss_op = cosine_triplet_loss(anchor_embeddings, positive_embeddings, negative_embeddings, margin)
 
     return loss_op, metric_ops
 
 
-def get_train_ops(anchor_embeddings: tf.Tensor,
+def get_train_ops(distance: Distance,
+                  anchor_embeddings: tf.Tensor,
                   positive_embeddings: tf.Tensor,
                   negative_embeddings: tf.Tensor,
                   margin: float,
                   learning_rate: float,
                   save_summaries_every: int,
                   summary_output_dir: str):
-    loss_op = triplet_loss(anchor_embeddings,
-                           positive_embeddings,
-                           negative_embeddings,
-                           margin=margin)
+    loss_op = {
+        distance.COSINE: lambda *args: cosine_triplet_loss(*args),
+        distance.EUCLIDEAN: lambda *args: euclidean_triplet_loss(*args)
+    }[distance](anchor_embeddings, positive_embeddings, negative_embeddings, margin)
 
     decay_learning_rate = tf.compat.v1.train.cosine_decay_restarts(
         learning_rate=learning_rate,
@@ -173,7 +194,8 @@ def get_embedding(audio_signal: tf.Tensor, sample_rate: int, embedding_dim: int,
     return arch.kaggle_cnn(signal, embedding_dim=embedding_dim, mode=mode)
 
 
-def make_model_fn(embedding_dim: int,
+def make_model_fn(distance: Distance,
+                  embedding_dim: int,
                   summary_output_dir: str,
                   margin: float = 1.0,
                   sample_rate: int = 8000,
@@ -198,6 +220,7 @@ def make_model_fn(embedding_dim: int,
                                                 mode=mode)
 
             loss_op, train_op, train_logging_hooks = get_train_ops(
+                distance=distance,
                 anchor_embeddings=anchor_embeddings,
                 positive_embeddings=positive_embeddings,
                 negative_embeddings=negative_embeddings,
@@ -220,7 +243,8 @@ def make_model_fn(embedding_dim: int,
                                                 embedding_dim=embedding_dim,
                                                 mode=mode)
 
-            loss_op, eval_metric_ops = get_metric_ops(anchor_embeddings=anchor_embeddings,
+            loss_op, eval_metric_ops = get_metric_ops(distance=distance,
+                                                      anchor_embeddings=anchor_embeddings,
                                                       positive_embeddings=positive_embeddings,
                                                       negative_embeddings=negative_embeddings,
                                                       margin=margin)
@@ -232,7 +256,7 @@ def make_model_fn(embedding_dim: int,
 
             embeddings = tf.linalg.l2_normalize(embeddings, axis=1)
 
-            predict_op, similarities_op = get_predict_ops(
+            predict_op, distance_op = get_predict_ops(
                 stored_embeddings=features["embeddings"],
                 signal_embeddings=embeddings,
             )
@@ -245,8 +269,8 @@ def make_model_fn(embedding_dim: int,
             tf.identity(predict_op, name="output")
             tf.identity(tf.shape(predict_op), name="output_shape")
 
-            tf.identity(similarities_op, name="similarities")
-            tf.identity(tf.shape(similarities_op), name="similarities_shape")
+            tf.identity(distance_op, name="distances")
+            tf.identity(tf.shape(distance_op), name="distances_shape")
         else:
             raise Exception(f"Unknown ModeKey {mode}")
 
@@ -286,6 +310,10 @@ def main():
                         required=True,
                         type=int,
                         help="Dimension of embeddings")
+    parser.add_argument("--distance",
+                        required=True,
+                        choices=[x.value for x in Distance],
+                        help="Distance to learn representation for")
     parser.add_argument("--margin",
                         required=True,
                         type=float,

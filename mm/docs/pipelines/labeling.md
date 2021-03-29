@@ -76,6 +76,6 @@ python3 pipelines/preprocess_dml.py \
   --source=${FRIDAY_SESSION?} \
   --sink_prefix=${FRIDAY_SESSION}/ptfexamples \
   --expected_file_size=500 \
-  --expected_total_size=200000 \
-  --samples_per_instance=10 
+  --expected_total_size=500000 \
+  --samples_per_instance=5
 ```

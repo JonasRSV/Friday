@@ -26,14 +26,14 @@ def distance_fn(x, y):
     # return np.abs(x - y).sum()
     # return np.sqrt(np.sqrt(np.square(np.square(x - y)).sum()))
     # return -(np.log(softmax(x)) * softmax(y)).sum()
-    x_norm = x / np.sqrt(x @ x)
-    y_norm = y / np.sqrt(y @ y)
+    #x_norm = x / np.sqrt(x @ x)
+    #y_norm = y / np.sqrt(y @ y)
 
-    return 1 - x_norm @ y_norm
+    #return 1 - x_norm @ y_norm
     #return np.sqrt(np.square(x - y).sum())
     #return np.sqrt(np.sqrt(np.sqrt(np.square(np.square(np.square(x - y)).sum()))))
 
-    #return np.abs(x - y).max()
+    return np.abs(x - y).max()
 
 
 class ODTWMFCC(Model):
@@ -62,7 +62,7 @@ class ODTWMFCC(Model):
                                     n_fft=2048,
                                     hop_length=1024,
                                     win_length=2048,
-                                    n_mels=128)
+                                    n_mels=128).T
 
     def _infer_average_score(self, utterance: np.ndarray):
         for k in self.keyword_score.keys():
@@ -107,7 +107,7 @@ class ODTWMFCC(Model):
         return self._infer_min_example(utterance)
 
     def name(self):
-        return "Ghost-DTW-MFCC-COS"
+        return "Ghost-DTW-MFCC-CHE"
 
 
 if __name__ == "__main__":

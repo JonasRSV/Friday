@@ -27,7 +27,7 @@ class AudioAugmentations(PreprocessFn):
                 #0.3,
                 #0.3,
                 0.25,
-                0.95,
+                1.0,
                 0.3
             ]
         )

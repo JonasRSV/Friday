@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from models.bulbasaur.inference.preprocess import fix_loudness
 
 from models.bulbasaur.inference.base import Base
 from pipelines.evaluate.query_by_example.model import Setting
@@ -14,7 +15,7 @@ class Simple(Base):
         self.embeddings = []
 
     def name(self):
-        return "Bulbasaur Simple"
+        return "DDL-COS"
 
     def infer_most_likely(self, utterance: np.ndarray):
         similarities, _ = self.get_similarities(self.embeddings, utterance)
@@ -56,10 +57,13 @@ class Simple(Base):
         return None, prediction, distance
 
     def infer(self, utterance: np.ndarray):
+        utterance = fix_loudness(utterance)
         #return self.infer_average(utterance)
         return self.infer_most_likely(utterance)
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
+        utterances = fix_loudness(utterances)
+
         self.embeddings = list(self.embeddings)
         for utterance in utterances:
             projection, _ = self.get_projection(utterance)

@@ -36,7 +36,7 @@ class DTWMFCC(Model):
                                  n_fft=2048,
                                  hop_length=1024,
                                  win_length=2048,
-                                 n_mels=128) for utterance in utterances]
+                                 n_mels=128).T for utterance in utterances]
 
         self.keyword_score[keyword] = 0
 
@@ -50,7 +50,7 @@ class DTWMFCC(Model):
                                          n_fft=2048,
                                          hop_length=1024,
                                          win_length=2048,
-                                         n_mels=128)
+                                         n_mels=128).T
 
         for keyword, mfccs in self.keywords_clips.items():
             for mfcc in mfccs:
