@@ -9,9 +9,6 @@ import tensorflow as tf
 import models.shared.audio as audio
 import argparse
 import models.bulbasaur.architechtures as arch
-import numpy as np
-import models.shared.augmentation as augmentation
-import models.shared.augmentations as a
 from enum import Enum
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
@@ -78,6 +75,10 @@ def cosine_distance(a: tf.Tensor, b: tf.Tensor):
     return 1 - tf.reduce_sum(a * b, axis=-1)
 
 
+def euclidean_distance(a: tf.Tensor, b: tf.Tensor):
+    return tf.sqrt(tf.reduce_sum(tf.square(a - b), axis=-1))
+
+
 def cosine_triplet_loss(anchor_embeddings: tf.Tensor,
                         positive_embeddings: tf.Tensor,
                         negative_embeddings: tf.Tensor,
@@ -92,26 +93,28 @@ def cosine_triplet_loss(anchor_embeddings: tf.Tensor,
     # return similarity_loss(left_embeddings, right_embeddings)
     return tf.reduce_sum(triplet)
 
+
 def euclidean_triplet_loss(anchor_embeddings: tf.Tensor,
-                        positive_embeddings: tf.Tensor,
-                        negative_embeddings: tf.Tensor,
-                        margin=1.0):
-    anchor_embeddings = tf.linalg.l2_normalize(anchor_embeddings, axis=1)
-    positive_embeddings = tf.linalg.l2_normalize(positive_embeddings, axis=1)
-    negative_embeddings = tf.linalg.l2_normalize(negative_embeddings, axis=1)
+                           positive_embeddings: tf.Tensor,
+                           negative_embeddings: tf.Tensor,
+                           margin=1.0):
 
-    triplet = tf.nn.relu(cosine_distance(anchor_embeddings, positive_embeddings) -
-                         cosine_distance(anchor_embeddings, negative_embeddings) + margin)
+    triplet = tf.nn.relu(euclidean_distance(anchor_embeddings, positive_embeddings) -
+                         euclidean_distance(anchor_embeddings, negative_embeddings) + margin)
 
-    # return similarity_loss(left_embeddings, right_embeddings)
     return tf.reduce_sum(triplet)
 
 
-def get_predict_ops(stored_embeddings: tf.Tensor,
+def get_predict_ops(distance: Distance,
+                    stored_embeddings: tf.Tensor,
                     signal_embeddings: tf.Tensor):
-    distance = cosine_distance(stored_embeddings, signal_embeddings)
-    predict_op = tf.argmin(distance)
-    return predict_op, distance
+    d = {
+        distance.COSINE: lambda *args: cosine_distance(*args),
+        distance.EUCLIDEAN: lambda *args: euclidean_distance(*args)
+    }[distance](stored_embeddings, signal_embeddings)
+
+    predict_op = tf.argmin(d)
+    return predict_op, d
 
 
 def get_metric_ops(distance: Distance,
@@ -120,7 +123,10 @@ def get_metric_ops(distance: Distance,
                    negative_embeddings: tf.Tensor,
                    margin: float):
     metric_ops = {}
-    loss_op = cosine_triplet_loss(anchor_embeddings, positive_embeddings, negative_embeddings, margin)
+    loss_op = {
+        distance.COSINE: lambda *args: cosine_triplet_loss(*args),
+        distance.EUCLIDEAN: lambda *args: euclidean_triplet_loss(*args)
+    }[distance](anchor_embeddings, positive_embeddings, negative_embeddings, margin)
 
     return loss_op, metric_ops
 
@@ -167,7 +173,7 @@ def get_train_ops(distance: Distance,
     train_logging_hooks = [
         tf.estimator.LoggingTensorHook(
             {"loss": "loss_op"},
-            every_n_iter=25),
+            every_n_iter=1),
         tf.estimator.SummarySaverHook(
             save_steps=save_summaries_every,
             output_dir=summary_output_dir,
@@ -178,13 +184,22 @@ def get_train_ops(distance: Distance,
 
 
 def extract_mfcc(signal: tf.Tensor, sample_rate: int):
+    #return audio.mfcc_feature(signal=signal,
+    #                          coefficients=27,
+    #                          sample_rate=sample_rate,
+    #                          frame_length=512,
+    #                          frame_step=256,
+    #                          fft_length=512,
+    #                          num_mel_bins=120,
+    #                          lower_edge_hertz=1,
+    #                          upper_edge_hertz=4000)
     return audio.mfcc_feature(signal=signal,
                               coefficients=27,
                               sample_rate=sample_rate,
-                              frame_length=512,
-                              frame_step=256,
-                              fft_length=512,
-                              num_mel_bins=120,
+                              frame_length=2048,
+                              frame_step=1024,
+                              fft_length=2048,
+                              num_mel_bins=128,
                               lower_edge_hertz=1,
                               upper_edge_hertz=4000)
 
@@ -362,6 +377,7 @@ def main():
 
     estimator = tf.estimator.Estimator(
         model_fn=make_model_fn(
+            distance=Distance(args.distance),
             summary_output_dir=args.model_directory,
             embedding_dim=args.embedding_dim,
             margin=args.margin,

@@ -43,7 +43,7 @@ def kaggle_cnn(x: tf.Tensor,
             x, training=mode == tf.estimator.ModeKeys.TRAIN,
             )
         print("x", x)
-        x = tf.compat.v1.layers.Dense(256, activation=tf.nn.relu, name="kaggle_cnn_1d")(x)
+        x = tf.compat.v1.layers.Dense(512, activation=tf.nn.relu, name="kaggle_cnn_1d")(x)
         print("x", x)
 
         embedding = tf.compat.v1.layers.Dense(embedding_dim, activation=None, name="kaggle_cnn_2d")(x)

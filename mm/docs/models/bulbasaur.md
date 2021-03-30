@@ -12,14 +12,19 @@ EXPERIMENT_NAME=bulbasaur.$(date | tr " " "_")
 MODEL_OUTPUT=/tmp/$EXPERIMENT_NAME
 ```
 
-Then for training launch
+Then for training, pick a distance
+
+```bash
+BULBASAUR_DISTANCE=cosine
+```
 
 ```bash
 python3 models/bulbasaur/bulbasaur.py\
     "--train_prefix=${FRIDAY_SESSION?}/ptfexamples.train*"\
     "--eval_prefix=${FRIDAY_SESSION?}/ptfexamples.valid*"\
     --margin=1.0\
-    --embedding_dim=256\
+    --distance=${BULBASAUR_DISTANCE}\
+    --embedding_dim=512\
     --clip_length=2\
     --model_directory=${MODEL_OUTPUT?}\
     --mode="train_eval"\
@@ -46,11 +51,6 @@ python3 models/bulbasaur/bulbasaur.py\
 
 ### Evaluation
 
-Pick a 'Inference' type
-
-```bash
-BULBASAUR_INFERENCE=Simple
-```
 
 Pick a model, it should be a path to a tensorflow 'SavedModel' export directory.
 
