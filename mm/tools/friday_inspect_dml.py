@@ -21,9 +21,9 @@ if __name__ == "__main__":
         example = tf.train.Example()
         example.ParseFromString(serialized_example.numpy())
 
-        anchor = np.array(tfexample_dma_utils.get_anchor_audio(example), dtype=np.int16)
-        positive = np.array(tfexample_dma_utils.get_positive_audio(example), dtype=np.int16)
-        negative = np.array(tfexample_dma_utils.get_negative_audio(example), dtype=np.int16)
+        anchor = tfexample_dma_utils.get_anchor_audio(example)
+        positive = tfexample_dma_utils.get_positive_audio(example)
+        negative = tfexample_dma_utils.get_negative_audio(example)
 
         anchor_text = tfexample_dma_utils.get_anchor_text(example)
         positive_text = tfexample_dma_utils.get_positive_text(example)

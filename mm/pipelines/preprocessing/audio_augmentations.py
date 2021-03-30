@@ -16,11 +16,11 @@ class AudioAugmentations(PreprocessFn):
             #a.TimeStretch(min_rate=0.98, max_rate=0.99),
             #a.PitchShift(min_semitones=-1, max_semitones=2),
             #a.Shift(min_rate=-500, max_rate=500),
-            a.Gain(min_gain=0.7, max_gain=1.3),
+            a.Gain(min_gain=0.8, max_gain=1.3),
             a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
                          sample_rate=8000,
-                         min_voice_factor=0.6,
-                         max_voice_factor=0.9),
+                         min_voice_factor=0.7,
+                         max_voice_factor=0.95),
             a.GaussianNoise(loc=0, stddev=100)
         ],
             p=[

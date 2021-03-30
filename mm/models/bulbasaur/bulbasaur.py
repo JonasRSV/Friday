@@ -31,18 +31,18 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
                     parallel_reads: int = 5,
                     batch_size: int = 32):
     feature_description = {
-        'anchor': tf.io.FixedLenFeature([audio_length], tf.int64),
-        'positive': tf.io.FixedLenFeature([audio_length], tf.int64),
-        'negative': tf.io.FixedLenFeature([audio_length], tf.int64),
+        'anchor': tf.io.FixedLenFeature([], tf.string),
+        'positive': tf.io.FixedLenFeature([], tf.string),
+        'negative': tf.io.FixedLenFeature([], tf.string),
     }
 
     def decode_example(x):
-        return tf.io.parse_single_example(x, feature_description)
+        x = tf.io.parse_single_example(x, feature_description)
 
-    def cast_to_int16(x):
-        x["anchor"] = tf.cast(x["anchor"], tf.int16)
-        x["positive"] = tf.cast(x["positive"], tf.int16)
-        x["negative"] = tf.cast(x["negative"], tf.int16)
+        x["anchor"] = tf.reshape(tf.decode_raw(input_bytes=x["anchor"], out_type=tf.int16), [audio_length])
+        x["positive"] = tf.reshape(tf.decode_raw(input_bytes=x["positive"], out_type=tf.int16), [audio_length])
+        x["negative"] = tf.reshape(tf.decode_raw(input_bytes=x["negative"], out_type=tf.int16), [audio_length])
+
         return x
 
     def input_fn():
@@ -55,7 +55,6 @@ def create_input_fn(mode: tf.estimator.ModeKeys,
         dataset = tf.data.TFRecordDataset(filenames=files,
                                           num_parallel_reads=parallel_reads)
         dataset = dataset.map(decode_example)
-        dataset = dataset.map(cast_to_int16)
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             # If we train we do data augmentation
@@ -98,7 +97,6 @@ def euclidean_triplet_loss(anchor_embeddings: tf.Tensor,
                            positive_embeddings: tf.Tensor,
                            negative_embeddings: tf.Tensor,
                            margin=1.0):
-
     triplet = tf.nn.relu(euclidean_distance(anchor_embeddings, positive_embeddings) -
                          euclidean_distance(anchor_embeddings, negative_embeddings) + margin)
 
@@ -184,7 +182,7 @@ def get_train_ops(distance: Distance,
 
 
 def extract_mfcc(signal: tf.Tensor, sample_rate: int):
-    #return audio.mfcc_feature(signal=signal,
+    # return audio.mfcc_feature(signal=signal,
     #                          coefficients=27,
     #                          sample_rate=sample_rate,
     #                          frame_length=512,

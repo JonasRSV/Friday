@@ -55,9 +55,9 @@ This pipeline creates a new kind of tfexample
 ```python3
 # The audio fields are x seconds recordings of mono 16 bit PCM data 
 
-anchor: int64list # Anchor audio recording
-positive: int64list # Positive audio recording
-negative: int64list # Negative audio recording
+anchor: byteslist # Anchor audio recording
+positive: byteslist # Positive audio recording
+negative: byteslist # Negative audio recording
 
 
 anchor_text:  byteslist # The text content of the anchor audio recording
@@ -75,7 +75,7 @@ from such a dataset until the target dataset reaches a provided size.
 python3 pipelines/preprocess_dml.py \
   --source=${FRIDAY_SESSION?} \
   --sink_prefix=${FRIDAY_SESSION}/ptfexamples \
-  --expected_file_size=500 \
-  --expected_total_size=500000 \
+  --expected_file_size=10 \
+  --expected_total_size=100 \
   --samples_per_instance=5
 ```

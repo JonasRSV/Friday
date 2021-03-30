@@ -23,7 +23,7 @@ python3 models/bulbasaur/bulbasaur.py\
     "--train_prefix=${FRIDAY_SESSION?}/ptfexamples.train*"\
     "--eval_prefix=${FRIDAY_SESSION?}/ptfexamples.valid*"\
     --margin=1.0\
-    --distance=${BULBASAUR_DISTANCE}\
+    --distance=${BULBASAUR_DISTANCE?}\
     --embedding_dim=512\
     --clip_length=2\
     --model_directory=${MODEL_OUTPUT?}\
