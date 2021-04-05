@@ -6,6 +6,7 @@ import shared.tfexample_utils as tfexample_utils
 import numpy as np
 import random
 import pandas as pd
+import simpleaudio
 from pipelines.to_tfexample.google_speech_commands import SUB_PATHS as ALL_KEYWORDS
 from pipelines.evaluate.query_by_example import core
 
@@ -58,10 +59,15 @@ def run_eval(model: m.Model, examples: str, keywords: [str], window_size: str, m
 
         padded_audio = list(audio[:window_size_samples])
         padded_audio = padded_audio + [0] * (window_size_samples - len(padded_audio))
-        padded_audio = np.array(padded_audio)
+        padded_audio = np.array(padded_audio, dtype=np.int16)
 
         timestamp = time.time()
         prediction, closest_keyword, distance = model.infer(padded_audio)
+
+        #print(text, " -> ", prediction)
+        #simpleaudio.play_buffer(padded_audio, num_channels=1, bytes_per_sample=2,
+        #                        sample_rate=sample_rate).wait_done()
+        #time.sleep(0.25)
 
         utterances.append(text)
         predictions.append(prediction)

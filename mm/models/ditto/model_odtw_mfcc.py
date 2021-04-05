@@ -26,14 +26,14 @@ def distance_fn(x, y):
     # return np.abs(x - y).sum()
     # return np.sqrt(np.sqrt(np.square(np.square(x - y)).sum()))
     # return -(np.log(softmax(x)) * softmax(y)).sum()
-    #x_norm = x / np.sqrt(x @ x)
-    #y_norm = y / np.sqrt(y @ y)
+    x_norm = x / np.sqrt(x @ x)
+    y_norm = y / np.sqrt(y @ y)
 
-    #return 1 - x_norm @ y_norm
+    return 1 - x_norm @ y_norm
     #return np.sqrt(np.square(x - y).sum())
     #return np.sqrt(np.sqrt(np.sqrt(np.square(np.square(np.square(x - y)).sum()))))
 
-    return np.abs(x - y).max()
+    #return np.abs(x - y).max()
 
 
 class ODTWMFCC(Model):
@@ -55,7 +55,10 @@ class ODTWMFCC(Model):
         self.sample_rate = None
         self.odtw = None
 
-        self.normalizing = float(2 ** 15)
+        # for GCS
+        self.normalizing = float(2 ** 16)
+        # For personal
+        #self.normalizing = float(2 ** 15)
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
         utterances = utterances / self.normalizing
@@ -69,6 +72,12 @@ class ODTWMFCC(Model):
                                     hop_length=1024,
                                     win_length=2048,
                                     n_mels=128).T
+        #return librosa.feature.mfcc(utterance, sr=self.sample_rate,
+        #                            n_mfcc=13,
+        #                            n_fft=512,
+        #                            hop_length=256,
+        #                            win_length=512,
+        #                            n_mels=128).T
 
     def _infer_average_score(self, utterance: np.ndarray):
         for k in self.keyword_score.keys():
@@ -93,12 +102,13 @@ class ODTWMFCC(Model):
     def _infer_min_example(self, utterance: np.ndarray):
         utterance = utterance / self.normalizing
         utterance = self.mfcc_feature(utterance)
+        print("utterance", utterance.shape)
 
         min_distance, keyword = 1e9, None
         for kw, mfccs in self.keywords_clips.items():
             for mfcc in mfccs:
                 distance = self.odtw.distance(utterance, mfcc, distance=distance_fn)
-                # print(kw, distance)
+                #print(kw, distance)
                 if distance < min_distance:
                     min_distance = distance
                     keyword = kw
@@ -113,7 +123,7 @@ class ODTWMFCC(Model):
         return self._infer_min_example(utterance)
 
     def name(self):
-        return "Ghost-DTW-MFCC-CHE"
+        return "Ghost-DTW-MFCC-COS"
 
 
 if __name__ == "__main__":

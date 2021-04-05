@@ -98,6 +98,11 @@ FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
 
 ```bash
 FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
+  --visualization="gcs_confusion"
+```
+
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
   --visualization="gcs_distribution"
 ```
 

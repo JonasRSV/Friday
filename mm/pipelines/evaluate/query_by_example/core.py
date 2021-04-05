@@ -1,6 +1,8 @@
 from typing import Iterable
 from tqdm import tqdm
 import shared.tfexample_utils as tfexample_utils
+import simpleaudio
+import time
 from pipelines.evaluate.query_by_example import model as m
 from enum import Enum
 import pathlib
@@ -47,7 +49,12 @@ def register_keywords(model: m.Model,
         # Pad audio files to window_size
         padded_audio_length = int(keyword_audio_size * keyword_audio_sample_rate)
         audio = audio[:padded_audio_length]
-        audio = audio + [0] * (padded_audio_length - len(audio))
+        audio = np.array(audio + [0] * (padded_audio_length - len(audio)), dtype=np.int16)
+
+        #print("registering..", text)
+        #simpleaudio.play_buffer(audio, num_channels=1, bytes_per_sample=2,
+        #                        sample_rate=sample_rate).wait_done()
+        #time.sleep(0.25)
 
         if text not in keywords_audio:
             keywords_audio[text] = []
@@ -59,10 +66,8 @@ def register_keywords(model: m.Model,
             raise Exception(f"Files contain different sample rates {keyword_audio_sample_rate} != {sample_rate}")
 
     for keyword, audio in keywords_audio.items():
-        np_audio = np.array(audio)
-        print(f"{model.name()} registering {keyword} - {np_audio.shape}")
-
-        print("audio", type(np_audio))
-        model.register_keyword(keyword, np_audio)
+        audio = np.array(audio)
+        print(f"{model.name()} registering {keyword} - {audio.shape}")
+        model.register_keyword(keyword, audio)
 
     return list(keywords_audio.keys())

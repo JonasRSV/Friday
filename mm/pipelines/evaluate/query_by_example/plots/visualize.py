@@ -22,6 +22,7 @@ class Visualizations(Enum):
     CONFUSION = "confusion"
     LATENCY = "latency"
     GCS_ACCURACY = "gcs_accuracy"
+    GCS_CONFUSION = "gcs_confusion"
     GCS_DISTRIBUTION = "gcs_distribution"
     USABILITY = "usability"
 
@@ -186,6 +187,39 @@ def gcs_accuracy(df: pd.DataFrame):
     plt.show()
 
 
+def gcs_confusion(df: pd.DataFrame):
+    keywords = list(df["utterance"].unique())
+    groups = list(df.groupby(by=["model", "time"]))
+    n_groups = len(groups)
+    rows = n_groups // 2
+
+    plt.figure(figsize=(16, rows * 7))
+    sb.set_style("whitegrid")
+    for i, ((model, t), df) in enumerate(groups[:rows * 2], 1):
+        name = f"{model}-{int(t) % 100}"
+
+        confusion_matrix = np.zeros((len(keywords), len(keywords)))
+
+        for _, row in df.iterrows():
+            if str(row["prediction"]) != "nan":
+                confusion_matrix[keywords.index(row["utterance"]), keywords.index(row["prediction"])] += 1
+
+        plt.subplot(rows, 2, i)
+        plt.title(name, fontsize=12)
+        sb.heatmap(confusion_matrix,
+                   cmap=sb.cubehelix_palette(start=2, rot=0, dark=0, light=.6, reverse=True, as_cmap=True),
+                   annot=True, square=True, cbar=False, xticklabels=keywords, yticklabels=keywords)
+
+    for index in range(rows * 2):
+        plt.subplot(rows, 2, index + 1)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+        plt.yticks(rotation=0)
+
+    plt.savefig(get_plot_dir() / f"gsc-confusion-matrix.png", bbox_inches="tight")
+    plt.show()
+
+
 def gcs_distribution(df: pd.DataFrame):
     data = []
     for _, df in df.groupby(by=["model", "time"]):
@@ -210,33 +244,27 @@ def gcs_distribution(df: pd.DataFrame):
 
 def usability(df: pd.DataFrame):
     colors = sb.color_palette()
-    #colors = sb.color_palette("rocket")
-    for (model, _), df in df.groupby(by=["model", "time"]):
-        plt.figure(figsize=(10, 5))
+    # colors = sb.color_palette("rocket")
+    for j, ((model, _), df) in enumerate(df.groupby(by=["model", "time"])):
+        plt.figure(figsize=(10, 2))
         sb.set_style("whitegrid")
         for i, (keyword, from_df) in enumerate(df.groupby(by="from")):
             same = from_df.loc[from_df["to"] == keyword]["distance"]
             different = from_df.loc[from_df["to"] != keyword]["distance"]
 
-            sb.distplot(same, hist=False, label=f"${keyword}_s$", color=colors[i])
-            sb.distplot(different, hist=False, label=f"${keyword}_d$", kde_kws={"linestyle":"--"},
+            sb.distplot(same, hist=False, label=f"${keyword}$", color=colors[i])
+            sb.distplot(different, hist=False, kde_kws={"linestyle": "--"},
                         color=colors[i])
-
 
             print("keyword", keyword)
 
-
-
-        #sb.kdeplot(data=df, x="distance", hue="from")
-        plt.title(model, fontsize=18)
+        # sb.kdeplot(data=df, x="distance", hue="from")
+        plt.title(model, fontsize=14)
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
-        plt.legend(fontsize=14)
-        plt.savefig(get_plot_dir() / f"usability-{model}.png", bbox_inches="tight")
+        plt.legend(fontsize=10)
+        plt.savefig(get_plot_dir() / f"usability-{j}.png", bbox_inches="tight")
         plt.show()
-
-
-
 
 
 def get_plot_dir():
@@ -275,6 +303,7 @@ if __name__ == "__main__":
         "confusion": lambda: confusion_matrix(load("confusion-matrix.csv")),
         "latency": lambda: latencies(load("latency.csv")),
         "gcs_accuracy": lambda: gcs_accuracy(load("google_speech_commands_results.csv")),
+        "gcs_confusion": lambda: gcs_confusion(load("google_speech_commands_results.csv")),
         "gcs_distribution": lambda: gcs_distribution(load("google_speech_commands_results.csv")),
         "usability": lambda: usability(load("usability.csv")),
 

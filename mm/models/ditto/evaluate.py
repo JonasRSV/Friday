@@ -30,10 +30,11 @@ class Ditto(Enum):
 
 
 def run_google_speech_commands_pipeline(model_fn):
-    keywords = ["sheila", "wow", "visual"]
+    keywords = ["dog", "down", "learn", "left", "seven", "sheila"]
 
-    a = google_run(model_fn(), keywords=keywords)
-    pass
+    df = google_run(model_fn(), keywords=keywords)
+
+    append("google_speech_commands_results.csv", df)
 
 
 def run_personal_pipeline(model_fn):
@@ -63,7 +64,7 @@ def run_personal_pipeline(model_fn):
 
 def run_resource_pipeline(model_fn):
     """Runs resource evaluation pipeline."""
-    df = resource_run(model_fn, K=10, N=100)
+    df = resource_run(model_fn, K=100, N=100)
     append("latency.csv", df)
 
 
@@ -81,8 +82,8 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     model = {
-        Ditto.DTWMFCC.value: lambda: model_dtw_mfcc.DTWMFCC(max_distance=730),
-        Ditto.ODTWMFCC.value: lambda: model_odtw_mfcc.ODTWMFCC(max_distance=0.15119559229102886),
+        Ditto.DTWMFCC.value: lambda: model_dtw_mfcc.DTWMFCC(max_distance=1000000),
+        Ditto.ODTWMFCC.value: lambda: model_odtw_mfcc.ODTWMFCC(max_distance=100000),
     }
 
     if args.pipeline == Pipelines.PERSONAL.value:
