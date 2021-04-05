@@ -61,7 +61,7 @@ Create common format from Google Speech Commands
 ```bash
 python3 pipelines/to_tfexample/google_speech_commands.py \
   --base_path=${FRIDAY_DATA?}/google_speech_commands \
-  --output_prefix=${FRIDAY_SESSION?}/tfexamples.\
+  --output_prefix=${FRIDAY_SESSION?}/tfexamples\
   --sample_rate=8000
 ```
 

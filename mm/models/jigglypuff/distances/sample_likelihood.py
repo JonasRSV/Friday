@@ -8,6 +8,14 @@ from pipelines.evaluate.query_by_example.model import Setting
 
 class SampleLikelihood(base.Base):
 
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        a = fix_loudness(a)
+        b = fix_loudness(b)
+
+        a, _ = self.get_output(a)
+
+        return -self.get_log_prob(b, a) - len(a) - len(kwargs["keyword"])
+
     def __init__(self, export_dir: str, max_distance: float):
         base.Base.__init__(self, export_dir=export_dir)
 

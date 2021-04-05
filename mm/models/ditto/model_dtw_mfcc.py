@@ -17,6 +17,23 @@ def euclidean(x, y):
 
 
 class DTWMFCC(Model):
+
+    def mfcc_feature(self, utterance: np.ndarray):
+        return librosa.feature.mfcc(utterance, sr=self.sample_rate,
+                                    n_mfcc=13,
+                                    n_fft=2048,
+                                    hop_length=1024,
+                                    win_length=2048,
+                                    n_mels=128).T
+
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        a = self.mfcc_feature(a / 2**15)
+        b = self.mfcc_feature(b / 2**15)
+
+        distance, _, _, _ = dtw(a, b, dist=euclidean)
+
+        return distance
+
     def register_setting(self, setting: Setting):
         self.sample_rate = setting.sample_rate
 
@@ -28,42 +45,31 @@ class DTWMFCC(Model):
         self.sample_rate = None
 
     def register_keyword(self, keyword: str, utterances: np.ndarray):
-        utterances = utterances / 2**15
+        utterances = utterances / 2 ** 15
 
-        self.keywords_clips[keyword] = [
-            librosa.feature.mfcc(utterance, sr=self.sample_rate,
-                                 n_mfcc=13,
-                                 n_fft=2048,
-                                 hop_length=1024,
-                                 win_length=2048,
-                                 n_mels=128).T for utterance in utterances]
+        self.keywords_clips[keyword] = [self.mfcc_feature(utterance) for utterance in utterances]
 
         self.keyword_score[keyword] = 0
 
-    def infer(self, utterance: np.ndarray):
-        for k in self.keyword_score.keys():
-            self.keyword_score[k] = 0
-
+    def _infer_min_example(self, utterance: np.ndarray):
         utterance = utterance / 2**15
-        utterance = librosa.feature.mfcc(utterance, sr=8000,
-                                         n_mfcc=13,
-                                         n_fft=2048,
-                                         hop_length=1024,
-                                         win_length=2048,
-                                         n_mels=128).T
+        utterance = self.mfcc_feature(utterance)
 
-        for keyword, mfccs in self.keywords_clips.items():
+        min_distance, keyword = 1e9, None
+        for kw, mfccs in self.keywords_clips.items():
             for mfcc in mfccs:
                 distance, _, _, _ = dtw(utterance, mfcc, dist=euclidean)
-                self.keyword_score[keyword] += (distance / len(self.keywords_clips[keyword]))
+                if distance < min_distance:
+                    min_distance = distance
+                    keyword = kw
 
-        scores = sorted(list(self.keyword_score.items()), key=lambda x: x[1])
-        best = scores[0]
+        if min_distance < self.max_distance:
+            return keyword, keyword, min_distance
 
-        if best[1] < self.max_distance:
-            return best[0], best[0], best[1]
+        return None, keyword, min_distance
 
-        return None, best[0], best[1]
+    def infer(self, utterance: np.ndarray):
+        return self._infer_min_example(utterance)
 
     def name(self):
         return "DTW-MFCC-EU"

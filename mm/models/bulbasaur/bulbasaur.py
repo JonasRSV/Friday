@@ -284,6 +284,10 @@ def make_model_fn(distance: Distance,
 
             tf.identity(distance_op, name="distances")
             tf.identity(tf.shape(distance_op), name="distances_shape")
+
+            min_distance_op = tf.reduce_min(distance_op)
+            tf.identity(min_distance_op, name="min_distance")
+            tf.identity(tf.shape(min_distance_op), name="min_distance_shape")
         else:
             raise Exception(f"Unknown ModeKey {mode}")
 

@@ -5,7 +5,16 @@ import models.jigglypuff.distances.base as base
 from pipelines.evaluate.query_by_example.model import Setting
 from models.jigglypuff.distances.preprocess import fix_loudness
 
+
 class ExampleLikelihood(base.Base):
+
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        a = fix_loudness(a)
+        b = fix_loudness(b)
+
+        a, _ = self.get_output(a)
+
+        return -self.get_log_prob(b, a) - len(a)
 
     def __init__(self, export_dir: str, max_distance: float):
         base.Base.__init__(self, export_dir=export_dir)
@@ -62,7 +71,7 @@ class ExampleLikelihood(base.Base):
 
     def infer(self, utterance: np.ndarray):
         utterance = fix_loudness(utterance)
-        #return self.infer_average_score(utterance)
+        # return self.infer_average_score(utterance)
         return self.infer_most_likely(utterance)
 
     def name(self):

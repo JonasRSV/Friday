@@ -15,6 +15,15 @@ def discrete(x, y):
 
 
 class BeamODTW(base.Base):
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        a = fix_loudness(a)
+        b = fix_loudness(b)
+
+        a, _ = self.get_output(a)
+        b, _ = self.get_output(b)
+
+        return self.ghost_dtw(a, b) / len(b)
+
     def __init__(self, export_dir: str, max_distance: float):
         base.Base.__init__(self, export_dir=export_dir)
 
@@ -35,6 +44,20 @@ class BeamODTW(base.Base):
         self.keywords = list(self.keyword_phoneme_seq.keys())
         print(self.keyword_phoneme_seq)
 
+    def ghost_dtw(self, a: np.ndarray, b: np.ndarray):
+        x = a
+        template = b
+        sequence_length = len(x)
+        template_length = len(template) + 2
+        mem = np.zeros((sequence_length, template_length))
+
+        return dtw(x=x,
+                   template=template,
+                   mem=mem,
+                   sequence_length=sequence_length,
+                   template_length=template_length,
+                   distance=discrete)
+
     def infer_min_avg_distance(self, utterance: np.ndarray):
         min_distance, keyword = 1e9, None
         ut_seq, _ = self.get_output(utterance)
@@ -42,20 +65,7 @@ class BeamODTW(base.Base):
         for kw, seqs in self.keyword_phoneme_seq.items():
             score = 0
             for seq in seqs:
-                x = ut_seq
-                template = seq
-                sequence_length = len(x)
-                template_length = len(template) + 2
-                mem = np.zeros((sequence_length, template_length))
-
-                distance = dtw(x=x,
-                               template=template,
-                               mem=mem,
-                               sequence_length=sequence_length,
-                               template_length=template_length,
-                               distance=discrete)
-
-                score += distance
+                score += self.ghost_dtw(ut_seq, seq)
 
             if score < min_distance:
                 min_distance = score
@@ -69,25 +79,13 @@ class BeamODTW(base.Base):
     def infer_min_distance(self, utterance: np.ndarray):
         min_distance, keyword = 1e9, None
         ut_seq, _ = self.get_output(utterance)
-        #print("utseq", ut_seq)
 
         if len(ut_seq) == 0:
             return None, random.choice(self.keywords), 1.1
 
         for kw, seqs in self.keyword_phoneme_seq.items():
             for seq in seqs:
-                x = ut_seq
-                template = seq
-                sequence_length = len(x)
-                template_length = len(template) + 2
-                mem = np.zeros((sequence_length, template_length))
-
-                distance = dtw(x=x,
-                               template=template,
-                               mem=mem,
-                               sequence_length=sequence_length,
-                               template_length=template_length,
-                               distance=discrete) / len(seq)
+                distance = self.ghost_dtw(ut_seq, seq) / len(seq)
 
                 if distance < min_distance:
                     min_distance = distance
@@ -100,7 +98,7 @@ class BeamODTW(base.Base):
 
     def infer(self, utterance: np.ndarray):
         utterance = fix_loudness(utterance)
-        #return self.infer_min_avg_distance(utterance)
+        # return self.infer_min_avg_distance(utterance)
         return self.infer_min_distance(utterance)
 
     def name(self):

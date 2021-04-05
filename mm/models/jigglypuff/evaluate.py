@@ -11,9 +11,11 @@ from models.jigglypuff.distances.beam_odtw import BeamODTW
 from models.jigglypuff.distances.example_likelihood import ExampleLikelihood
 from models.jigglypuff.distances.sample_likelihood import SampleLikelihood
 from models.jigglypuff.distances.posteriograms_odtw import PosteriogramsODTW
+from pipelines.evaluate.query_by_example.usability_pipeline import run as usability_run
 from enum import Enum
 
 from pipelines.evaluate.query_by_example.metrics import personal
+from pipelines.evaluate.query_by_example.resources_pipeline import run as resource_run
 from pipelines.evaluate.query_by_example.metrics.storage import append
 from pipelines.evaluate.query_by_example.metrics import distance
 from pipelines.evaluate.query_by_example.core import Pipelines
@@ -28,18 +30,15 @@ class Jigglypuff(Enum):
     PosteriogramsODTW = "PosteriogramsODTW"
 
 
-def run_google_speech_commands_pipeline(model):
+def run_google_speech_commands_pipeline(model_fn):
     keywords = ["sheila", "wow", "visual"]
 
-    a = google_run(model, keywords=keywords)
-
-    #df = distance.metrics_per_distance(a, 100)
-    #append("mpd.csv", df)
-    #distance.metrics(a, keywords=keywords)
+    a = google_run(model_fn(), keywords=keywords)
+    pass
 
 
-def run_personal_pipeline(model):
-    (a, b), keywords = personal_run(model)
+def run_personal_pipeline(model_fn):
+    (a, b), keywords = personal_run(model_fn())
 
     df = distance.metrics_per_distance(a, 100, len(b), keywords)
     append("metrics_per_distance.csv", df)
@@ -63,7 +62,18 @@ def run_personal_pipeline(model):
     print(df)
 
 
-# log(exp(- log(x)) / y) = -log(x) - log y
+def run_resource_pipeline(model_fn):
+    """Runs resource evaluation pipeline."""
+    df = resource_run(model_fn, K=10, N=100)
+    append("latency.csv", df)
+
+
+def run_usability_pipeline(model_fn):
+    """Runs resource evaluation pipeline."""
+    df = usability_run(model_fn)
+
+    append("usability.csv", df)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -73,14 +83,15 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     model = {
-        Jigglypuff.BEAMODTW.value: BeamODTW(export_dir=args.export_dir, max_distance=0.0),
-        Jigglypuff.ExampleLikelihood.value: ExampleLikelihood(export_dir=args.export_dir, max_distance=-1),
-        Jigglypuff.SampleLikelihood.value: SampleLikelihood(export_dir=args.export_dir, max_distance=-2.85),
-        Jigglypuff.PosteriogramsODTW.value: PosteriogramsODTW(export_dir=args.export_dir, max_distance=0.09),
+        Jigglypuff.BEAMODTW.value: lambda: BeamODTW(export_dir=args.export_dir, max_distance=0.0),
+        Jigglypuff.ExampleLikelihood.value: lambda: ExampleLikelihood(export_dir=args.export_dir, max_distance=-1),
+        Jigglypuff.SampleLikelihood.value: lambda: SampleLikelihood(export_dir=args.export_dir, max_distance=-2.85),
+        Jigglypuff.PosteriogramsODTW.value: lambda: PosteriogramsODTW(export_dir=args.export_dir, max_distance=0.09),
     }
 
     {
         Pipelines.PERSONAL.value: run_personal_pipeline,
         Pipelines.GOOGLE_SPEECH_COMMANDS.value: run_google_speech_commands_pipeline,
+        Pipelines.RESOURCE.value: run_resource_pipeline,
+        Pipelines.USABILITY.value: run_usability_pipeline,
     }[args.pipeline](model[args.jigglypuff])
-

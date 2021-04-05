@@ -13,8 +13,6 @@ Ditto is a model using audio matching algorithms for QbE KWS. It is basically DT
 There are many ditto variants, first pick one to evaluate.
 
 ```bash
-DITTO_MODEL=FASTDTW
-DITTO_MODEL=FASTDTWMFCC
 DITTO_MODEL=DTWMFCC
 DITTO_MODEL=ODTWMFCC
 ```
@@ -44,5 +42,24 @@ FRIDAY_DATA=data python3 models/ditto/evaluate.py\
     --window_size=2\
     --n=3\
     --seed=1337\
+    --sample_rate=8000
+```
+
+When evaluating resource usage:
+
+```bash 
+FRIDAY_DATA=data python3 models/ditto/evaluate.py\
+    --ditto=${DITTO_MODEL?}\
+    --pipeline=resource
+```
+
+When evaluating usability use:
+
+```bash 
+FRIDAY_DATA=data python3 models/ditto/evaluate.py\
+    --ditto=${DITTO_MODEL?}\
+    --pipeline=usability\
+    --examples="data/usability-eval/*"\
+    --window_size=2\
     --sample_rate=8000
 ```

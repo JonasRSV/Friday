@@ -37,6 +37,12 @@ def distance_fn(x, y):
 
 
 class ODTWMFCC(Model):
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        a = self.mfcc_feature(a / self.normalizing)
+        b = self.mfcc_feature(b / self.normalizing)
+
+        return self.odtw.distance(a, b, distance=distance_fn)
+
     def register_setting(self, setting: Setting):
         self.sample_rate = setting.sample_rate
         self.odtw = ODTW(sequence_length=len(self.mfcc_feature(np.random.rand(setting.sequence_length))))

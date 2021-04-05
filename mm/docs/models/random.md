@@ -30,3 +30,18 @@ FRIDAY_DATA=data python3 models/baseline/random_qbe.py\
   --seed=1337\
   --sample_rate=8000
 ```
+Evaluate resource with
+
+```bash
+FRIDAY_DATA=data python3 models/baseline/random_qbe.py --pipeline=resource
+```
+
+Evaluate usability with
+
+```bash
+FRIDAY_DATA=data python3 models/baseline/random_qbe.py \
+  --pipeline=usability\
+  --examples="data/usability-eval/*"\
+  --window_size=2\
+  --sample_rate=8000
+```

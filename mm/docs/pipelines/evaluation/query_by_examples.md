@@ -62,37 +62,46 @@ Each pipeline stores the result in some csv file under 'FRIDAY_DATA'.
 See all visualization options with..
 
 ```bash
-python3 pipelines/evaluate/query_by_example/metrics/visualize.py
+python3 pipelines/evaluate/query_by_example/plots/visualize.py
 ```
 
 #### Examples
 
 ```bash
-FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
-  --dataset="P"\
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
   --visualization="efficacy"
 ```
 
 ```bash
-FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
-  --dataset="P"\
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
   --visualization="false_positive_rate"
 ```
 
 ```bash
-FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
-  --dataset="P"\
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
   --visualization="accuracies"
 ```
 
 ```bash
-FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
-  --dataset="P"\
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
   --visualization="confusion"
 ```
 
 ```bash
-FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/metrics/visualize.py\
-  --dataset="GSC"\
-  --visualization="efficacy"
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
+  --visualization="latency"
+```
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
+  --visualization="gcs_accuracy"
+```
+
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
+  --visualization="gcs_distribution"
+```
+
+```bash
+FRIDAY_DATA=data python3 pipelines/evaluate/query_by_example/plots/visualize.py\
+  --visualization="usability"
 ```

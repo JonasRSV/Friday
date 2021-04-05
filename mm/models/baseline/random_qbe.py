@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import time
 
 # Some systems don't use the launching directory as root
 if os.getcwd() not in sys.path:
@@ -9,16 +10,22 @@ if os.getcwd() not in sys.path:
 import numpy as np
 import random
 
+from pipelines.evaluate.query_by_example.metrics import distance
 from pipelines.evaluate.query_by_example.metrics import personal
 from pipelines.evaluate.query_by_example.metrics.storage import append
 from pipelines.evaluate.query_by_example.metrics.distance import metrics_per_distance
 from pipelines.evaluate.query_by_example.model import Model, Setting
+from pipelines.evaluate.query_by_example.usability_pipeline import run as usability_run
 from pipelines.evaluate.query_by_example.personal_pipeline import run as personal_run
+from pipelines.evaluate.query_by_example.resources_pipeline import run as resource_run
 from pipelines.evaluate.query_by_example.google_speech_commands_pipeline import run as google_run
 from pipelines.evaluate.query_by_example.core import Pipelines
 
 
 class Random(Model):
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        return np.random.rand()
+
     def register_setting(self, setting: Setting):
         pass
 
@@ -36,32 +43,51 @@ class Random(Model):
 
 
 def run_google_speech_commands_pipeline():
-    a = google_run(Random(), keywords=["sheila", "wow", "seven"])
+    df = google_run(Random(), keywords=["left", "learn", "sheila", "seven", "dog", "down"])
 
-    df = metrics_per_distance(a, 10)
-    append("mpd.csv", df)
+    append("google_speech_commands_results.csv", df)
 
 
 def run_personal_pipeline():
-    """Runs personal evaluation pipeline.
-
-    the pipeline returns two dataframes.
-
-    First: the 'General' dataframe returned by all pipelines
-    Second: the 'Personal' specific dataframe that can be used with 'personal' metrics.
-    """
+    """Runs personal evaluation pipeline."""
     model = Random()
+
     (a, b), keywords = personal_run(model)
-    print(a, b)
 
-    df = metrics_per_distance(a, 10)
+    df = distance.metrics_per_distance(a, 100, len(b), keywords)
+    append("metrics_per_distance.csv", df)
+    # distance.metrics(a, keywords=keywords)
 
-    append("mpd.csv", df)
+    print("max efficacy", df["efficacy"].max())
+    distance_maximizing_efficacy = df.iloc[df["efficacy"].argmax()]["distance"]
+    print("best distance", distance_maximizing_efficacy)
+    print(a)
 
-    df = personal.main(df=b, keywords=keywords)
-    df["model"] = model.name()
+    b = distance.b_from_a(a, keywords, distance_maximizing_efficacy)
+    b["timestamp"] = time.time()
+    # print("b\n", b)
+    # print("b from a\n", distance.b_from_a(a, keywords, distance_maximizing_efficacy))
 
-    append("personal.csv", df)
+    append("confusion-matrix.csv", b)
+    # df = personal.main(df=b, keywords=keywords)
+    # df["model"] = model.name()
+    # append("personal.csv", df)
+
+
+def run_resource_pipeline():
+    """Runs resource evaluation pipeline."""
+    model_fn = lambda: Random()
+    df = resource_run(model_fn, K=100, N=100)
+
+    print(df)
+
+
+def run_usability_pipeline():
+    """Runs resource evaluation pipeline."""
+    model_fn = lambda: Random()
+    df = usability_run(model_fn)
+
+    print(df)
 
 
 if __name__ == "__main__":
@@ -74,3 +100,9 @@ if __name__ == "__main__":
 
     if args.pipeline == Pipelines.GOOGLE_SPEECH_COMMANDS.value:
         run_google_speech_commands_pipeline()
+
+    if args.pipeline == Pipelines.RESOURCE.value:
+        run_resource_pipeline()
+
+    if args.pipeline == Pipelines.USABILITY.value:
+        run_usability_pipeline()

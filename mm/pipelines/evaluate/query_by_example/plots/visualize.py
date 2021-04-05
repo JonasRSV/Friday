@@ -10,6 +10,7 @@ import pipelines.evaluate.query_by_example.core as core
 import seaborn as sb
 import matplotlib.pyplot as plt
 from enum import Enum
+from pipelines.evaluate.query_by_example.metrics.gsc import multiclass_accuracy
 import argparse
 import pathlib
 
@@ -19,10 +20,13 @@ class Visualizations(Enum):
     FALSE_POSITIVE_RATE = "false_positive_rate"
     ACCURACIES = "accuracies"
     CONFUSION = "confusion"
+    LATENCY = "latency"
+    GCS_ACCURACY = "gcs_accuracy"
+    GCS_DISTRIBUTION = "gcs_distribution"
+    USABILITY = "usability"
 
 
-def efficacy(df: pd.DataFrame, dataset: str):
-    df = df.loc[df["dataset"] == dataset]
+def efficacy(df: pd.DataFrame):
     plt.figure(figsize=(15, 5))
     sb.set_style("whitegrid")
 
@@ -39,13 +43,13 @@ def efficacy(df: pd.DataFrame, dataset: str):
             else:
                 sb.lineplot(df["norm_distance"], eff)
 
-    #anchors = [(0.8, 0.9), (0.9, 0.96), (0.92, 0.92)]
+    # anchors = [(0.8, 0.9), (0.9, 0.96), (0.92, 0.92)]
     for index, plot_name in enumerate(plots, 1):
         plt.subplot(1, 3, index)
 
-        #optimal_eff = 1.0 / (np.zeros_like(df["false_positive_rate"]) + 0.01)
+        # optimal_eff = 1.0 / (np.zeros_like(df["false_positive_rate"]) + 0.01)
 
-        #sb.lineplot(df["norm_distance"], optimal_eff, label="optimal")
+        # sb.lineplot(df["norm_distance"], optimal_eff, label="optimal")
 
         plt.title(plot_name, fontsize=12)
         plt.ylabel("efficacy", fontsize=12)
@@ -60,8 +64,7 @@ def efficacy(df: pd.DataFrame, dataset: str):
     plt.show()
 
 
-def false_positive_rate(df: pd.DataFrame, dataset: str):
-    df = df.loc[df["dataset"] == dataset]
+def false_positive_rate(df: pd.DataFrame):
     plt.figure(figsize=(10, 3))
     sb.set_style("whitegrid")
     for (model, t), df in df.groupby(by=["model", "time"]):
@@ -78,8 +81,7 @@ def false_positive_rate(df: pd.DataFrame, dataset: str):
     plt.show()
 
 
-def accuracies(df: pd.DataFrame, dataset: str):
-    df = df.loc[df["dataset"] == dataset]
+def accuracies(df: pd.DataFrame):
     plt.figure(figsize=(15, 5))
     sb.set_style("whitegrid")
     plots = ["accuracy_as_first", "accuracy_as_some_point", "accuracy_as_majority"]
@@ -103,10 +105,7 @@ def accuracies(df: pd.DataFrame, dataset: str):
     plt.show()
 
 
-def confusion_matrix(df: pd.DataFrame, dataset: str):
-    df = df.loc[df["dataset"] == dataset]
-
-    print(df.columns)
+def confusion_matrix(df: pd.DataFrame):
     keywords = list(df.columns[3: list(df.columns).index("None") + 1])
 
     groups = list(df.groupby(by=["model", "timestamp"]))
@@ -126,12 +125,12 @@ def confusion_matrix(df: pd.DataFrame, dataset: str):
                 confusion_matrix[keywords.index(row["utterance"])][majority] += 1
             else:
                 confusion_matrix[keywords.index(row["utterance"])][-1] += 1
-            #for kw in keywords:
+            # for kw in keywords:
             #    confusion_matrix[keywords.index(row["utterance"])][keywords.index(kw)] += row[kw]
 
         plt.subplot(rows, 2, i)
         plt.title(name, fontsize=12)
-        sb.heatmap(confusion_matrix, 
+        sb.heatmap(confusion_matrix,
                    cmap=sb.cubehelix_palette(start=2, rot=0, dark=0, light=.6, reverse=True, as_cmap=True),
                    annot=True, square=True, cbar=False, xticklabels=keywords, yticklabels=keywords[:-1])
 
@@ -143,6 +142,101 @@ def confusion_matrix(df: pd.DataFrame, dataset: str):
 
     plt.savefig(get_plot_dir() / f"confusion-matrix.png", bbox_inches="tight")
     plt.show()
+
+
+def latencies(df: pd.DataFrame):
+    with sb.plotting_context(rc={"legend.fontsize": 16,
+                                 "legend.title_fontsize": 16}):
+        plt.figure(figsize=(10, 4))
+        sb.set_style("whitegrid")
+        sb.lineplot(x="K", y="latency", data=df, hue="model", style="model", markers=True, dashes=True, ci=68)
+
+        plt.plot(np.arange(0, df["K"].max() + 2), np.ones(df["K"].max() + 2) * 0.25, 'r--')
+
+        plt.xlim([0, df["K"].max() + 1])
+        plt.yscale("log")
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+        plt.ylabel("L(K)", fontsize=20)
+        plt.xlabel("K", fontsize=20)
+
+        plt.savefig(get_plot_dir() / f"latencies.png", bbox_inches="tight")
+        plt.show()
+
+
+def gcs_accuracy(df: pd.DataFrame):
+    names, accuracies = [], []
+    for (model, t), df in df.groupby(by=["model", "time"]):
+        names.append(model)
+        accuracies.append(multiclass_accuracy(df))
+
+    plt.figure(figsize=(10, 4))
+    sb.set_style("whitegrid")
+    pal = sb.cubehelix_palette(start=2, rot=0, dark=0.15, light=.7, reverse=False, n_colors=len(names))
+    accuracies = np.array(accuracies)
+
+    rank = accuracies.argsort().argsort()  # http://stackoverflow.com/a/6266510/1628638
+    sb.barplot(x=names, y=accuracies, palette=np.array(pal[::-1])[rank])
+
+    plt.ylim([0, 1])
+    plt.ylabel("accuracy", fontsize=16)
+    plt.yticks(fontsize=11)
+    plt.xticks(fontsize=14)
+    plt.savefig(get_plot_dir() / f"gsc_accuracies.png", bbox_inches="tight")
+    plt.show()
+
+
+def gcs_distribution(df: pd.DataFrame):
+    data = []
+    for _, df in df.groupby(by=["model", "time"]):
+        data = df["utterance"].value_counts()
+        break
+
+    print("data", data)
+    print("data", type(data))
+    plt.figure(figsize=(10, 4))
+    sb.set_style("whitegrid")
+    pal = sb.cubehelix_palette(start=2, rot=0, dark=0.15, light=.7, reverse=False, n_colors=len(data))
+
+    rank = data.argsort().argsort()  # http://stackoverflow.com/a/6266510/1628638
+    sb.barplot(x=data.index, y=data.values, palette=np.array(pal[::-1])[rank])
+
+    plt.ylabel("samples", fontsize=16)
+    plt.yticks(fontsize=11)
+    plt.xticks(fontsize=14)
+    plt.savefig(get_plot_dir() / f"gsc_distribution.png", bbox_inches="tight")
+    plt.show()
+
+
+def usability(df: pd.DataFrame):
+    colors = sb.color_palette()
+    #colors = sb.color_palette("rocket")
+    for (model, _), df in df.groupby(by=["model", "time"]):
+        plt.figure(figsize=(10, 5))
+        sb.set_style("whitegrid")
+        for i, (keyword, from_df) in enumerate(df.groupby(by="from")):
+            same = from_df.loc[from_df["to"] == keyword]["distance"]
+            different = from_df.loc[from_df["to"] != keyword]["distance"]
+
+            sb.distplot(same, hist=False, label=f"${keyword}_s$", color=colors[i])
+            sb.distplot(different, hist=False, label=f"${keyword}_d$", kde_kws={"linestyle":"--"},
+                        color=colors[i])
+
+
+            print("keyword", keyword)
+
+
+
+        #sb.kdeplot(data=df, x="distance", hue="from")
+        plt.title(model, fontsize=18)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+        plt.legend(fontsize=14)
+        plt.savefig(get_plot_dir() / f"usability-{model}.png", bbox_inches="tight")
+        plt.show()
+
+
+
 
 
 def get_plot_dir():
@@ -170,15 +264,18 @@ def load(name: str) -> pd.DataFrame:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", required=True, type=str, choices=[v.value for v in core.Pipelines])
     parser.add_argument("--visualization", required=True, type=str, choices=[v.value for v in Visualizations])
 
     args = parser.parse_args()
 
     {
-        "efficacy": lambda x: efficacy(load("metrics_per_distance.csv"), x),
-        "false_positive_rate": lambda x: false_positive_rate(load("metrics_per_distance.csv"), x),
-        "accuracies": lambda x: accuracies(load("metrics_per_distance.csv"), x),
-        "confusion": lambda x: confusion_matrix(load("confusion-matrix.csv"), x)
+        "efficacy": lambda: efficacy(load("metrics_per_distance.csv")),
+        "false_positive_rate": lambda: false_positive_rate(load("metrics_per_distance.csv")),
+        "accuracies": lambda: accuracies(load("metrics_per_distance.csv")),
+        "confusion": lambda: confusion_matrix(load("confusion-matrix.csv")),
+        "latency": lambda: latencies(load("latency.csv")),
+        "gcs_accuracy": lambda: gcs_accuracy(load("google_speech_commands_results.csv")),
+        "gcs_distribution": lambda: gcs_distribution(load("google_speech_commands_results.csv")),
+        "usability": lambda: usability(load("usability.csv")),
 
-    }[args.visualization](args.dataset)
+    }[args.visualization]()

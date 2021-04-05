@@ -99,3 +99,24 @@ FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
     --sample_rate=8000
 ```
 
+When evaluating resource usage:
+
+```bash 
+FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
+    --export_dir=${JIGGLYPUFF_MODEL?}\
+    --jigglypuff=${JIGGLYPUFF_DISTANCE?}\
+    --pipeline=resource
+```
+
+When evaluating usability use:
+
+```bash 
+FRIDAY_DATA=data python3 models/jigglypuff/evaluate.py\
+    --export_dir=${JIGGLYPUFF_MODEL?}\
+    --jigglypuff=${JIGGLYPUFF_DISTANCE?}\
+    --pipeline=usability\
+    --examples="data/usability-eval/*"\
+    --window_size=2\
+    --sample_rate=8000
+```
+

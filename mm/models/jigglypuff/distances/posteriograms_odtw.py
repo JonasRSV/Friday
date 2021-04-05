@@ -23,29 +23,29 @@ def entropy(x, y):
     return (np.log(softmax(y) / softmax(x)) * softmax(y)).sum()
 
     # Same as Gaussian PosterioGrams DTW paper https://www.researchgate.net/profile/James-Glass-3/publication/224096804_Unsupervised_spoken_keyword_spotting_via_segmental_DTW_on_Gaussian_Posteriorgrams/links/02e7e53b41b829dc8d000000/Unsupervised-spoken-keyword-spotting-via-segmental-DTW-on-Gaussian-Posteriorgrams.pdf
-    #return -np.log(softmax(x) @ softmax(y))
+    # return -np.log(softmax(x) @ softmax(y))
     # No good :I
-    #return (np.log(softmax(x) / softmax(y)) * softmax(x)).sum()
+    # return (np.log(softmax(x) / softmax(y)) * softmax(x)).sum()
 
     # Jensen Shannon Distance (Maybe)
-    #x = softmax(x)
-    #y = softmax(y)
-    #m = (x + y) / 2
+    # x = softmax(x)
+    # y = softmax(y)
+    # m = (x + y) / 2
 
-    #a = (np.log(y / m) * y).sum()
-    #b = (np.log(x / m) * x).sum()
+    # a = (np.log(y / m) * y).sum()
+    # b = (np.log(x / m) * x).sum()
 
-    #return a + b
+    # return a + b
 
     ## Total Variation Distance (Nah)
-    #x = softmax(x)
-    #y = softmax(y)
+    # x = softmax(x)
+    # y = softmax(y)
 
-    #x[-1] = 0
-    #y[-1] = 0
+    # x[-1] = 0
+    # y[-1] = 0
 
-    #x[0] = 0
-    #y[0] = 0
+    # x[0] = 0
+    # y[0] = 0
 
     # return np.abs(x - y).max()
 
@@ -59,10 +59,16 @@ def entropy(x, y):
     # return 1 - x_norm @ y_norm
 
 
-
-
-
 class PosteriogramsODTW(base.Base):
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        a = fix_loudness(a)
+        b = fix_loudness(b)
+
+        a, _ = self.get_logits(a)
+        b, _ = self.get_logits(b)
+
+        return self.ghost_dtw(a, b)
+
     def __init__(self, export_dir: str, max_distance: float):
         base.Base.__init__(self, export_dir=export_dir)
 
@@ -81,6 +87,20 @@ class PosteriogramsODTW(base.Base):
 
         print(self.keyword_logitss)
 
+    def ghost_dtw(self, a: np.ndarray, b: np.ndarray):
+        x = a
+        template = b
+        sequence_length = len(x)
+        template_length = len(template) + 2
+        mem = np.zeros((sequence_length, template_length))
+
+        return dtw(x=x,
+                   template=template,
+                   mem=mem,
+                   sequence_length=sequence_length,
+                   template_length=template_length,
+                   distance=entropy)
+
     def infer_min_avg_distance(self, utterance: np.ndarray):
         min_distance, keyword = 1e9, None
         ut_logits, _ = self.get_logits(utterance)
@@ -88,20 +108,7 @@ class PosteriogramsODTW(base.Base):
         for kw, logitss in self.keyword_logitss.items():
             score = 0
             for logits in logitss:
-                x = ut_logits
-                template = logits
-                sequence_length = len(x)
-                template_length = len(template) + 2
-                mem = np.zeros((sequence_length, template_length))
-
-                distance = dtw(x=x,
-                               template=template,
-                               mem=mem,
-                               sequence_length=sequence_length,
-                               template_length=template_length,
-                               distance=entropy)
-
-                score += distance
+                score += self.ghost_dtw(ut_logits, logits)
 
             if score < min_distance:
                 min_distance = score
@@ -118,18 +125,7 @@ class PosteriogramsODTW(base.Base):
 
         for kw, logitss in self.keyword_logitss.items():
             for logits in logitss:
-                x = ut_logits
-                template = logits
-                sequence_length = len(x)
-                template_length = len(template) + 2
-                mem = np.zeros((sequence_length, template_length))
-
-                distance = dtw(x=x,
-                               template=template,
-                               mem=mem,
-                               sequence_length=sequence_length,
-                               template_length=template_length,
-                               distance=entropy) / len(kw)
+                distance = self.ghost_dtw(ut_logits, logits) / len(kw)
 
                 if distance < min_distance:
                     min_distance = distance
@@ -142,7 +138,7 @@ class PosteriogramsODTW(base.Base):
 
     def infer(self, utterance: np.ndarray):
         utterance = fix_loudness(utterance)
-        #return self.infer_min_avg_distance(utterance)
+        # return self.infer_min_avg_distance(utterance)
         return self.infer_min_distance(utterance)
 
     def name(self):

@@ -11,6 +11,8 @@ tf.compat.v1.enable_eager_execution()
 
 
 class Pipelines(Enum):
+    RESOURCE = "resource"
+    USABILITY = "usability"
     PERSONAL = "P"
     GOOGLE_SPEECH_COMMANDS = "GSC"
 

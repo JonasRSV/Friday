@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 class Setting:
     def __init__(self, sample_rate: int, sequence_length: int):
+        """Sequence length is given in number of samples"""
         self.sample_rate = sample_rate
         self.sequence_length = sequence_length
 
@@ -43,6 +44,18 @@ class Model(ABC):
             C: the distance to the keyword closest to the utterance
         """
         raise NotImplementedError(f"'infer' have not been implemented for {self.__class__}")
+
+    @abstractmethod
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        """Calculate the distance between the two sounds
+
+        a: A N-vector containing the 16bit samples.
+        b: A N-vector containing the 16bit samples.
+
+        Returns
+            A: a floating point scalar, the distance between a and b
+        """
+        raise NotImplementedError(f"'distance' have not been implemented for {self.__class__}")
 
     @abstractmethod
     def name(self):

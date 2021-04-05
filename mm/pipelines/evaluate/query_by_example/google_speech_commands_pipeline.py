@@ -43,25 +43,11 @@ def sample_keywords(seed: int, n: int, keywords: [str], examples: str) -> Iterab
             yield example
 
 
-def sample_row(utterance: str,
-               model: str,
-               latency: float,
-               keyword: str,
-               keywords: [str],
-               closest_keyword: str,
-               distance: float):
-    """A row entry of a prediction sample into the final dataframe."""
-    if keyword:
-        return [utterance, model, latency] + [int(k == keyword) for k in keywords] + [0, closest_keyword, distance]
-
-    return [utterance, model, latency] + [0 for _ in keywords] + [1, closest_keyword, distance]
-
-
 def run_eval(model: m.Model, examples: str, keywords: [str], window_size: str, model_sample_rate: int):
     """Run evaluation across a tfexamples dataset."""
     window_size_samples = int(window_size * model_sample_rate)
 
-    df = []
+    utterances, predictions, closest_keywords, distances, latency = [], [], [], [], []
     for example in core.example_it(examples):
         audio = tfexample_utils.get_audio(example)
         text = tfexample_utils.get_text(example)
@@ -77,21 +63,24 @@ def run_eval(model: m.Model, examples: str, keywords: [str], window_size: str, m
         timestamp = time.time()
         prediction, closest_keyword, distance = model.infer(padded_audio)
 
-        df.append(sample_row(
-            utterance=prediction,
-            model=model.name(),
-            latency=time.time() - timestamp,
-            keyword=text,
-            keywords=ALL_KEYWORDS,
-            closest_keyword=closest_keyword,
-            distance=distance
-        ))
+        utterances.append(text)
+        predictions.append(prediction)
+        closest_keywords.append(closest_keyword)
+        distances.append(distance)
+        latency.append(time.time() - timestamp)
 
-    df = pd.DataFrame(df, columns=["utterance", "model", "latency"] + ALL_KEYWORDS +
-                                  ["None", "closest_keyword", "distance"])
-    df["is_keyword"] = df["utterance"].apply(lambda x: x in keywords)
+    df = pd.DataFrame({
+        "utterance": utterances,
+        "prediction": predictions,
+        "closest_keyword": closest_keywords,
+        "distance": distances,
+        "latency": latency
+
+    })
+
     df["dataset"] = core.Pipelines.GOOGLE_SPEECH_COMMANDS.value
     df["time"] = time.time()
+    df["model"] = model.name()
 
     return df
 
