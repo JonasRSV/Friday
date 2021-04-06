@@ -27,8 +27,11 @@ class Simple(Base):
         return "DDL-COS"
 
     def infer_most_likely(self, utterance: np.ndarray):
-        distances = self.get_distances(self.embeddings, utterance)
-        distances = distances / self.keyword_norm
+        #distances = self.get_distances(self.embeddings, utterance)
+        #distances = distances #/ self.keyword_norm
+
+        similarities, _ = self.get_similarities(self.embeddings, utterance)
+        distances = 1 - similarities
 
         prediction = self.keywords[np.argmin(distances)]
         distance = np.min(distances)

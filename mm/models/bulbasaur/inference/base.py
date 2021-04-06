@@ -20,8 +20,8 @@ class Base(m.Model, ABC):
         self.base_output = self.graph.get_tensor_by_name("output:0")
         self.base_output_shape = self.graph.get_tensor_by_name("output_shape:0")
 
-        self.base_min_distance = self.graph.get_tensor_by_name("min_distance:0")
-        self.base_distances = self.graph.get_tensor_by_name("distances:0")
+        self.base_similarities = self.graph.get_tensor_by_name("similarities:0")
+        self.base_similarities_shape = self.graph.get_tensor_by_name("similarities_shape:0")
 
     def get_projection(self, audio: np.ndarray):
         projection, shape = self.session.run((self.base_project, self.base_project_shape), feed_dict={
@@ -31,18 +31,23 @@ class Base(m.Model, ABC):
         return projection, shape
 
     def get_output(self, embeddings: np.ndarray, audio: np.ndarray):
-        output, min_distance = self.session.run((self.base_output, self.base_min_distance), feed_dict={
+        output, shape = self.session.run((self.base_output, self.base_output_shape), feed_dict={
             self.base_audio: audio,
             self.base_embeddings: embeddings
         })
 
-        return output, min_distance
+        if output.ndim == 0:
+            return np.array([output]), [1]
 
-    def get_distances(self, embeddings: np.ndarray, audio: np.ndarray):
-        return self.session.run(self.base_distances, feed_dict={
+        return output, shape
+
+    def get_similarities(self, embeddings: np.ndarray, audio: np.ndarray):
+        similarities, shape = self.session.run((self.base_similarities, self.base_similarities_shape), feed_dict={
             self.base_audio: audio,
             self.base_embeddings: embeddings
         })
+
+        return similarities, shape
 
     def __del__(self):
         """Cleanup tensorflow session on destruction of this object."""
