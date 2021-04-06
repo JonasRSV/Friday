@@ -7,24 +7,31 @@ from pipelines.evaluate.query_by_example.model import Setting
 
 
 class Simple(Base):
+    def distance(self, a: np.ndarray, b: np.ndarray, **kwargs):
+        a = fix_loudness(a)
+        b = fix_loudness(b)
+
+        a, _ = self.get_projection(a)
+
+        return self.get_distances(embeddings=[a], audio=b)[0]
+
     def __init__(self, export_dir: str, max_distance: float):
         Base.__init__(self, export_dir=export_dir)
         self.max_distance = max_distance
 
         self.keywords = []
         self.embeddings = []
+        self.keyword_norm = []
 
     def name(self):
         return "DDL-COS"
 
     def infer_most_likely(self, utterance: np.ndarray):
-        similarities, _ = self.get_similarities(self.embeddings, utterance)
+        distances = self.get_distances(self.embeddings, utterance)
+        distances = distances / self.keyword_norm
 
-        distance = 1 - np.max(similarities)
-        prediction = self.keywords[np.argmax(similarities)]
-
-        #for sim, kw in zip(similarities, self.keywords):
-        #    print(kw, sim)
+        prediction = self.keywords[np.argmin(distances)]
+        distance = np.min(distances)
 
         if distance < self.max_distance:
             return prediction, prediction, distance
@@ -32,8 +39,7 @@ class Simple(Base):
         return None, prediction, distance
 
     def infer_average(self, utterance: np.ndarray):
-        similarities, _ = self.get_similarities(self.embeddings, utterance)
-        distances = 1 - similarities
+        distances = self.get_distances(self.embeddings, utterance)
 
         kw_distances = {}
         for i, kw in enumerate(self.keywords):
@@ -73,12 +79,16 @@ class Simple(Base):
 
         self.keywords.extend([keyword] * len(utterances))
 
+        self.keyword_norm = list(self.keyword_norm)
+        self.keyword_norm.extend([len(keyword)] * len(utterances))
+        self.keyword_norm = np.array(self.keyword_norm)
+
     def register_setting(self, setting: Setting):
         pass
 
 
 if __name__ == "__main__":
-    model = Simple(export_dir=f"{os.getenv('FRIDAY_ROOT')}/mm/data/bulbasaur_model/1614849325",
+    model = Simple(export_dir=f"{os.getenv('FRIDAY_ROOT')}/mm/data/bulbasaur_model/ddl_apr_6",
                    max_distance=1000)
 
     mock_audio_0 = (np.random.normal(-1, 1, 16000) * 10000).astype(np.int16)

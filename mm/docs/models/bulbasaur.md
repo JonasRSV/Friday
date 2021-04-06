@@ -56,7 +56,7 @@ python3 models/bulbasaur/bulbasaur.py\
 Pick a model, it should be a path to a tensorflow 'SavedModel' export directory.
 
 ```bash 
-BULBASAUR_MODEL=$PWD/data/bulbasaur_model/1615960284 
+BULBASAUR_MODEL=$PWD/data/bulbasaur_model/ddl_apr_6 
 ```
 
 Then run the evaluate script
@@ -72,7 +72,7 @@ When evaluating against the 'Personal':
 ```bash 
 FRIDAY_DATA=data python3 models/bulbasaur/evaluate.py\
   --export_dir=${BULBASAUR_MODEL?}\
-  --bulbasaur=${BULBASAUR_INFERENCE?}\
+  --bulbasaur=Simple\
   --pipeline=P\
   --tasks="data/evaluation/tasks/tfexamples.en-easy-jonas-9"\
   --examples="data/evaluation/examples/tfexamples.en*"\

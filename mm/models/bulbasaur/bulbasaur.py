@@ -171,7 +171,7 @@ def get_train_ops(distance: Distance,
     train_logging_hooks = [
         tf.estimator.LoggingTensorHook(
             {"loss": "loss_op"},
-            every_n_iter=20),
+            every_n_iter=1),
         tf.estimator.SummarySaverHook(
             save_steps=save_summaries_every,
             output_dir=summary_output_dir,
@@ -181,7 +181,7 @@ def get_train_ops(distance: Distance,
     return loss_op, train_op, train_logging_hooks
 
 
-def extract_mfcc(signal: tf.Tensor, sample_rate: int):
+def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     # return audio.mfcc_feature(signal=signal,
     #                          coefficients=27,
     #                          sample_rate=sample_rate,
@@ -191,19 +191,27 @@ def extract_mfcc(signal: tf.Tensor, sample_rate: int):
     #                          num_mel_bins=120,
     #                          lower_edge_hertz=1,
     #                          upper_edge_hertz=4000)
-    return audio.mfcc_feature(signal=signal,
-                              coefficients=27,
-                              sample_rate=sample_rate,
-                              frame_length=2048,
-                              frame_step=1024,
-                              fft_length=2048,
-                              num_mel_bins=128,
-                              lower_edge_hertz=1,
-                              upper_edge_hertz=4000)
+    # return audio.mfcc_feature(signal=signal,
+    #                          coefficients=20,
+    #                          sample_rate=sample_rate,
+    #                          frame_length=2048,
+    #                          frame_step=256,
+    #                          fft_length=2048,
+    #                          num_mel_bins=128,
+    #                          lower_edge_hertz=1,
+    #                          upper_edge_hertz=4000)
+    return audio.log_mel_spectrogram_feature(signal=signal,
+                                             sample_rate=sample_rate,
+                                             frame_length=2048,
+                                             frame_step=512,
+                                             fft_length=2048,
+                                             num_mel_bins=128,
+                                             lower_edge_hertz=1,
+                                             upper_edge_hertz=4000)
 
 
 def get_embedding(audio_signal: tf.Tensor, sample_rate: int, embedding_dim: int, mode: tf.estimator.ModeKeys):
-    signal = extract_mfcc(signal=audio.normalize_audio(audio_signal), sample_rate=sample_rate)
+    signal = extract_audio_feature(signal=audio.normalize_audio(audio_signal), sample_rate=sample_rate)
     return arch.kaggle_cnn(signal, embedding_dim=embedding_dim, mode=mode)
 
 
