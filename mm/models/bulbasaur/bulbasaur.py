@@ -270,6 +270,7 @@ def make_model_fn(distance: Distance,
             embeddings = tf.linalg.l2_normalize(embeddings, axis=1)
 
             predict_op, distance_op = get_predict_ops(
+                distance=distance,
                 stored_embeddings=features["embeddings"],
                 signal_embeddings=embeddings,
             )

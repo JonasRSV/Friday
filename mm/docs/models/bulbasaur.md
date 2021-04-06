@@ -42,8 +42,9 @@ To Export after training run
 python3 models/bulbasaur/bulbasaur.py\
     --model_directory=${MODEL_OUTPUT?}\
     --mode="export"\
+    --distance=${BULBASAUR_DISTANCE?}\
     --margin=1.0\
-    --embedding_dim=256\
+    --embedding_dim=512\
     --clip_length=2\
     --sample_rate=8000
     
