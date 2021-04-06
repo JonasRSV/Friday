@@ -300,8 +300,6 @@ def make_model_fn(distance: Distance,
         else:
             raise Exception(f"Unknown ModeKey {mode}")
 
-        print('global vars', tf.global_variables())
-        print('global vars', len(tf.global_variables()))
         return tf.estimator.EstimatorSpec(mode=mode,
                                           predictions=predict_op,
                                           loss=loss_op,

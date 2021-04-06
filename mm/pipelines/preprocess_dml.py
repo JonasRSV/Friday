@@ -140,7 +140,7 @@ if __name__ == '__main__':
         LengthFilter(max_length=args.clip_length, min_length=0.0),
         TextUpperCase(),
         RandomBiPadding(length=args.clip_length),
-        AudioAugmentations()
+        #AudioAugmentations()
     ]
 
     utterances = meta_pass(args.source)
