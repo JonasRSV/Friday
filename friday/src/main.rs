@@ -33,7 +33,7 @@ use ctrlc;
 fn main() {
 
     // Tensorflow model that identifies the keyword present in speech
-    let mut model = tensorflow_models::discriminative::Discriminative::new()
+    let mut model = tensorflow_models::discriminative::interface::Discriminative::new()
         .expect("Failed to load model");
 
     let recording_config = friday_audio::RecordingConfig {
@@ -65,7 +65,7 @@ fn main() {
         // Webserver for discriminiative model to serve its info
         Arc::new(
             Mutex::new(
-                tensorflow_models::discriminative::WebDiscriminative::new(&model)
+                tensorflow_models::discriminative::interface::WebDiscriminative::new(&model)
             )
         ),
 
@@ -163,7 +163,6 @@ fn serve_friday<M, S, V, R>(
                                           Ok(prediction) => match prediction {
                                               friday_inference::Prediction::Result{
                                                   class,
-                                                  index: _
                                               } => {
                                                   for vendor in vendors.iter() {
                                                       match vendor.dispatch(&class) {
@@ -183,8 +182,8 @@ fn serve_friday<M, S, V, R>(
                                                   std::thread::sleep(std::time::Duration::from_millis(2000));
 
                                               },
-                                                  friday_inference::Prediction::Silence => (),
-                                                  friday_inference::Prediction::Inconclusive => ()
+                                              friday_inference::Prediction::Silence => (),
+                                              friday_inference::Prediction::Inconclusive => ()
                                           },
                                           Err(err) => friday_logging::error!("Failed to do inference - Reason: {:?}", 
                                               err)

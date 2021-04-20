@@ -146,8 +146,8 @@ def confusion_matrix(df: pd.DataFrame):
 
 
 def latencies(df: pd.DataFrame):
-    with sb.plotting_context(rc={"legend.fontsize": 16,
-                                 "legend.title_fontsize": 16}):
+    with sb.plotting_context(rc={"legend.fontsize": 12,
+                                 "legend.title_fontsize": 12}):
         plt.figure(figsize=(10, 4))
         sb.set_style("whitegrid")
         sb.lineplot(x="K", y="latency", data=df, hue="model", style="model", markers=True, dashes=True, ci=68)
@@ -156,11 +156,12 @@ def latencies(df: pd.DataFrame):
 
         plt.xlim([0, df["K"].max() + 1])
         plt.yscale("log")
-        plt.xticks(fontsize=16)
-        plt.yticks(fontsize=16)
-        plt.ylabel("L(K)", fontsize=20)
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.ylabel("$\mathcal{L}(K)$", fontsize=20)
         plt.xlabel("K", fontsize=20)
 
+        plt.legend(bbox_to_anchor=(0.72, -0.25))
         plt.savefig(get_plot_dir() / f"latencies.png", bbox_inches="tight")
         plt.show()
 
@@ -177,9 +178,9 @@ def gcs_accuracy(df: pd.DataFrame):
     accuracies = np.array(accuracies)
 
     rank = accuracies.argsort().argsort()  # http://stackoverflow.com/a/6266510/1628638
-    sb.barplot(x=names, y=accuracies, palette=np.array(pal[::-1])[rank])
+    sb.barplot(x=accuracies, y=names, palette=np.array(pal[::-1])[rank])
 
-    plt.ylim([0, 1])
+    plt.xlim([0, 1])
     plt.ylabel("accuracy", fontsize=16)
     plt.yticks(fontsize=11)
     plt.xticks(fontsize=14)
@@ -193,7 +194,7 @@ def gcs_confusion(df: pd.DataFrame):
     n_groups = len(groups)
     rows = n_groups // 2
 
-    plt.figure(figsize=(16, rows * 7))
+    plt.figure(figsize=(20, rows * 10))
     sb.set_style("whitegrid")
     for i, ((model, t), df) in enumerate(groups[:rows * 2], 1):
         name = f"{model}-{int(t) % 100}"
@@ -201,19 +202,19 @@ def gcs_confusion(df: pd.DataFrame):
         confusion_matrix = np.zeros((len(keywords), len(keywords)))
 
         for _, row in df.iterrows():
-            if str(row["prediction"]) != "nan":
-                confusion_matrix[keywords.index(row["utterance"]), keywords.index(row["prediction"])] += 1
+            if str(row["closest_keyword"]) != "nan":
+                confusion_matrix[keywords.index(row["utterance"]), keywords.index(row["closest_keyword"])] += 1
 
         plt.subplot(rows, 2, i)
-        plt.title(name, fontsize=12)
+        plt.title(name, fontsize=20)
         sb.heatmap(confusion_matrix,
                    cmap=sb.cubehelix_palette(start=2, rot=0, dark=0, light=.6, reverse=True, as_cmap=True),
                    annot=True, square=True, cbar=False, xticklabels=keywords, yticklabels=keywords)
 
     for index in range(rows * 2):
         plt.subplot(rows, 2, index + 1)
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
         plt.yticks(rotation=0)
 
     plt.savefig(get_plot_dir() / f"gsc-confusion-matrix.png", bbox_inches="tight")
@@ -246,15 +247,15 @@ def usability(df: pd.DataFrame):
     colors = sb.color_palette()
     # colors = sb.color_palette("rocket")
     for j, ((model, _), df) in enumerate(df.groupby(by=["model", "time"])):
-        plt.figure(figsize=(10, 2))
+        plt.figure(figsize=(10, 2.5))
         sb.set_style("whitegrid")
         for i, (keyword, from_df) in enumerate(df.groupby(by="from")):
             same = from_df.loc[from_df["to"] == keyword]["distance"]
             different = from_df.loc[from_df["to"] != keyword]["distance"]
 
-            sb.distplot(same, hist=False, label=f"${keyword}$", color=colors[i])
+            sb.distplot(same, hist=False, label=f"${keyword}$", color=colors[i], norm_hist=True)
             sb.distplot(different, hist=False, kde_kws={"linestyle": "--"},
-                        color=colors[i])
+                        color=colors[i], norm_hist=True)
 
             print("keyword", keyword)
 

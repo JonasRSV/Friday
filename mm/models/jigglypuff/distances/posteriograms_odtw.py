@@ -83,6 +83,7 @@ class PosteriogramsODTW(base.Base):
         for utterance in utterances:
             seq, _ = self.get_logits(utterance)
 
+            print(seq.shape)
             self.keyword_logitss[keyword].append(seq)
 
         print(self.keyword_logitss)

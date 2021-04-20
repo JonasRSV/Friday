@@ -16,6 +16,7 @@ Then for training, pick a distance
 
 ```bash
 BULBASAUR_DISTANCE=cosine
+BULBASAUR_DISTANCE=euclidean
 ```
 
 ```bash
@@ -30,7 +31,7 @@ python3 models/bulbasaur/bulbasaur.py\
     --mode="train_eval"\
     --sample_rate=8000\
     --batch_size=128\
-    --start_learning_rate=0.0001\
+    --start_learning_rate=0.0005\
     --max_steps=1000000\
     --save_summary_every=300\
     --eval_every=300\
@@ -86,7 +87,7 @@ When evaluating against 'Google Speech Commands':
 ```bash 
 FRIDAY_DATA=data python3 models/bulbasaur/evaluate.py\
     --export_dir=${BULBASAUR_MODEL?}\
-    --bulbasaur=${BULBASAUR_INFERENCE?}\
+    --bulbasaur=Simple\
     --pipeline=GSC\
     --examples="data/speech_commands_qbe_eval/*"\
     --window_size=2\
@@ -94,4 +95,26 @@ FRIDAY_DATA=data python3 models/bulbasaur/evaluate.py\
     --seed=1337\
     --sample_rate=8000
 ```
+
+When evaluating resource usage:
+
+```bash 
+FRIDAY_DATA=data python3 models/bulbasaur/evaluate.py\
+    --export_dir=${BULBASAUR_MODEL?}\
+    --bulbasaur=Simple\
+    --pipeline=resource
+```
+
+When evaluating usability use:
+
+```bash 
+FRIDAY_DATA=data python3 models/bulbasaur/evaluate.py\
+    --export_dir=${BULBASAUR_MODEL?}\
+    --bulbasaur=Simple\
+    --pipeline=usability\
+    --examples="data/usability-eval/*"\
+    --window_size=2\
+    --sample_rate=8000
+```
+
 

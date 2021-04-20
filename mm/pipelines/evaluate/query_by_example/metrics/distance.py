@@ -144,6 +144,7 @@ def metrics_per_distance(df: pd.DataFrame, n: int, total: int, keywords: [str]):
     """
 
     print("df", df.head(60))
+    print("df", df.head(120).tail(60))
     print("df", df.tail(60))
 
     min_distance = df["distance"].min()

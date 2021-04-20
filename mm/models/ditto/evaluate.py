@@ -64,7 +64,7 @@ def run_personal_pipeline(model_fn):
 
 def run_resource_pipeline(model_fn):
     """Runs resource evaluation pipeline."""
-    df = resource_run(model_fn, K=100, N=100)
+    df = resource_run(model_fn, K=30, N=100)
     append("latency.csv", df)
 
 

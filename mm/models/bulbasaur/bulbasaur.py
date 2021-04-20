@@ -183,14 +183,14 @@ def get_train_ops(distance: Distance,
 
 def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     return audio.mfcc_feature(signal=signal,
-                             coefficients=27,
-                             sample_rate=sample_rate,
-                             frame_length=512,
-                             frame_step=256,
-                             fft_length=512,
-                             num_mel_bins=120,
-                             lower_edge_hertz=1,
-                             upper_edge_hertz=4000)
+                              coefficients=27,
+                              sample_rate=sample_rate,
+                              frame_length=512,
+                              frame_step=256,
+                              fft_length=512,
+                              num_mel_bins=120,
+                              lower_edge_hertz=1,
+                              upper_edge_hertz=4000)
     # return audio.mfcc_feature(signal=signal,
     #                          coefficients=20,
     #                          sample_rate=sample_rate,
@@ -200,7 +200,7 @@ def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     #                          num_mel_bins=128,
     #                          lower_edge_hertz=1,
     #                          upper_edge_hertz=4000)
-    #return audio.log_mel_spectrogram_feature(signal=signal,
+    # return audio.log_mel_spectrogram_feature(signal=signal,
     #                                         sample_rate=sample_rate,
     #                                         frame_length=2048,
     #                                         frame_step=512,

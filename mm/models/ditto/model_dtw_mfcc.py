@@ -19,10 +19,16 @@ def euclidean(x, y):
 class DTWMFCC(Model):
 
     def mfcc_feature(self, utterance: np.ndarray):
+        #return librosa.feature.mfcc(utterance, sr=self.sample_rate,
+        #                            n_mfcc=13,
+        #                            n_fft=2048,
+        #                            hop_length=1024,
+        #                            win_length=2048,
+        #                            n_mels=128).T
         return librosa.feature.mfcc(utterance, sr=self.sample_rate,
-                                    n_mfcc=13,
+                                    n_mfcc=20,
                                     n_fft=2048,
-                                    hop_length=1024,
+                                    hop_length=512,
                                     win_length=2048,
                                     n_mels=128).T
 

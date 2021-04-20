@@ -64,10 +64,11 @@ def run_eval(model: m.Model, examples: str, keywords: [str], window_size: str, m
         timestamp = time.time()
         prediction, closest_keyword, distance = model.infer(padded_audio)
 
-        #print(text, " -> ", prediction)
-        #simpleaudio.play_buffer(padded_audio, num_channels=1, bytes_per_sample=2,
-        #                        sample_rate=sample_rate).wait_done()
-        #time.sleep(0.25)
+        #if text == "seven":
+        #    print(text, " -> ", prediction)
+        #    simpleaudio.play_buffer(padded_audio, num_channels=1, bytes_per_sample=2,
+        #                            sample_rate=sample_rate).wait_done()
+        #    time.sleep(0.25)
 
         utterances.append(text)
         predictions.append(prediction)

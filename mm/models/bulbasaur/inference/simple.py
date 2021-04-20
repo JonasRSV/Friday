@@ -24,7 +24,7 @@ class Simple(Base):
         self.keyword_norm = []
 
     def name(self):
-        return "DDL-COS"
+        return "DDL-EU"
 
     def infer_most_likely(self, utterance: np.ndarray):
         distances = self.get_distances(self.embeddings, utterance)

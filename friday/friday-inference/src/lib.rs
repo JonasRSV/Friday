@@ -4,7 +4,6 @@ use friday_error::FridayError;
 pub enum Prediction {
     Result {
         class: String,
-        index: u32
     },
     Silence,
     Inconclusive
@@ -25,7 +24,6 @@ impl DummyModel {
         return DummyModel{
             ret: Prediction::Result {
                 class: c,
-                index: 1
             }
         }
     }

@@ -4,6 +4,8 @@ use wav;
 use std::fs::File;  
 use std::fs;
 
+
+#[derive(Clone)]
 pub struct Files {
     root: path::PathBuf
 }
@@ -34,6 +36,37 @@ impl Files {
                     Err(err) => frierr!("Failed to write data to wav file, Reason: {:?}", err),
                     Ok(_) => Ok(file_name)
                 }
+        }
+    }
+
+    /// Reads an audio file stored with 'store_audio' and returns the PCM data and sample_rate
+    pub fn read_audio<S: AsRef<str>>(&self, name: S) -> Result<(Vec<i16>, u32), FridayError> {
+        let mut file_path = self.root.clone();
+        file_path.push(name.as_ref().clone());
+        match File::open(file_path) {
+            Err(err) => frierr!("Failed to open audio file {:?}", err),
+            Ok(mut file) => match wav::read(&mut file){
+                Err(err) => frierr!("Failed to read wav file {:?}", err),
+                Ok((header, data)) => 
+                    match header.sampling_rate == 8000 
+                        && header.bits_per_sample == 16 
+                        && header.channel_count == 1 { 
+                        false => frierr!("Audio file {} contains unexpected header fields \
+                            got bits per sample {} - sample rate {} - channel count {} - Audio Format {} \
+                            expect bits per sample 16 - sample rate 8000 - channel count 1 - Audio Format 1",
+                            name.as_ref(), 
+                            header.bits_per_sample, 
+                            header.sampling_rate, 
+                            header.channel_count, 
+                            header.audio_format),
+                        true => match data {
+                            wav::BitDepth::Sixteen(audio) => Ok((audio, header.sampling_rate)),
+                            // This error should not occur, since we validate bitdepth in the
+                            // parent match
+                            _ => frierr!("Wav data contained an unexpected bitdepth, expected 16")
+                        }
+                    }
+            }
         }
     }
 

@@ -31,10 +31,11 @@ class Jigglypuff(Enum):
 
 
 def run_google_speech_commands_pipeline(model_fn):
-    keywords = ["sheila", "wow", "visual"]
+    keywords = ["dog", "down", "learn", "left", "seven", "sheila"]
 
-    a = google_run(model_fn(), keywords=keywords)
-    pass
+    df = google_run(model_fn(), keywords=keywords)
+
+    append("google_speech_commands_results.csv", df)
 
 
 def run_personal_pipeline(model_fn):
@@ -64,7 +65,7 @@ def run_personal_pipeline(model_fn):
 
 def run_resource_pipeline(model_fn):
     """Runs resource evaluation pipeline."""
-    df = resource_run(model_fn, K=10, N=100)
+    df = resource_run(model_fn, K=30, N=100)
     append("latency.csv", df)
 
 

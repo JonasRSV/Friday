@@ -16,7 +16,7 @@ if __name__ == "__main__":
     print(args.prefix)
 
     for serialized_example in tf.data.TFRecordDataset(filenames=[
-        str(random.choice(list(args.prefix.glob("ptfexamples-dml-*"))))
+        str(random.choice(list(args.prefix.glob(""))))
     ]):
         example = tf.train.Example()
         example.ParseFromString(serialized_example.numpy())

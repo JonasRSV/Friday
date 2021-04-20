@@ -85,7 +85,7 @@ class BeamODTW(base.Base):
 
         for kw, seqs in self.keyword_phoneme_seq.items():
             for seq in seqs:
-                distance = self.ghost_dtw(ut_seq, seq) / len(seq)
+                distance = self.ghost_dtw(ut_seq, seq) #/ len(seq)
 
                 if distance < min_distance:
                     min_distance = distance
