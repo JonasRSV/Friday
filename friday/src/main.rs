@@ -33,7 +33,7 @@ use ctrlc;
 fn main() {
 
     // Tensorflow model that identifies the keyword present in speech
-    let mut model = tensorflow_models::discriminative::interface::Discriminative::new()
+    let mut model = tensorflow_models::ddl::interface::DDL::new()
         .expect("Failed to load model");
 
     let recording_config = friday_audio::RecordingConfig {
@@ -62,10 +62,10 @@ fn main() {
 
     server.register(
         vec![
-        // Webserver for discriminiative model to serve its info
+        // Webserver for model to serve its info
         Arc::new(
             Mutex::new(
-                tensorflow_models::discriminative::interface::WebDiscriminative::new(&model)
+                tensorflow_models::ddl::interface::WebDDL::new(&model)
             )
         ),
 
@@ -84,7 +84,7 @@ fn main() {
         ),
 
         // Webserver for recording and manipulating audio files on the assistant.
-        // Will be used to add keywords through the API.
+        // Is used to add keywords through the API.
         Arc::new(
             Mutex::new(
                 web::record::api::WebRecord::new(istream.clone()).expect("Failed to create WebRecord")

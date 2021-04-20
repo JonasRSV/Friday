@@ -209,6 +209,8 @@ pub struct Model {
     status: *mut tensorflow_rust_sys::TF_Status
 }
 
+unsafe impl Send for Model { }
+
 impl Model {
 
     pub fn free_tensorflow_resources(&mut self) -> bool {

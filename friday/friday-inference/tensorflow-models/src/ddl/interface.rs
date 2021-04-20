@@ -18,7 +18,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json;
 
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Config {
     export_dir: PathBuf,
     sensitivity: f32,
@@ -27,6 +27,7 @@ pub struct Config {
     audio: HashMap<String, String>
 }
 
+#[derive(Debug, Clone)]
 struct Examples {
     audio: HashMap<String, String>,
 
@@ -49,6 +50,9 @@ struct DDLModel {
     output_projection: m::Tensor,
     output_distances: m::Tensor,
 }
+
+unsafe impl Send for DDLModel { }
+
 
 #[derive(Clone)]
 pub struct DDL {
@@ -519,54 +523,108 @@ mod tests {
         }
     }
 
-    //#[test]
-    //fn discriminative_web() {
-    //env::set_var("FRIDAY_GUI", ".");
+    #[test]
+    fn ddl_web_get_examples_and_sensitivity() {
+        env::set_var("FRIDAY_GUI", ".");
+        env::set_var("FRIDAY_CONFIG", "test-resources");
 
-    //let config = Config {
-    //export_dir: PathBuf::from("test-resources/1603634879"),
-    //class_map: [
-    //(String::from("Silence"), 0), 
-    //(String::from("a"), 1),
-    //(String::from("b"), 2),
-    //(String::from("c"), 3),
-    //(String::from("d"), 4),
-    //(String::from("e"), 5),
-    //(String::from("f"), 6),
-    //(String::from("g"), 7),
-    //(String::from("h"), 8),
-    //(String::from("i"), 9)].iter().cloned().collect(),
-    //sensitivity: 0.0
-    //};
+        let config = Config {
+            audio: [
+                ("hello-123.wav".to_owned(), "kalle".to_owned()),
+                ("955-184-642-144.wav".to_owned(), "1234".to_owned()),
+            ].iter().cloned().collect(),
+            export_dir: PathBuf::from("test-resources/ddl_apr_13_eu"),
+            sensitivity: 2.0
+        };
 
-    //let model = Discriminative::model_from_config(config).expect("Failed to load Config");
+        let model = DDL::model_from_config(config).expect("Failed to load Config");
 
-    //let web = WebDiscriminative::new(&model);
+        let web = WebDDL::new(&model);
 
-    //let mut server = friday_web::server::Server::new().expect("Failed to create web friday server");
-    //server.register(vec![
-    //Arc::new(Mutex::new(web))
-    //]).expect("Failed to register discriminative web vendor");
-    //let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
+        let mut server = friday_web::server::Server::new().expect("Failed to create web friday server");
+        server.register(vec![
+            Arc::new(Mutex::new(web))
+        ]).expect("Failed to register DDL web vendor");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
 
-    //std::thread::sleep(std::time::Duration::from_millis(2000));
-    //let resp = ureq::get(
-    //"http://0.0.0.0:8000/friday-inference/tensorflow-models/discriminative/classes").call();
-    //let class_map : Vec<String> = resp.into_json_deserialize::<Vec<String>>()
-    //.expect("Failed to parse json response");
+        std::thread::sleep(std::time::Duration::from_millis(2000));
+        let resp = ureq::get(
+            "http://0.0.0.0:8000/friday-inference/tensorflow-models/ddl/examples").call();
+        let examples = resp.into_json_deserialize::<HashMap<String, String>>()
+            .expect("Failed to parse json response");
 
-    //friday_logging::info!("Got class_map response: {:?}", class_map);
-    //assert_eq!(class_map, model.class_map.read().unwrap().clone());
+        friday_logging::info!("Got examples response: {:?}", examples);
+        assert_eq!(examples, model.examples.read().unwrap().audio.clone());
 
-    //let resp = ureq::get(
-    //"http://0.0.0.0:8000/friday-inference/tensorflow-models/discriminative/sensitivity").call();
-    //let sensitivity : f32 = resp.into_json_deserialize::<f32>()
-    //.expect("Failed to parse json response");
+        let resp = ureq::get(
+            "http://0.0.0.0:8000/friday-inference/tensorflow-models/ddl/sensitivity").call();
+        let sensitivity : f32 = resp.into_json_deserialize::<f32>()
+            .expect("Failed to parse json response");
 
-    //friday_logging::info!("Got sensitivity response: {:?}", sensitivity);
-    //assert_eq!(sensitivity, model.sensitivity.read().unwrap().clone());
+        friday_logging::info!("Got sensitivity response: {:?}", sensitivity);
+        assert_eq!(sensitivity, model.sensitivity.read().unwrap().clone());
 
 
-    //handle.stop();
-    //}
+        handle.stop();
+    }
+
+    #[test]
+    fn ddl_web_set_examples() {
+        env::set_var("FRIDAY_GUI", ".");
+        env::set_var("FRIDAY_CONFIG", "test-resources");
+
+        let config = Config {
+            audio: [
+                ("hello-123.wav".to_owned(), "kalle".to_owned()),
+            ].iter().cloned().collect(),
+            export_dir: PathBuf::from("test-resources/ddl_apr_13_eu"),
+            sensitivity: 2.0
+        };
+
+        let model = DDL::model_from_config(config.clone()).expect("Failed to load Config");
+
+        let web = WebDDL::new(&model);
+
+        let mut server = friday_web::server::Server::new().expect("Failed to create web friday server");
+        server.register(vec![
+            Arc::new(Mutex::new(web))
+        ]).expect("Failed to register DDL web vendor");
+        let handle = server.listen("0.0.0.0:8000").expect("Failed to start server");
+
+        std::thread::sleep(std::time::Duration::from_millis(2000));
+        let resp = ureq::get(
+            "http://0.0.0.0:8000/friday-inference/tensorflow-models/ddl/examples").call();
+        let examples = resp.into_json_deserialize::<HashMap<String, String>>()
+            .expect("Failed to parse json response");
+
+        friday_logging::info!("Got examples response: {:?}", examples);
+        assert_eq!(examples, model.examples.read().unwrap().audio.clone());
+
+        let mut update = config.audio.clone();
+        update.insert("955-184-642-144.wav".to_owned(), "1234".to_owned());
+
+
+        let resp = ureq::put("http://0.0.0.0:8000/friday-inference/tensorflow-models/ddl/examples")
+            .send_json(serde_json::to_value(update).expect("Failed to serialize state"));
+
+        // Setting examples went fine!
+        assert_eq!(resp.status(), 200);
+
+        friday_logging::info!("Examples is now {:?}", model.examples.read().unwrap());
+
+        let mut update = config.audio.clone();
+        update.insert("955-184-642-144.wav".to_owned(), "kalle".to_owned());
+        *update.get_mut("hello-123.wav").unwrap() = "1234".to_owned();
+
+        let resp = ureq::put("http://0.0.0.0:8000/friday-inference/tensorflow-models/ddl/examples")
+            .send_json(serde_json::to_value(update).expect("Failed to serialize state"));
+
+        // Setting examples went fine!
+        assert_eq!(resp.status(), 200);
+
+        friday_logging::info!("Examples is now {:?}", model.examples.read().unwrap());
+
+
+        handle.stop();
+    }
 }

@@ -34,7 +34,7 @@ mod tests {
         let mut server = Server::new().expect("Failed to create webserver");
 
         let hue_vendor = vendor_philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
-        let model = tensorflow_models::discriminative::interface::Discriminative::new()
+        let model = tensorflow_models::ddl::interface::DDL::new()
             .expect("Failed to load model");
         let discovery = friday_discovery::discovery::Discovery::new(8000)
             .expect("Failed to create discovery");
@@ -51,10 +51,10 @@ mod tests {
 
         server.register(
             vec![
-            // Webserver for discriminiative model to serve its info
+            // Webserver for DDL model to serve its info
             Arc::new(
                 Mutex::new(
-                    tensorflow_models::discriminative::interface::WebDiscriminative::new(&model)
+                    tensorflow_models::ddl::interface::WebDDL::new(&model)
                 )
             ),
 

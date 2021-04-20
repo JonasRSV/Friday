@@ -1,0 +1,8 @@
+{
+  "export_dir": "test-resources/ddl_apr_13_eu",
+  "sensitivity": 2.0,
+  "audio": {
+    "hello-123.wav": "1234",
+    "955-184-642-144.wav": "kalle"
+  }
+}
