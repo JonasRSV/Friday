@@ -71,7 +71,7 @@ pub struct DDL {
 impl DDL {
 
     pub fn new() -> Result<DDL, FridayError>  {
-        return friday_storage::config::get_config("discriminative.json").map_or_else(
+        return friday_storage::config::get_config("ddl.json").map_or_else(
             propagate!("Failed to create ddl model"),
             DDL::model_from_config 
         );
@@ -218,11 +218,16 @@ impl DDL {
                             // This happends if for some reason an audio file is assigned a
                             // different keyword
                             if names[id_index] != name.to_owned() {
+                                friday_logging::debug!("Updating example ({}, {}) -> ({}, {})",
+                                    names[id_index], ids[id_index], name, file_name);
                                 self.update(&mut examples, &name, &file_name, id_index)
                             }
                         },
                         // Audio file is not yet present as an example so we add it
-                        None => self.add(&mut examples, &name, &file_name)
+                        None => {
+                            friday_logging::debug!("Adding example ({}, {})", name, file_name);
+                            self.add(&mut examples, &name, &file_name)
+                        }
                     }
                 }
 

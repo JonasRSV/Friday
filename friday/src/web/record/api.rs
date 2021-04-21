@@ -219,7 +219,8 @@ mod tests {
 
         let r = friday_audio::RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: 16000
+            model_frame_size: 16000,
+            loudness: 1
         };
 
 
@@ -261,7 +262,8 @@ mod tests {
 
         let r = friday_audio::RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: 16000
+            model_frame_size: 16000,
+            loudness: 1
         };
 
 
@@ -304,7 +306,9 @@ mod tests {
 
         let r = friday_audio::RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: 16000
+            model_frame_size: 16000,
+            loudness: 1
+                
         };
 
 
@@ -358,7 +362,8 @@ mod tests {
 
         let r = friday_audio::RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: 16000
+            model_frame_size: 16000,
+            loudness: 1,
         };
 
 

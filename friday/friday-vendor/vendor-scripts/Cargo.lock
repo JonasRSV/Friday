@@ -10,6 +10,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "byteorder"
+version = "1.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
+
+[[package]]
 name = "friday-error"
 version = "0.1.0"
 
@@ -29,6 +35,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "wav",
 ]
 
 [[package]]
@@ -66,6 +73,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "991431c3519a3f36861882da93630ce66b52918dcf1b8e2fd66b397fc96f28df"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "riff"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bffa0ee268f0e9f654cf3b8939af03e44c26724f3d1f6b44d08677bf198ecb89"
+dependencies = [
+ "byteorder",
 ]
 
 [[package]]
@@ -130,6 +146,15 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+]
+
+[[package]]
+name = "wav"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd7aed3d26784de37a121db6c518cb38753ffb0d7845a0c31a2bc9f3852b1260"
+dependencies = [
+ "riff",
 ]
 
 [[package]]

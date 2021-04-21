@@ -12,7 +12,7 @@ mod tests {
               }).expect("Error setting Ctrl-C handler");
 
               // Run forever-loop
-              println!("Listening..");
+              friday_logging::info!("Listening..");
               while running.load(Ordering::SeqCst) {
                   std::thread::sleep(std::time::Duration::from_millis(500));
               }
@@ -41,7 +41,8 @@ mod tests {
 
         let recording_config = friday_audio::RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: model.expected_frame_size()
+            model_frame_size: model.expected_frame_size(),
+            loudness: 10
         };
 
         // Input audio stream, this is shared with the recording web-vendor

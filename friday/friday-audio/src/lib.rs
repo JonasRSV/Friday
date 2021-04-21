@@ -2,7 +2,11 @@
 #[derive(Clone)]
 pub struct RecordingConfig {
     pub sample_rate: u32,
-    pub model_frame_size: usize
+    pub model_frame_size: usize,
+
+    // constant that each sample is multiplied with
+    pub loudness: i16
+        
 }
 
 

@@ -22,7 +22,7 @@ impl EnergyBasedDetector {
     fn energy(audio: &Vec<i16>) -> f64 {
         let mut e = 0.0;
         for sample in audio.iter() {
-            let f64sample = sample.clone() as f64;
+            let f64sample = (sample.clone() as f64) / 32768.0;
             e += f64::sqrt(f64sample * f64sample);
         }
         return e / audio.len() as f64;
@@ -31,13 +31,18 @@ impl EnergyBasedDetector {
     pub fn new() -> Result<EnergyBasedDetector, FridayError> {
         friday_storage::config::get_config("vad_energy.json").map_or_else(
             propagate!("Failed to initialize EnergyBased VAD"),
-            |config: Config| Ok(EnergyBasedDetector {
-                energy_threshold: config.threshold,
-                verbose: match config.verbose {
-                    None => false,
-                    Some(v) => v
-                }
-            }))
+            |config: Config| Ok(EnergyBasedDetector::from_config(config)))
+    }
+
+    fn from_config(config: Config) -> EnergyBasedDetector {
+        EnergyBasedDetector {
+            energy_threshold: config.threshold,
+            verbose: match config.verbose {
+                None => false,
+                Some(v) => v
+            }
+        }
+
     }
 }
 
@@ -63,12 +68,20 @@ mod tests {
     fn energy_based_detector() {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
 
-        let noisy_audio = vec![16000; 16000];
-        let quiet_audio = vec![0; 16000];
+        
+        let config_dir = friday_storage::config::get_config_directory().unwrap();
+        let files = friday_storage::files::Files::new(config_dir).unwrap();
 
-        let mut detector = EnergyBasedDetector::new().expect("Failed to create EnergyBasedDetector");
+        let (quiet_audio, _) = files.read_audio("silence.wav").unwrap();
+        let (voice_audio, _) = files.read_audio("voice.wav").unwrap();
 
-        assert!(detector.detect(&noisy_audio));
+
+        let mut detector = EnergyBasedDetector::from_config(Config{
+            threshold: 0.08275,
+            verbose: Some(true)
+        });
+
+        assert!(detector.detect(&voice_audio));
         assert!(!detector.detect(&quiet_audio));
     }
 }

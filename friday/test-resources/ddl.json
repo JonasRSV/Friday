@@ -1,0 +1,9 @@
+{
+  "export_dir": "test-resources/ddl_apr_13_eu",
+  "sensitivity": 0.6,
+  "audio": {
+    "213-691-806-350.wav": "illuminate",
+    "51-99-890-440.wav": "kalle",
+    "430-90-569-120.wav": "kalle"
+  }
+}

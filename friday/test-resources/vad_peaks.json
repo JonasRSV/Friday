@@ -1,0 +1,6 @@
+
+{
+  "min_peaks": 6,
+  "min_peak_height": 4000,
+  "verbose": true
+}

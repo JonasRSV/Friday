@@ -13,17 +13,18 @@ use std::time;
 
 
 
-fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>) 
+fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>,
+    loudness_contant: i16) 
     where T: cpal::Sample {
-        fn insert<T>(samples: &[T], q: &mut MutexGuard<CircularQueue<i16>>) 
+        fn insert<T>(samples: &[T], q: &mut MutexGuard<CircularQueue<i16>>, loudness: i16) 
             where T: cpal::Sample {
                 for sample in samples.iter() {
-                    q.push(sample.to_i16());
+                    q.push(sample.to_i16() * loudness);
                 }
         }
 
         match buffer.lock() {
-            Ok(mut guard) => insert(input, &mut guard),
+            Ok(mut guard) => insert(input, &mut guard, loudness_contant),
             Err(err) => {
                 friday_logging::fatal!("(audioio) - Failed to aquire lock for writing audio data\
                 - Reason: {}", err);
@@ -95,10 +96,11 @@ impl CPALIStream {
                             CircularQueue::with_capacity(conf.model_frame_size)));
 
                     let read_buffer = write_buffer.clone();
+                    let loudness = conf.loudness.clone();
 
                     return device.build_input_stream(
                         &config.into(),
-                        move |data, _: &_| write_to_buffer::<i16>(data, &write_buffer),
+                        move |data, _: &_| write_to_buffer::<i16>(data, &write_buffer, loudness),
                         |err| {
                             friday_logging::fatal!("Recording error - {}", err);
                             // To not spam the living #!#! out of the audio device if an error
@@ -164,7 +166,8 @@ mod tests {
     fn cpal_some_printing() {
         let r = RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: 16000
+            model_frame_size: 16000,
+            loudness: 1
         };
 
 
@@ -192,7 +195,8 @@ mod tests {
     fn normal_workload() {
         let r = RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: 16000
+            model_frame_size: 16000,
+            loudness: 1
         };
 
 
@@ -210,11 +214,21 @@ mod tests {
 
     }
 
+    fn energy(audio: &Vec<i16>) -> f64 {
+        let mut e = 0.0;
+        for sample in audio.iter() {
+            let f64sample = (sample.clone() as f64) / 32768.0;
+            e += f64::sqrt(f64sample * f64sample);
+        }
+        return e / 16000.0;
+    }
+
     #[test]
     fn record_audio_files() {
         let r = RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: 16000
+            model_frame_size: 16000,
+            loudness: 1
         };
 
 
@@ -225,7 +239,7 @@ mod tests {
             std::thread::sleep(std::time::Duration::from_millis(2000));
             match istream.lock().unwrap().read() {
                 Some(data) => {
-                    friday_logging::info!("Read Ok!");
+                    friday_logging::info!("Read Ok!, energy {}", energy(&data));
                     let out = File::create(
                         Path::new(&format!("test-{}.wav", index)));
 

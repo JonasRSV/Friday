@@ -38,7 +38,8 @@ fn main() {
 
     let recording_config = friday_audio::RecordingConfig {
         sample_rate: 8000,
-        model_frame_size: model.expected_frame_size()
+        model_frame_size: model.expected_frame_size(),
+        loudness: 10
     };
 
     // Input audio stream, this is shared with the recording web-vendor
@@ -109,8 +110,8 @@ fn main() {
 
     // Cheap voice activity detection - if this one triggers we then trigger
     // the tensorflow model
-    let mut vad = friday_vad::vad_energy::EnergyBasedDetector::new()
-        .expect("Failed to create VAD - EnergyBasedDetector");
+    let mut vad = friday_vad::vad_peaks::PeakBasedDetector::new()
+        .expect("Failed to create VAD - PeakBasedDetector");
 
     // Serve friday using the main thread
     serve_friday(&mut vad, &mut model, &vendors, istream);
@@ -164,6 +165,7 @@ fn serve_friday<M, S, V, R>(
                                               friday_inference::Prediction::Result{
                                                   class,
                                               } => {
+                                                  friday_logging::info!("Dispatching {}", class);
                                                   for vendor in vendors.iter() {
                                                       match vendor.dispatch(&class) {
                                                           Ok(dispatch_response) => match dispatch_response {
