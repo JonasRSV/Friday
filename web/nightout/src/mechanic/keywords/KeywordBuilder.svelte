@@ -6,14 +6,18 @@ import Keyword from './Keyword.svelte';
 import WaveBanner from "./../../banners/WaveBanner.svelte"
 import IoMdMicrophone from 'svelte-icons/io/IoMdMicrophone.svelte'
 import { FridayAPI } from "./../../FridayAPI.js"
-import { playAudio } from "./../../core/Audio";
+import { playAudio, extractAudioBlob } from "./../../core/Audio";
 import { onMount } from "svelte";
 
 
 export let deactivate;
 
+
 let recordings = []
-let syncing = false;
+let is_syncing = false;
+let is_recording = false;
+
+let audio_cache = {}
 
 let onRemoveClick = (state) => {
   state.selecting = false;
@@ -28,10 +32,19 @@ let onRemoveClick = (state) => {
 
 let onPlayClick = (state) => {
   state.selecting = false;
-  console.log("Playing", state.id);
 
-  // Rename recording on device
-  FridayAPI.recordingAudio(state.id).then(audio => playAudio(audio));
+  if (audio_cache.hasOwnProperty(state.id)) {
+      playAudio(audio_cache[state.id]);
+  } else {
+    FridayAPI.recordingAudio(state.id).then(audio_stream => {
+      extractAudioBlob(audio_stream).then(url => {
+        audio_cache[state.id] = url;
+        playAudio(url);
+      });
+    });
+  }
+
+
 
   recordings = recordings;
 }
@@ -39,6 +52,7 @@ let onPlayClick = (state) => {
 let onRecordClick = (e) => {
   e.stopPropagation();
 
+  is_recording = true;
   // Rename recording on device
   FridayAPI.recordingNew().then(recording => {
     recordings.push({
@@ -47,11 +61,9 @@ let onRecordClick = (e) => {
       "selecting": false
     });
 
+    is_recording = false;
     recordings = recordings;
   });
-
-  console.log("recording");
-
 }
 
 let captureEvent = (e) => {
@@ -66,12 +78,12 @@ let captureEvent = (e) => {
     e.stopPropagation();
   // If we are syncing, do nothing and wait until sync is done
   // syncing should trigger a re-render of something else.
-  } else if (syncing) {
+  } else if (is_syncing) {
     e.stopPropagation();
 
   // otherwise start syncing with friday
   } else {
-    syncing = true;
+    is_syncing = true;
     syncWithFriday();
     e.stopPropagation()
   }
@@ -87,7 +99,7 @@ async function syncWithFriday()  {
 
   await FridayAPI.setExamples(examples);
   await (new Promise(resolve => setTimeout(resolve, 1000)));
-  syncing = false;
+  is_syncing = false;
   deactivate();
 }
 
@@ -156,13 +168,30 @@ onMount (async () => {
   transform: translate(-50%, -50%);
 }
 
+.mic-container {
+  height: 100px;
+  width: 120px;
+}
+
+.recording {
+  position: relative;
+  width: 350px;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
 </style>
 
 
 <div class="keyword-builder-keypress-capture" on:click={captureEvent}>
-{#if syncing}
+{#if is_syncing}
 <div class="middle-screen">
   <h1>Syncing with Friday...</h1>
+  <Spinner info type="grow" />
+</div>
+{:else if is_recording}
+<div class="middle-screen">
+  <h1>Probably Recording...</h1>
   <Spinner info type="grow" />
 </div>
 {:else}
@@ -173,26 +202,24 @@ onMount (async () => {
       </Col>
     </Row>
     <Row class="d-flex justify-content-center">
-      <Col xs=5 sm=3 md=1 lg=1>
-        <div on:click={onRecordClick}>
-          <WaveBanner>
-            <div class="mic-icon">
-              <IoMdMicrophone/>
-            </div>
-          </WaveBanner>
-        </div>
-      </Col>
+      <div class="mic-container" on:click={onRecordClick}>
+        <WaveBanner>
+          <div class="mic-icon">
+            <IoMdMicrophone/>
+          </div>
+        </WaveBanner>
+      </div>
     </Row>
-    <div class="d-flex flex-wrap flex-row justify-content-start">
+    <div class="d-flex flex-wrap flex-row justify-content-center">
           {#each recordings as recording }
-          <Col xs=12 sm=6 md=4 lg=4 class="my-3">
+          <div class="recording my-3">
             <Keyword id={recording.id} 
                      bind:keyword={recording.keyword}
                        onRemoveClick={() => onRemoveClick(recording)}
                        onPlayClick={() => onPlayClick(recording)}
                        bind:selecting={recording.selecting}
                        />
-          </Col>
+          </div>
           {/each}
     </div>
   </Container>

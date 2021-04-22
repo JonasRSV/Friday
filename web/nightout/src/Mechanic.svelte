@@ -17,7 +17,7 @@ export let daction;
 
 
 $: {
-  keywordBuilderActive = active;
+  keywordPickerActive = active;
 }
 
 let keywords = []

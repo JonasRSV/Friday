@@ -108,7 +108,7 @@ $: {
   </Row>
   <Row class="text-center">
     <Col xs=12 sm=12 md=12 lg=12>
-      <div class="title-text">When you say...</div>
+      <div class="title-text">Keyword</div>
     </Col>
   </Row>
   <Row>

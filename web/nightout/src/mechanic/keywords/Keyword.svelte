@@ -82,6 +82,14 @@ let localClick = (handler) => (e) => {
   color: yellow;
 }
 
+.click-area {
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  top: -25px;
+  left: 10px;
+}
+
 </style>
 
 
@@ -98,25 +106,28 @@ let localClick = (handler) => (e) => {
 <WaveBanner>
   <Row> 
     <Col xs=4 sm=4 md=4 lg=4 >
-      <div class="icon-onclick red" on:click={localClick(() => onRemoveClick())}>
+      <div class="icon-onclick red" >
+        <div class="click-area" on:click={localClick(() => onRemoveClick())}> </div>
         <FaTrash />
       </div>
     </Col>
     <Col xs=4 sm=4 md=4 lg=4 >
-      <div class="icon-onclick yellow" on:click={activateRenaming}>
+      <div class="icon-onclick yellow" >
+        <div class="click-area" on:click={activateRenaming}> </div>
         <FaPencilAlt />
       </div>
     </Col>
     <Col xs=4 sm=4 md=4 lg=4 >
-      <div class="icon-onclick purple" on:click={localClick(() => onPlayClick())}>
+      <div class="icon-onclick purple" >
+        <div class="click-area" on:click={localClick(() => onPlayClick())}> </div>
         <FaPlay />
-      </div>
+    </div>
     </Col>
   </Row>
 </WaveBanner>
 {:else if keyword != ""}
 <div class="activate-selection" on:click={activateSelection}>
-  <WaveBanner>
+  <WaveBanner active>
     <div class="text-container">
       <div class="text-background">
         {keyword}

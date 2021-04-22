@@ -1,12 +1,11 @@
 <script>
   import {Col, Container, Row} from 'sveltestrap';
-  import { IconLookup } from "./action/IconLookup.js";
   import BubbleBanner from "./banners/BubbleBanner.svelte"
+  import GiSplitCross from 'svelte-icons/gi/GiSplitCross.svelte'
 
 export let action;
 export let openMechanic;
 export let onRemoveClick;
-export let icons = [];
 
 export function setKeyword(newKeyword) {
   action.keyword = newKeyword;
@@ -15,8 +14,6 @@ export function setKeyword(newKeyword) {
 export function setCommand(newCommand) {
   action.command = newCommand;
 
-  // Update icons when we set new command
-  icons = IconLookup.lookup(action);
 }
 
 
@@ -25,7 +22,6 @@ let removeClicked = (e) => {
   onRemoveClick(action);
 }
 
-icons = IconLookup.lookup(action);
   
 </script>
 
@@ -38,20 +34,14 @@ icons = IconLookup.lookup(action);
     justify-content: center;
   }
 
-  .horizontal-center {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-  }
-
   .action-height { height: 110px; }
   .keyword { font-size: 22pt; }
-  .icon { width: 30px; }
 
 
   .remove {
-    height: 100%;
-    widows: 100%;
+    width: 100%;
+    height: 110px;
+
     background-color: rgba(120, 20, 20, 0.7);
   }
 
@@ -86,25 +76,14 @@ icons = IconLookup.lookup(action);
           <Container fluid class=container-xs>
             <BubbleBanner>
               <Row>
-                <Col xs=3 sm=3 md=3 lg=3> 
-                  <div class="remove" on:click={removeClicked}>
+                <Col xs=4 sm=4 md=4 lg=4> 
+                  <div class="d-flex flex-column justify-content-center remove" on:click={removeClicked}>
+                    <GiSplitCross />
                   </div>
                 </Col>
-                <Col xs=6 sm=6 md=6 lg=6 class="text-center"> 
+                <Col xs=8 sm=8 md=8 lg=8 class="text-center"> 
                   <div class="keyword vertical-center action-height" >
                     {action.keyword}
-                  </div>
-                </Col>
-
-                <Col xs=3 sm=3 md=3 lg=3 class="vendors text-left"> 
-                  <div class="vendors vertical-center action-height">
-                    <div class="horizontal-center">
-                      {#each icons as icon}
-                        <div class="icon">
-                          <svelte:component this={icon.component} {...icon.props}/>
-                        </div>
-                      {/each}
-                    </div>
                   </div>
                 </Col>
               </Row>

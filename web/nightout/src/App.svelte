@@ -1,7 +1,7 @@
 <script>
 import Action from "./Action.svelte";
 import Mechanic from "./Mechanic.svelte";
-import ActionAdd from "./action/ActionAdd.svelte";
+import AddActionButton from "./action/AddActionButton.svelte";
 import Header from "./Header.svelte";
 import { dAction, Vendor } from './Core';
 import { Spinner } from 'sveltestrap';
@@ -71,14 +71,13 @@ onMount (async () => {
   dActions.push(... await FridayAPI.fetchActions());
 
   title = await FridayAPI.getDeviceName();
-
   // And then we display them
   displayActions = true;
 
 
   // TODO While developing mechanic
-  dActionAtMech = dActions[0];
-  displayMechanic = true;
+  /*dActionAtMech = dActions[0];*/
+  /*displayMechanic = true;*/
 
 
 });
@@ -103,7 +102,7 @@ onMount (async () => {
     </div>
   {/if}
 
-  <ActionAdd bind:active={displayActions} onAddClick={addAction}/>
+  <AddActionButton bind:active={displayActions} onAddClick={addAction}/>
   <Mechanic sync={syncFriday} daction={dActionAtMech} bind:active={displayMechanic} />
 </main>
 
