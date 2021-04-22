@@ -5,7 +5,6 @@ use friday_vendor;
 use friday_vendor::DispatchResponse;
 use friday_vendor::Vendor;
 
-use vendor_philips_hue;
 use vendor_scripts;
 
 use friday_audio;
@@ -32,7 +31,7 @@ use ctrlc;
 
 fn main() {
 
-    // Tensorflow model that identifies the keyword present in speech
+    // Tensorflow model that identifies keywords present in speech
     let mut model = tensorflow_models::ddl::interface::DDL::new()
         .expect("Failed to load model");
 
@@ -58,7 +57,6 @@ fn main() {
         .expect("Failed to create discovery");
 
     // vendors
-    let hue_vendor = vendor_philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
     let scripts_vendor = vendor_scripts::vendor::Scripts::new().expect("Failed to create 'Scripts' Vendor");
 
     server.register(
@@ -70,14 +68,15 @@ fn main() {
             )
         ),
 
-        // Webserver for philips_hue vendor to control lights and light actions 
+        // Webserver for scripts vendor 
         Arc::new(
             Mutex::new(
-                vendor_philips_hue::webvendor::WebHue::new(&hue_vendor)
+                vendor_scripts::webvendor::WebScripts::new(&scripts_vendor)
             )
         ),
 
-        // Webserver for discovery services: to set and get device name
+        // Webserver for discovery services: to set and get device name and pining remote server
+        // for discoverfriday.se
         Arc::new(
             Mutex::new(
                 friday_discovery::webvendor::WebDiscovery::new(&discovery)
@@ -97,7 +96,6 @@ fn main() {
 
     // Vendors that subscribe to keyword detections
     let vendors: Vec<Box<dyn friday_vendor::Vendor>> = vec![
-        Box::new(hue_vendor),
         Box::new(scripts_vendor)
     ];
 

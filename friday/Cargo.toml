@@ -16,7 +16,6 @@ friday-error = { path = "friday-error" }
 friday-storage= { path = "friday-storage" }
 
 friday-vendor = { path = "friday-vendor" }
-vendor-philips-hue = { path = "friday-vendor/vendor-philips-hue" }
 vendor-scripts = { path = "friday-vendor/vendor-scripts" }
 
 friday-inference = { path = "friday-inference" }

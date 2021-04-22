@@ -33,11 +33,11 @@ mod tests {
 
         let mut server = Server::new().expect("Failed to create webserver");
 
-        let hue_vendor = vendor_philips_hue::vendor::Hue::new().expect("Failed to create Philips Hue Vendor");
+        let scripts_vendor = vendor_scripts::vendor::Scripts::new().expect("Failed to create Scripts Vendor");
         let model = tensorflow_models::ddl::interface::DDL::new()
             .expect("Failed to load model");
         let discovery = friday_discovery::discovery::Discovery::new(8000)
-            .expect("Failed to create discovery");
+            .expect("Failed to create discoveryy");
 
         let recording_config = friday_audio::RecordingConfig {
             sample_rate: 8000,
@@ -59,10 +59,10 @@ mod tests {
                 )
             ),
 
-            // Webserver for philips_hue vendor to control lights and light actions 
+            // Webserver for scripts vendor 
             Arc::new(
                 Mutex::new(
-                    vendor_philips_hue::webvendor::WebHue::new(&hue_vendor)
+                    vendor_scripts::webvendor::WebScripts::new(&scripts_vendor)
                 )
             ),
 

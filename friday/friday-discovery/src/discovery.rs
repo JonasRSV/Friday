@@ -59,7 +59,7 @@ impl Discovery {
             }))
     }
 
-    /// Starts a thread that leaves clue to make it easier for users to find Friday.
+    /// Starts a thread that leaves clues to make it easier for users to find Friday.
     pub fn make_discoverable(&self) -> DiscoveryHandle {
         let self_reference = Box::new(self.clone());
 

@@ -270,7 +270,6 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
- "serde",
  "time 0.1.44",
  "winapi 0.3.9",
 ]
@@ -525,18 +524,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "derive_setters"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6604612c19dd3bb353650b715b61f09bcb089dd17bdca1a9a42637079bf5e428"
-dependencies = [
- "darling",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "discard"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -700,7 +687,6 @@ dependencies = [
  "serde_json",
  "tensorflow-models",
  "ureq 1.5.4",
- "vendor-philips-hue",
  "vendor-scripts",
 ]
 
@@ -825,21 +811,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aca5565f760fb5b220e499d72710ed156fdb74e631659e99377d9ebfbd13ae8"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "huelib"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d3f99e2badee9b1e3100f216c99318751127f91d30b8fbd17ff4bfce5b4825d"
-dependencies = [
- "chrono",
- "derive_setters",
- "serde",
- "serde_json",
- "serde_repr",
- "thiserror",
- "ureq 1.5.4",
 ]
 
 [[package]]
@@ -1645,17 +1616,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_repr"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dc6b7951b17b051f3210b063f12cc17320e2fe30ae05b0fe2a3abb068551c76"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "sha1"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2120,21 +2080,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 
 [[package]]
-name = "vendor-philips-hue"
-version = "0.1.0"
-dependencies = [
- "friday-error",
- "friday-logging",
- "friday-storage",
- "friday-vendor",
- "friday-web",
- "huelib",
- "serde",
- "serde_derive",
- "serde_json",
-]
-
-[[package]]
 name = "vendor-scripts"
 version = "0.1.0"
 dependencies = [
@@ -2142,6 +2087,7 @@ dependencies = [
  "friday-logging",
  "friday-storage",
  "friday-vendor",
+ "friday-web",
  "serde",
  "serde_derive",
  "serde_json",

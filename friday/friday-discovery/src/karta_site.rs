@@ -44,7 +44,7 @@ impl KartaSite {
     /// IP on the local network. This lets a user go visit that site and be redirected to
     /// the friday without having to look-up the Fridays IP on the local network itself.
     pub fn new(name: Arc<RwLock<String>>, port: u16) -> Result<KartaSite, FridayError>  {
-        return friday_storage::config::get_config("discovery_kartasite.json").map_or_else(
+        return friday_storage::config::get_config("discovery/kartasite.json").map_or_else(
             propagate!("Failed to create KartaSite Karta"),
             |config| Ok(KartaSite {
                 config,
