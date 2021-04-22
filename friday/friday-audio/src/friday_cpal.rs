@@ -19,7 +19,19 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>,
         fn insert<T>(samples: &[T], q: &mut MutexGuard<CircularQueue<i16>>, loudness: i16) 
             where T: cpal::Sample {
                 for sample in samples.iter() {
-                    q.push(sample.to_i16() * loudness);
+                    let mut i16sample = sample.to_i16();
+
+                    // To avoid overflowing issues
+                    if i16sample == -32768 {
+                        i16sample = -32767;
+                    }
+
+                    // To avoid overflowing issues
+                    match i16sample.checked_mul(loudness) {
+                        Some(v) => q.push(v),
+                        None => q.push(i16sample)
+
+                    };
                 }
         }
 

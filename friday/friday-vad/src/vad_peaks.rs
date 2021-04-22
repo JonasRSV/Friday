@@ -26,6 +26,7 @@ impl PeakBasedDetector {
         let mut p = 0;
         let mut max_p: i16 = 0;
         for sample in audio.iter() {
+
             let height = i16::abs(*sample);
 
             if height > min_peak_height {

@@ -12,17 +12,18 @@ use serde_derive::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
-    scripts: HashMap<String, String>
+    pub scripts: HashMap<String, Vec<String>>
 }
 
 pub struct Scripts {
-    pub config: Arc<RwLock<Config>>
+    pub config: Arc<RwLock<Config>>,
+    pub files: friday_storage::files::Files
 }
 
 /// Enum type for the lookup function to differentiate between
 /// Errors and missing action.
 pub enum Lookup {
-    Script(String),
+    Scripts(Vec<String>),
     Missing,
     Err(FridayError)
 }
@@ -41,9 +42,22 @@ impl Scripts {
     pub fn new() -> Result<Scripts, FridayError> {
         friday_storage::config::get_config("scripts.json").map_or_else(
             propagate!("Failed to create new scripts vendor"), 
-            |config: Config| Ok(Scripts {
-                config: Arc::new(RwLock::new(config)) 
-            }))
+            |config: Config| Scripts::from_config(config))
+    }
+
+    fn from_config(config: Config) -> Result<Scripts, FridayError> {
+        friday_storage::config::get_config_directory().map_or_else(
+            propagate!("Failed to create get config directory for 'Scripts' Vendor"), 
+            |mut config_dir| {
+                // We store all scripts in 'CONFIG_ROOT/recordings'
+                config_dir.push("scripts");
+                friday_storage::files::Files::new(config_dir).map_or_else(
+                    propagate!("Failed to create 'Files' for 'Scripts' vendor"),
+                    |files| Ok(Scripts {
+                        config: Arc::new(RwLock::new(config)),
+                        files
+                    }))})
+
     }
 
     fn lookup<S: AsRef<str>>(&self, name: S) -> Lookup {
@@ -52,32 +66,38 @@ impl Scripts {
             Ok(config) =>  
                 match config.scripts.get(name.as_ref()) {
                     None => Lookup::Missing,
-                    Some(script) => Lookup::Script(script.to_owned())
+                    Some(scripts) => Lookup::Scripts(scripts.to_owned())
                 }
         }
     }
 
     /// Executes 'script' this blocks until exit
     /// Throws an error if the program has a non-zero exit code
-    fn execute(&self, script: String) -> Result<DispatchResponse, FridayError> {
+    fn execute(&self, script: String) {
         friday_logging::info!("Executing {}", script);
-        process::Command::new(script.clone()).output().map_or_else(
-            |err| frierr!("Failed to execute {} - Reason: {}", script, err), 
-            |output| {
-                if output.status.success() {
-                    friday_logging::info!("Executed {}", script);
-                    Ok(DispatchResponse::Success)
-                } else {
-                    match std::str::from_utf8(&output.stdout) {
-                        Err(err) => frierr!("Failed to convert process 'stdout' to utf8 - Reason: {}", err),
-                        Ok(stdout) => frierr!("{} non-zero exit code {} - Process output: {}", 
-                            script,
-                            output.status.code().unwrap_or(-1),
-                            stdout)
-                    }
-                }
 
-            })
+        match self.files.full_path_of(script.clone()) {
+            Err(err) => friday_logging::error!("Failed to execute {}, Reason: {:?}", script, err),
+            Ok(command) => process::Command::new(command.clone()).output().map_or_else(
+                |err| friday_logging::error!("Failed to execute {}, Reason: {}", command.clone(), err), 
+                |output| {
+                    if output.status.success() {
+                        friday_logging::info!("Successfully Executed {}", script);
+                    } else {
+                        match std::str::from_utf8(&output.stdout) {
+                            Err(err) => friday_logging::error!(
+                                "Failed to convert process 'stdout' to utf8 - Reason: {}", err),
+                            Ok(stdout) => friday_logging::error!(
+                                "{} non-zero exit code {} - Process output: {}", 
+                                command.clone(),
+                                output.status.code().unwrap_or(-1),
+                                stdout)
+                        }
+                    }
+
+                })
+        }
+
     }
 }
 
@@ -87,7 +107,11 @@ impl Vendor for Scripts {
         match self.lookup(action) {
             Lookup::Missing => Ok(DispatchResponse::NoMatch),
             Lookup::Err(err) => err.into(),
-            Lookup::Script(script) => self.execute(script)
+            Lookup::Scripts(scripts) => {
+                scripts.iter().for_each(|script| self.execute(script.to_owned()));
+
+                Ok(DispatchResponse::Success)
+            }
         }
     }
 }
@@ -96,13 +120,23 @@ impl Vendor for Scripts {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
 
     #[test]
-    fn lookup_script() {
-        let scripts = Scripts::new().expect("Failed to create 'Scripts' Vendor");
+    fn lookup_scripts() {
+        env::set_var("FRIDAY_CONFIG", "test-resources");
+        let scripts = Scripts::from_config(
+            Config {
+                scripts: [
+                    ("hello".to_owned(), vec!["woo.sh".to_owned()]),
+                    ("what".to_owned(), vec!["woo".to_owned()]),
+                ].iter().cloned().collect()
+            }
 
-        match scripts.lookup("exists") {
-            Lookup::Script(script) => assert_eq!(script, "./test-resources/woo.sh"),
+        ).expect("Failed to create Scripts Vendor");
+
+        match scripts.lookup("hello") {
+            Lookup::Scripts(scripts) => assert_eq!(scripts, vec!["woo.sh"]),
             Lookup::Missing => {
                 friday_logging::error!("Missing key 'exists'");
                 assert!(false)
@@ -115,8 +149,8 @@ mod tests {
         }
 
         match scripts.lookup("no-exists") {
-            Lookup::Script(script) => {
-                friday_logging::error!("{} should be missing, but contains {}", "no-exists", script);
+            Lookup::Scripts(scripts) => {
+                friday_logging::error!("{} should be missing, but contains {:?}", "no-exists", scripts);
                 assert!(false);
             },
             Lookup::Missing => assert!(true),
@@ -129,16 +163,33 @@ mod tests {
     }
 
     #[test]
-    fn execute_script() {
-        let scripts = Scripts::new().expect("Failed to create 'Scripts' Vendor");
+    fn execute_scripts() {
+        env::set_var("FRIDAY_CONFIG", "test-resources");
 
-        scripts.execute("./test-resources/woo.sh".to_owned()).expect("failed to execute woo");
+        let scripts = Scripts::from_config(Config{
+            scripts: HashMap::new()
+        }).expect("Failed to create 'Scripts' Vendor");
 
-        assert!(scripts.execute("./test-resources/noo.sh".to_owned()).is_err());
+        scripts.execute("woo.sh".to_owned());
+        scripts.execute("hi_python.py".to_owned());
+        scripts.execute("noo.sh".to_owned());
+        scripts.execute("bad_exit_code.sh".to_owned());
+        scripts.execute("boo.sh".to_owned());
 
-        let err = scripts.execute("./test-resources/bad_exit_code.sh".to_owned());
-        assert!(err.is_err());
+    }
 
-        friday_logging::error!("err is {:?}", err.err().unwrap());
+    #[test]
+    fn execute_many_scripts() {
+        env::set_var("FRIDAY_CONFIG", "test-resources");
+        let scripts = Scripts::from_config(Config{
+            scripts: [
+                ("hello".to_owned(), vec!["woo.sh".to_owned(), "woo.sh".to_owned(), "bad_exit_code.sh".to_owned()]),
+            ].iter().cloned().collect()
+        }).expect("Failed to create 'Scripts' vendor");
+
+
+        let script = "hello".to_owned();
+        scripts.dispatch(&script).expect("Failed to dispatch");
+
     }
 }

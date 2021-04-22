@@ -1,5 +1,8 @@
 {
   "scripts": {
-    "exists": "./test-resources/woo.sh"
+    "hi": [
+      "cookies.sh",
+      "woo.sh"
+    ]
   }
 }

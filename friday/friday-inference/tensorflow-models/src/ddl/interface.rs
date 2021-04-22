@@ -234,6 +234,7 @@ impl DDL {
                 //// Remove any stale examples 
                 for (index, id) in examples.ids.clone().iter().enumerate() {
                     if !examples.audio.contains_key(id) {
+                        friday_logging::debug!("Removing example ({}, {})", names[index], ids[index]);
                         examples.names.remove(index);
                         examples.ids.remove(index);
                         examples.embeddings.remove(index);
@@ -255,6 +256,11 @@ impl friday_inference::Model for DDL {
             Ok(model) => match self.examples.read() {
                 Ok(examples) => match self.sensitivity.read() {
                     Ok(sensitivity) => {
+
+                        if examples.embeddings.len() == 0 {
+                            friday_logging::debug!("Cannot infer without examples");
+                            return Ok(friday_inference::Prediction::Inconclusive);
+                        }
 
 
                         let mut input_embeddings = model.input_embeddings.clone();

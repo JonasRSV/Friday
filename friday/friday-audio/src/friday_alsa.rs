@@ -54,7 +54,8 @@ mod tests {
     fn alsa_some_printing() {
         let r = RecordingConfig {
             sample_rate: 8000,
-            model_frame_size: 16000
+            model_frame_size: 16000,
+            loudness: 1
         };
 
         ALSAIStream::record(&r).expect("Failed to record with ALSAIStream");

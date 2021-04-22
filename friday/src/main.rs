@@ -39,7 +39,7 @@ fn main() {
     let recording_config = friday_audio::RecordingConfig {
         sample_rate: 8000,
         model_frame_size: model.expected_frame_size(),
-        loudness: 10
+        loudness: 1
     };
 
     // Input audio stream, this is shared with the recording web-vendor
@@ -142,6 +142,10 @@ fn serve_friday<M, S, V, R>(
               ctrlc::set_handler(move || {
                   r.store(false, Ordering::SeqCst);
               }).expect("Error setting Ctrl-C handler");
+
+              // Run forever-loop
+              friday_logging::info!("Purging some audio... (takes 2 seconds)");
+              std::thread::sleep(std::time::Duration::from_millis(2000));
 
               // Run forever-loop
               friday_logging::info!("Listening..");

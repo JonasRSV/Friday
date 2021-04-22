@@ -49,8 +49,8 @@ impl Files {
                 Err(err) => frierr!("Failed to read wav file {:?}", err),
                 Ok((header, data)) => 
                     match header.sampling_rate == 8000 
-                        && header.bits_per_sample == 16 
-                        && header.channel_count == 1 { 
+                    && header.bits_per_sample == 16 
+                    && header.channel_count == 1 { 
                         false => frierr!("Audio file {} contains unexpected header fields \
                             got bits per sample {} - sample rate {} - channel count {} - Audio Format {} \
                             expect bits per sample 16 - sample rate 8000 - channel count 1 - Audio Format 1",
@@ -113,6 +113,17 @@ impl Files {
         path.push(name.as_ref());
         path.exists()
     }   
+
+    /// Gets full path of a file
+    pub fn full_path_of<S: AsRef<str>>(&self, name: S) -> Result<String, FridayError> {
+        let mut root = self.root.clone();
+        root.push(name.as_ref());
+
+        match root.to_str() {
+            Some(s) => Ok(s.to_owned()),
+            None => frierr!("Failed to convert {:?} to String", root)
+        }
+    }
 
     /// Lists all files under "namespace"
     pub fn list_files_under<S: AsRef<str>>(&self, namespace: S) -> Result<Vec<String>, FridayError> {
@@ -224,5 +235,17 @@ mod tests {
 
     }
 
+    #[test]
+    fn test_file_full_path() {
+        env::set_var("FRIDAY_CONFIG", "./test-resources");
+
+        let config_dir = config::get_config_directory().expect("failed to get config directory");
+        let files = Files::new(config_dir).expect("Failed to create 'Files' storage");
+
+        assert_eq!(files.full_path_of("test_config.json").expect("Failed to list files"), 
+            "./test-resources/test_config.json");
+
+
+    }
 
 }

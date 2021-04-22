@@ -42,7 +42,7 @@ mod tests {
         let recording_config = friday_audio::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: model.expected_frame_size(),
-            loudness: 10
+            loudness: 1
         };
 
         // Input audio stream, this is shared with the recording web-vendor

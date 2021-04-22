@@ -2,8 +2,11 @@
   "export_dir": "test-resources/ddl_apr_13_eu",
   "sensitivity": 0.6,
   "audio": {
-    "213-691-806-350.wav": "illuminate",
-    "51-99-890-440.wav": "kalle",
-    "430-90-569-120.wav": "kalle"
+    "179-345-538-751.wav": "tand",
+    "278-688-872-2.wav": "slack",
+    "952-176-176-217.wav": "tand",
+    "835-127-308-461.wav": "slack",
+    "852-451-4-331.wav": "tand",
+    "939-845-683-216.wav": "slack"
   }
 }
