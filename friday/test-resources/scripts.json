@@ -1,5 +1,8 @@
 {
   "scripts": {
-    "wow": ["hello_world.sh"]
+    "slack": [
+      "hello_mars.sh",
+      "hello_world.sh"
+    ]
   }
 }

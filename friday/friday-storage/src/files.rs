@@ -1,5 +1,6 @@
 use std::path;
 use friday_error::{FridayError, frierr};
+use friday_logging;
 use wav;
 use std::fs::File;  
 use std::fs;
@@ -137,14 +138,22 @@ impl Files {
                 for entry in it {
                     // As soon as one error occurs we fail
                     match entry {
-                        Err(err) => return frierr!("Failed to read directory entry, Reason: {:?}", err),
-                        Ok(e) => match e.file_name().into_string() {
-                            Err(osstr) => return frierr!("Failed to convert {:?} into String", osstr),
-                            Ok(r) => names.push(r)
+                        Err(err) => friday_logging::error!(
+                            "Failed to read directory entry Reason: {:?}", err),
+                        Ok(e) => match e.metadata() {
+                            Err(err) => friday_logging::error!(
+                                "Failed to get metadata for {:?}, Reason: {:?}", e, err),
+                            Ok(meta) => {
+                                // list only files not directories
+                                if meta.is_file() {
+                                    match e.file_name().into_string() {
+                                        Err(osstr) => return frierr!("Failed to convert {:?} into String", osstr),
+                                        Ok(r) => names.push(r)
+                                    }
+                                }
+                            }
                         }
                     };
-
-
                 }
 
                 Ok(names)
@@ -152,6 +161,7 @@ impl Files {
         }
     }
 }
+
 
 #[cfg(test)]
 mod tests {
