@@ -2,7 +2,8 @@
   "scripts": {
     "slack": [
       "hello_mars.sh",
-      "hello_world.sh"
+      "hello_world.sh",
+      "hello_world.py"
     ]
   }
 }

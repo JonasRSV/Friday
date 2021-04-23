@@ -427,7 +427,6 @@ def main():
             inputs = {
                 "audio": tf.placeholder(shape=[audio_length], dtype=tf.int16, name="audio"),
                 "embeddings": tf.placeholder(shape=[None, args.embedding_dim], dtype=tf.float32, name="embeddings"),
-
             }
             return tf.estimator.export.ServingInputReceiver(
                 features=inputs, receiver_tensors=inputs)

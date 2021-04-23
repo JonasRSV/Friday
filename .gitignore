@@ -4,7 +4,7 @@
 **/.venv
 bin
 mm/data
-release
+releases/release*
 web/recordyourownsite/__pycache__/
 web/recordyourownsite/recordings/*.wav
 

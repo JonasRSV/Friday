@@ -170,6 +170,7 @@ mod tests {
             scripts: HashMap::new()
         }).expect("Failed to create 'Scripts' Vendor");
 
+        scripts.execute("all-hue-off.py".to_owned());
         scripts.execute("woo.sh".to_owned());
         scripts.execute("hi_python.py".to_owned());
         scripts.execute("noo.sh".to_owned());

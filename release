@@ -1,0 +1,97 @@
+#!/bin/bash
+
+set -e
+
+
+fg_black="$(tput setaf 0)"
+fg_red="$(tput setaf 1)"
+fg_green="$(tput setaf 2)"
+fg_yellow="$(tput setaf 3)"
+fg_blue="$(tput setaf 4)"
+fg_magenta="$(tput setaf 5)"
+fg_cyan="$(tput setaf 6)"
+fg_white="$(tput setaf 7)"
+reset="$(tput sgr0)"
+
+
+create_pi_release () {
+  echo "${fg_magenta}Creating armv7 release (PI)${fg_reset}"
+
+  echo "${fg_magenta}Creating 'releases/release-raspberrypi3' ${fg_reset}"
+  mkdir -p releases/release-raspberrypi3
+
+  echo "${fg_magenta}Copying 'bin/friday-armv7-unknown-linux-gnueabinhf' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp bin/friday-armv7-unknown-linux-gnueabinhf releases/release-raspberrypi3
+
+  echo "${fg_magenta}Copying 'releases/*.json' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp releases/*.json releases/release-raspberrypi3
+
+  echo "${fg_magenta}Copying 'releases/models' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp -r releases/models releases/release-raspberrypi3
+
+  echo "${fg_magenta}Copying 'releases/discovery' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp -r releases/discovery releases/release-raspberrypi3
+
+  echo "${fg_magenta}Copying 'friday/friday-vendor/vendor-scripts/test-resources/scripts' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp -r friday/friday-vendor/vendor-scripts/test-resources/scripts releases/release-raspberrypi3
+
+  echo "${fg_magenta}Copying 'web/nightout/release/' 'releases/release-raspberrypi3/' ${fg_reset}"
+  cp -r web/nightout/release releases/release-raspberrypi3
+
+  echo "${fg_magenta}Renaming 'releases/release-raspberrypi3/release' 'releases/release-raspberrypi3/nightout'${fg_reset}"
+  mv releases/release-raspberrypi3/release releases/release-raspberrypi3/nightout
+
+  echo "${fg_magenta}Creating 'releases/release-raspberrypi3/recordings' '${fg_reset}"
+  mkdir -p releases/release-raspberrypi3/recordings
+
+
+  echo "${fg_green}Release successful! Release should be in releases/release-raspberrypi3! :) ${fg_reset}"
+} 
+
+create_linux_release () {
+  echo "${fg_magenta}I am not implemented ${fg_reset}"
+
+}
+
+print_help() {
+      echo ""
+      echo ""
+      echo "${fg_green}  ******** Friday release script ******** ${fg_black}"
+      echo " "
+      echo "${fg_white} options:"
+      echo "-h, --help  show brief help"
+      echo "${fg_magenta}-pi --armv7-unknown-linux-gnueabinhf${fg_white},   E.g Raspberry Pi (2, 3..)s"
+      echo "${fg_magenta}-li --x86_64-unknown-linux-gnu${fg_white},  Common Desktops and laptops (running linux)"
+      exit 0
+}
+
+
+#while test $# -gt 0; do
+case "$1" in
+  -h|--help)
+    print_help
+    break
+    ;;
+  --armv7-unknown-linux-gnueabinhf)
+    create_pi_release
+    exit 0
+    ;;
+  -pi)
+    create_pi_release
+    exit 0
+    ;;
+  --friday-x86_64-unknown-linux-gnu)
+    create_linux_release
+    exit 0
+    ;;
+  -li)
+    create_linux_release
+    exit 0
+    ;;
+  *)
+    print_help
+    break
+    ;;
+esac
+#done
+print_help

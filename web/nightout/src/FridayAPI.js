@@ -30,9 +30,9 @@ import {
 export class FridayAPI {
     // TODO: how to do this better?
     // For dev
-    static prefix = "http://" + window.location.host.slice(0, -5) + ":8000";
+    //static prefix = "http://" + window.location.host.slice(0, -5) + ":8000";
     // For production
-    //static prefix = "";
+    static prefix = "";
 
     static getDeviceName = () => APIGetDeviceName(this.prefix);
     static setDeviceName = (name) => APISetDeviceName(

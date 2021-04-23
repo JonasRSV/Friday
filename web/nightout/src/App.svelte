@@ -76,8 +76,8 @@ onMount (async () => {
 
 
   // TODO While developing mechanic
-  commandAtMechanic = commands[0];
-  displayMechanic = true;
+  // commandAtMechanic = commands[0];
+  // displayMechanic = true;
 
 
 });
