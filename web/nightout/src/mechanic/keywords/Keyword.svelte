@@ -25,7 +25,6 @@ let activateRenaming = (e) => {
 }
 
 let submitRenaming = (e) => {
-  console.log("e", e)
   keyword = e.target.elements.name.value;
   renaming = false;
   selecting = false;

@@ -3,10 +3,8 @@
 // This Component is used to modify Actions
 // It is a Action mechanic!
 import { Container, Row, Col } from 'sveltestrap';
-import HueBanner from './hue/HueBanner.svelte';
-import HueControl from './hue/HueControl.svelte';
 import ScriptBanner from './scripts/ScriptBanner.svelte';
-import SpotifyBanner from './spotify/SpotifyBanner.svelte';
+import Scripts from './scripts/Scripts.svelte';
 
 
 export let onBannerClick;
@@ -30,10 +28,6 @@ let onBannerClickLocal = (e, component) => {
     opacity: 0.8;
   }
 
-  .inactive:hover {
-    cursor: not-allowed;
-  }
-
   .title-text {
     font-size: 22pt;
   }
@@ -55,30 +49,8 @@ let onBannerClickLocal = (e, component) => {
   <Row> 
     <Col xs=1 sm=2 md=2 lg=2></Col>
     <Col xs=10 sm=8 md=8 lg=8>
-      <div class='banner on-click' on:click={(e) => onBannerClickLocal(e, HueControl)} > 
-        <HueBanner /> 
-      </div> 
-    </Col>
-    <Col xs=1 sm=2 md=2 lg=2></Col>
-  </Row>
-  <div class="empty-space"></div>
-  <Row> 
-    <Col xs=1 sm=2 md=2 lg=2></Col>
-    <Col xs=10 sm=8 md=8 lg=8>
-    <div class='banner inactive' on:click={(e) => e.stopPropagation()} > 
+    <div class='banner on-click' on:click={(e) => onBannerClickLocal(e, Scripts)} > 
       <ScriptBanner /> 
-    </div> 
-    </Col>
-    <Col xs=1 sm=2 md=2 lg=2></Col>
-  </Row>
-
-  <div class="empty-space"></div>
-
-  <Row> 
-    <Col xs=1 sm=2 md=2 lg=2></Col>
-    <Col xs=10 sm=8 md=8 lg=8>
-    <div class='banner inactive' on:click={(e) => e.stopPropagation()} > 
-      <SpotifyBanner /> 
     </div> 
     </Col>
     <Col xs=1 sm=2 md=2 lg=2></Col>

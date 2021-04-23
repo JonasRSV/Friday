@@ -8,12 +8,12 @@ function makeid(length) {
     return result;
 }
 
-export class dAction {
+export class Command {
     static New() {
-        return new dAction("", "", {});
+        return new Command("Mr", []);
     }
 
-    constructor(keyword, vendor, command) {
+    constructor(keyword, scripts) {
         // ID is for svelte 
         this.id = makeid(10);
 
@@ -21,8 +21,7 @@ export class dAction {
         this.component = null;
 
         this.keyword = keyword;
-        this.vendor = vendor;
-        this.command = command;
+        this.scripts = scripts;
     }
 
     setKeyword(keyword) {
@@ -35,13 +34,13 @@ export class dAction {
         }
     }
 
-    setCommand(command) {
+    setScripts(scripts) {
         if (this.component != null) {
             // The component will set the value 
             // of this and also update the UI
-            this.component.setCommand(command)
+            this.component.setScripts(scripts)
         } else {
-            this.command = command
+            this.scripts = scripts
         }
     }
 }

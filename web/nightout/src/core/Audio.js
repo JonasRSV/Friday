@@ -1,6 +1,5 @@
 
 export function extractAudioBlob(stream) {
-    console.log("stream", stream);
 
   let reader = stream.body.getReader();
 

@@ -1,83 +1,83 @@
 <script>
-import Action from "./Action.svelte";
+import CommandWidget from "./CommandWidget.svelte";
 import Mechanic from "./Mechanic.svelte";
-import AddActionButton from "./action/AddActionButton.svelte";
+import AddCommandButton from "./action/AddCommandButton.svelte";
 import Header from "./Header.svelte";
-import { dAction, Vendor } from './Core';
 import { Spinner } from 'sveltestrap';
 import { onMount } from "svelte";
 import { FridayAPI } from "./FridayAPI.js"
+import { Command } from "./core/Command.js"
 
 export let title = "Friday";
 
 
 // States for our mechanic
 let displayMechanic = false; // Render y/n
-let dActionAtMech = null;    // daction to fix
+let renderCommands = false; // Render y/n
 
-
-// States for our actions
-let displayActions = false; // Render y/n
-let dActions = [];           // all dactions
+let commands = []; // all commands the assistant knows
+let commandAtMechanic = null;    // command to fix
 
 
 // The 'App' exposes 4 things.
-// 1. It exposes a way to 'remove' actions
-// 2. It exposes a way to 'add' actions 
-// 3. It exposes a way to 'modify' actions 
+// 1. It exposes a way to 'remove' commands
+// 2. It exposes a way to 'add' commands 
+// 3. It exposes a way to 'modify' commands 
 // 4. It exposes a way to sync with friday
 // These things are represented by the functions below
 
-// Currently removing and syncing is O(n) n: num actions
-// I believe this will be fine
+let commandsToScripts = () => {
+  let scripts = {}
+  commands.forEach(command => {
+    scripts[command.keyword] = command.scripts;
+  });
 
-export let removeAction = dActionClicked => {
+  return scripts;
+  
+}
+
+let syncFriday = () => FridayAPI.setBoundScripts(commandsToScripts(commands));
+
+let removeCommand = command => {
   // Removes the action
-  dActions = dActions.filter(elem => elem.id != dActionClicked.id);
+  commands = commands.filter(elem => elem.id != command.id);
 
   // Syncs with friday
-  if (dActionClicked.vendor == Vendor.hueLights) {
-    FridayAPI.setHueLightsCommands(dActions);
-  } else if (dActionClicked.vendor != undefined) {
-    console.log("No vendor implemented for", dActionClicked.vendor)
-  } else { }
+  syncFriday();
+
+  // re-render
+  commands = commands
 }
 
-export let addAction = () => {
-  dActions.push(dAction.New());
+let addCommand = () => {
+  commands.push(Command.New());
 
   // force re-render
-  dActions = dActions
+  commands = commands
 }
 
-export let showMechanic = dActionClicked => {
-  dActionAtMech = dActionClicked
+let showMechanic = command => {
+  commandAtMechanic = command
   displayMechanic = true;
 }
 
-export let syncFriday = daction => {
-  if (daction.vendor == Vendor.hueLights) {
-    FridayAPI.setHueLightsCommands(dActions);
-  } else {
-    console.log("No vendor implemented for", daction.vendor)
-  }
-}
 
 
 onMount (async () => { 
-  // Javascript is weird
-  // basically push takes *args and we unfold the entire list as args
-  // Also this only works for lists up to about 1e5 elements.. 
-  dActions.push(... await FridayAPI.fetchActions());
+  let scripts = await FridayAPI.getBoundScripts();
+
+  for (var key in scripts) {
+    commands.push(new Command(key, scripts[key]));
+  }
 
   title = await FridayAPI.getDeviceName();
   // And then we display them
-  displayActions = true;
+  renderCommands = true;
 
 
   // TODO While developing mechanic
-  /*dActionAtMech = dActions[0];*/
-  /*displayMechanic = true;*/
+  commandAtMechanic = commands[0];
+  displayMechanic = true;
 
 
 });
@@ -88,12 +88,12 @@ onMount (async () => {
 
 <main>
   <Header title="{title}"/>
-  {#if displayActions}
-    {#each dActions as action (action.id)}
-      <Action action={action} 
-              bind:this={action.component}
+  {#if renderCommands}
+    {#each commands as command (command.id)}
+      <CommandWidget command={command} 
+              bind:this={command.component}
               openMechanic={showMechanic}
-              onRemoveClick={removeAction}
+              onRemoveClick={removeCommand}
               />
     {/each}
   {:else}
@@ -102,8 +102,8 @@ onMount (async () => {
     </div>
   {/if}
 
-  <AddActionButton bind:active={displayActions} onAddClick={addAction}/>
-  <Mechanic sync={syncFriday} daction={dActionAtMech} bind:active={displayMechanic} />
+  <AddCommandButton bind:active={renderCommands} onAddClick={addCommand}/>
+  <Mechanic sync={syncFriday} command={commandAtMechanic} bind:active={displayMechanic} />
 </main>
 
 <style>

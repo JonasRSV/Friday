@@ -6,14 +6,15 @@ import { FridayAPI } from "./FridayAPI.js";
 import Keywords from "./mechanic/Keywords.svelte";
 import Banners from "./mechanic/Banners.svelte";
 import KeywordBuilder from "./mechanic/keywords/KeywordBuilder.svelte"
+/*import Scripts from "./mechanic/scripts/Scripts.svelte"*/
 
 
-// This function syncs a daction to friday
+// This function syncs a command to friday
 export let sync;
 // If this component is active or not
 export let active;
-// The current action we're tinkering on
-export let daction;
+// The current command we're tinkering on
+export let command;
 
 
 $: {
@@ -69,9 +70,6 @@ let deActKeywordPicker = () => {
   deActMechanic();
 }
 
-let actControlBuilder = () => {
-  controlBuilderActive = true;
-}
 
 let actControlPicker = () => {
   controlPickerActive = true;
@@ -88,15 +86,13 @@ let actKeywordPicker = () => {
 let updateKeyword = (keyword) => {
 
   // Update UI components
-  daction.setKeyword(keyword);
+  command.setKeyword(keyword);
 
   // To re-render current component
-  daction = daction
+  command = command
 
   // Sync the action with friday
-  sync(daction);
-
-  console.log("Updated keyword");
+  sync(command);
 
   // Control Picker
   controlPickerActive = true;
@@ -104,7 +100,6 @@ let updateKeyword = (keyword) => {
 }
 
 let onBannerClick = (controlComponent) => {
-  console.log("Clicked banner")
   control = controlComponent;
   controlBuilderActive = true;
 }
@@ -148,14 +143,14 @@ FridayAPI.getKeywords().then(server_keywords => keywords = server_keywords);
   {:else if keywordPickerActive}
     <div class="fixed-above" on:click={deActKeywordPicker}>
       <Keywords 
-         bind:activeKeyword={daction.keyword} 
+         bind:activeKeyword={command.keyword} 
          bind:keywords={keywords} 
          updateKeyword={updateKeyword} 
          newKeyword={actKeywordBuilder}/>
     </div>
   {:else if controlBuilderActive}
-    <div class="fixed-above" on:click={deActControlBuilder}>
-        <svelte:component this={control} daction={daction} sync={sync} />
+    <div class="fixed-above" on:click={deActMechanic}>
+        <svelte:component this={control} command={command} sync={sync} />
     </div>
   {:else if controlPickerActive}
     <div class="fixed-above" on:click={deActControlPicker}>

@@ -1,7 +1,4 @@
 import {
-    ActiondActionBi
-} from "./Core.js";
-import {
     APIGetKeywords,
     APIClearKeywordsCache
 } from "./api/Keywords.js";
@@ -11,11 +8,11 @@ import {
     APIClearExamplesCache
 } from "./api/Examples.js";
 import {
-    APIGetHueLights,
-    APISetHueLights,
-    APIGetHueLightsCommands,
-    APISetHueLightsCommands
-} from "./api/HueLights.js";
+    APIGetBoundScripts,
+    APIClearBoundScriptsCache,
+    APISetBoundScripts,
+    APIGetAllScripts,
+} from "./api/Scripts.js";
 
 import {
     APIGetDeviceName,
@@ -57,28 +54,14 @@ export class FridayAPI {
     // Gets the keywords of the command e.g 'on' - 'off' etc
     static getKeywords = () => APIGetKeywords(this.prefix);
 
-    // Gets the hue lights available 
-    // See philips hue /lights endpoint for documentation of content
-    static getHueLights = () => APIGetHueLights(this.prefix);
-    static setHueLights = (data) => APISetHueLights(this.prefix, JSON.stringify(data));
-
-
-    // Gets the hueLightCommands and converts them to our representation of commands
-    static getHueLightsCommands = () => APIGetHueLightsCommands(this.prefix)
-        .then(ActiondActionBi.hueLightsToDActions)
-
-    // Sets the hueLightCommands 
-    static setHueLightsCommands = (dactions) => APISetHueLightsCommands(
-        this.prefix,
-        ActiondActionBi.dActionsToHueLights(dactions)
-    )
-
-    static async fetchActions() {
-        let dactions = [];
-        dactions.push(...await this.getHueLightsCommands());
-
-        return dactions;
+    static getBoundScripts = () => APIGetBoundScripts(this.prefix);
+    static setBoundScripts = (scripts) => {
+      return APISetBoundScripts(this.prefix, JSON.stringify(scripts)).then(r => {
+        // clear cache so next getExamples or getKeywords gets new
+        APIClearBoundScriptsCache();
+      });
     }
+    static getAllScripts = () => APIGetAllScripts(this.prefix);
 
     // Recording API
     static recordingNew = () => APIRecordingNew(this.prefix);
