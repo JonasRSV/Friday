@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="static/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="static/animate.min.css" type="text/css">
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <title>Discover</title>
+    <title>Discover Friday</title>
   </head>
   <body style="background-color: black;">
     <div class="title-container container-fluid">
@@ -16,7 +16,7 @@
 
       <div class="row text-center mt-5"> 
         <div class="col-12">
-          <h1 class="main-title animate__animated animate__fadeInDown">Discover</h1>
+          <h1 class="main-title animate__animated animate__fadeInDown">Fridays</h1>
         </div>
       </div>
       <div class="row text-center title-bottom mt-5"> 
@@ -32,12 +32,12 @@
 
       <div class="row text-center mt-5" > 
         <div class="col-12">
-          <h5 
+          <h3 
             onclick="redirect('{{ item[0] }}')"
             class="friday-entry animate__animated  animate__slideInLeft" 
             data-toggle="tooltip" 
             data-placement=right" 
-            title="Go to your friday! :)">{{ item[1] }}</h5>
+            title="Go to your friday! :)">{{ item[1] }}</h3>
         </div>
       </div>
 

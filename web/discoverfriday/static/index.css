@@ -11,8 +11,8 @@ body, html {
 
 .main-title {
   font-family: 'Bungee Outline', cursive;
-  color: #CE8CE9;
-  font-size: 10vw;
+  color: white;
+  font-size: 35pt;
 }
 
 .title-container {
@@ -28,14 +28,16 @@ body, html {
 }
 
 .friday-separator {
-  color: #CE8CE9;
+  color: white;
+  height: 2px;
 }
 
 .friday-entry {
-  color: #CE8CE9;
-  font-size: 5vw;
+  color: white;
   z-index: 999;
+  font-size: 24pt;
 }
+
 
 .friday-entry:hover {
   cursor: pointer;
