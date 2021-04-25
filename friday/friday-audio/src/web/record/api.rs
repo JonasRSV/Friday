@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use friday_audio::recorder::Recorder;
+use crate::recorder::Recorder;
 use friday_error::{FridayError, propagate, frierr};
 use friday_web;
 use friday_storage;
@@ -208,7 +208,6 @@ impl friday_web::vendor::Vendor for WebRecord {
 mod tests {
     use super::*;
     use std::fs::File;  
-    use friday_audio;
     use std::env;
     use ureq;
 
@@ -217,7 +216,7 @@ mod tests {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
         env::set_var("FRIDAY_GUI", ".");
 
-        let r = friday_audio::RecordingConfig {
+        let r = crate::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
             loudness: 1
@@ -225,7 +224,7 @@ mod tests {
 
 
         let istream = 
-            friday_audio::friday_cpal::CPALIStream::record(&r)
+            crate::friday_cpal::CPALIStream::record(&r)
             .expect("Failed to start audio recording");
 
         let web_record_vendor = Arc::new(Mutex::new(WebRecord::new(istream).expect("Failed to create 'WebRecord'")));
@@ -260,7 +259,7 @@ mod tests {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
         env::set_var("FRIDAY_GUI", ".");
 
-        let r = friday_audio::RecordingConfig {
+        let r = crate::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
             loudness: 1
@@ -268,7 +267,7 @@ mod tests {
 
 
         let istream = 
-            friday_audio::friday_cpal::CPALIStream::record(&r)
+            crate::friday_cpal::CPALIStream::record(&r)
             .expect("Failed to start audio recording");
 
         let web_record_vendor = Arc::new(
@@ -304,7 +303,7 @@ mod tests {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
         env::set_var("FRIDAY_GUI", ".");
 
-        let r = friday_audio::RecordingConfig {
+        let r = crate::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
             loudness: 1
@@ -313,7 +312,7 @@ mod tests {
 
 
         let istream = 
-            friday_audio::friday_cpal::CPALIStream::record(&r)
+            crate::friday_cpal::CPALIStream::record(&r)
             .expect("Failed to start audio recording");
 
         let web_record_vendor = Arc::new(
@@ -360,7 +359,7 @@ mod tests {
         env::set_var("FRIDAY_CONFIG", "./test-resources");
         env::set_var("FRIDAY_GUI", ".");
 
-        let r = friday_audio::RecordingConfig {
+        let r = crate::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
             loudness: 1,
@@ -368,7 +367,7 @@ mod tests {
 
 
         let istream = 
-            friday_audio::friday_cpal::CPALIStream::record(&r)
+            crate::friday_cpal::CPALIStream::record(&r)
             .expect("Failed to start audio recording");
 
         let web_record_vendor = Arc::new(

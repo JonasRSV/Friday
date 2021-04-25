@@ -701,6 +701,7 @@ dependencies = [
  "friday-logging",
  "friday-storage",
  "friday-web",
+ "rand",
  "serde",
  "serde_derive",
  "serde_json",

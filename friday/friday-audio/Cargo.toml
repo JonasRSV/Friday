@@ -18,3 +18,8 @@ serde_json = "1.0"
 serde = "1.0"
 serde_derive = "1.0"
 alsa = "0.4.3"
+rand = "0.5"
+
+# Used for testing web endpoint
+[dev-dependencies]
+ureq = { version = "1.5.4", features = ["json", "charset"] }

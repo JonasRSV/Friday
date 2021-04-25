@@ -76,7 +76,8 @@ mod tests {
             // Will be used to add keywords through the API.
             Arc::new(
                 Mutex::new(
-                    web::record::api::WebRecord::new(istream.clone()).expect("Failed to create WebRecord")
+                    friday_audio::web::record::api::WebRecord::new(
+                        istream.clone()).expect("Failed to create WebRecord")
                 )
             )
 
