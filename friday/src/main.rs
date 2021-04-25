@@ -35,11 +35,9 @@ fn main() {
     let mut model = tensorflow_models::ddl::interface::DDL::new()
         .expect("Failed to load model");
 
-    let recording_config = friday_audio::RecordingConfig {
-        sample_rate: 8000,
-        model_frame_size: model.expected_frame_size(),
-        loudness: 2
-    };
+    let recording_config = friday_audio::RecordingConfig::new(
+        8000, 
+        model.expected_frame_size()).expect("Could not initialize 'RecordingConfig'");
 
     // Input audio stream, this is shared with the recording web-vendor
     let istream = 

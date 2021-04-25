@@ -83,7 +83,7 @@ impl Discovery {
         // this thread wont stop until sleep is over. If this thread is supposed to sleep for
         // say 10 minutes - it kind of sux to have to wait 10 minutes for the program to exit.
 
-        friday_logging::info!("Discovery - Polling for {} seconds", duration.as_secs());
+        friday_logging::info!("Discovery - Waiting for {} seconds", duration.as_secs());
 
         let poll_until = time::Instant::now() + duration;
         loop {

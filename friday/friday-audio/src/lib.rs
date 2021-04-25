@@ -1,5 +1,13 @@
+use serde_derive::{Deserialize, Serialize};
+use friday_error::{FridayError, propagate};
 
-#[derive(Clone)]
+
+#[derive(Deserialize, Serialize)]
+pub struct RecordingStorage {
+    pub loudness: i16
+}
+
+#[derive(Clone, )]
 pub struct RecordingConfig {
     pub sample_rate: u32,
     pub model_frame_size: usize,
@@ -7,6 +15,23 @@ pub struct RecordingConfig {
     // constant that each sample is multiplied with
     pub loudness: i16
         
+}
+
+impl RecordingConfig {
+    pub fn new(
+        sample_rate: u32, 
+        model_frame_size: usize) -> Result<RecordingConfig, FridayError> {
+        friday_storage::config::get_config("recording.json").map_or_else(
+            propagate!("Failed to create recording config"),
+            |config: RecordingStorage| {
+                Ok(RecordingConfig {
+                    sample_rate,
+                    model_frame_size,
+                    loudness: config.loudness
+                })
+            }
+        )
+    }
 }
 
 

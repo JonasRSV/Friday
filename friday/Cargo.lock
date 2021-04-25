@@ -699,6 +699,11 @@ dependencies = [
  "cpal",
  "friday-error",
  "friday-logging",
+ "friday-storage",
+ "friday-web",
+ "serde",
+ "serde_derive",
+ "serde_json",
  "wav",
 ]
 

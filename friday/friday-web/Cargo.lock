@@ -79,6 +79,7 @@ name = "friday-storage"
 version = "0.1.0"
 dependencies = [
  "friday-error",
+ "friday-logging",
  "serde",
  "serde_derive",
  "serde_json",

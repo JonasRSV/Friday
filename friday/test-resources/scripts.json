@@ -1,8 +1,6 @@
 {
   "scripts": {
-    "slack": [
-      "hello_mars.sh",
-      "hello_world.sh",
+    "illuminati": [
       "hello_world.py"
     ]
   }

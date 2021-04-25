@@ -128,7 +128,7 @@ impl Server {
                                 move || {
                                     let server_ref = self_reference;
                                     loop {
-                                        match server.recv_timeout(std::time::Duration::from_secs(5)) {
+                                        match server.recv_timeout(std::time::Duration::from_secs(2)) {
                                             Ok(maybe_request) => match maybe_request {
                                                 Some(request) => Server::handle_request(
                                                     request, 

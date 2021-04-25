@@ -232,12 +232,23 @@ impl DDL {
                 }
 
                 //// Remove any stale examples 
+                let mut index_offset = 0;
                 for (index, id) in examples.ids.clone().iter().enumerate() {
                     if !examples.audio.contains_key(id) {
                         friday_logging::debug!("Removing example ({}, {})", names[index], ids[index]);
-                        examples.names.remove(index);
-                        examples.ids.remove(index);
-                        examples.embeddings.remove(index);
+                        examples.names.remove(index - index_offset);
+                        examples.ids.remove(index - index_offset);
+                        examples.embeddings.remove(index - index_offset);
+
+                        // Everytime we remove an element the 'index' variable is off by one more.
+                        // We compensate for this with this offset variable.
+                        //
+                        // This works because we loop from left to right.
+                        //
+                        // Meaning if we remove element 0, then element 1 is the new 0 so
+                        // subtraction works, if we loop right to left this would not
+                        // work. Or if we removed in random order it would not work either.
+                        index_offset += 1;
 
                     }
                 }
