@@ -31,10 +31,8 @@ pub struct KartaSite {
 
 #[derive(Serialize)]
 struct Message {
-    // The URL we had before sending this update
-    old_url: Option<String>,
-    // The URL we have now
-    new_url: String,
+    // The URL to this machine
+    url: String,
     // Name of this friday (not necessarily unique)
     name: String
 }
@@ -99,14 +97,12 @@ impl KartaSite {
 
     /// Sends local IP to the remote server so that the server can redirect users to this local
     /// machine.
-    fn send_ip(&mut self, old_ip: Option<String>, new_ip: String) -> Result<(), friday_error::FridayError> {
+    fn send_ip(&mut self, ip: String) -> Result<(), friday_error::FridayError> {
         match self.name.clone().read() {
             Err(err) => frierr!("Failed to aquire lock for name - Reason: {}", err),
             Ok(name) => match serde_json::to_value(Message{
-                // Old URL - server can use it to remove if it wants
-                old_url: old_ip.map(|u| self.format_url(u)),
                 // URL that will redirect a user to this fridays local site
-                new_url: self.format_url(new_ip.clone()),
+                url: self.format_url(ip.clone()),
                 // Name of this Friday that the server can display if it wants
                 // it is not guaranteed to be unique.
                 name: name.clone()
@@ -116,9 +112,6 @@ impl KartaSite {
                     let response = ureq::put(self.config.site_url.as_str()).send_json(value);
 
                     if response.status() == 200 {
-                        // If we managed to update our IP remotely we update our current local IP
-                        self.update_local_ip(new_ip.clone());
-
                         // Little logging to show that we successfully sent discovery to site
                         friday_logging::info!(
                             "Discovery: {} status {}", 
@@ -148,15 +141,25 @@ impl core::Karta for KartaSite {
         // remove that IP from itself? 
         match KartaSite::get_local_ip() {
             Err(err) => propagate!("Failed to get local IP")(err),
-            Ok(new_local_ip) => match self.config.local_ip.clone() {
+            Ok(local_ip) => match self.config.local_ip.clone() {
                 // Tell server that this is our local ip! 
-                None => self.send_ip(None, new_local_ip.clone()),
+                None => {
+                    // Update local IP
+                    self.update_local_ip(local_ip.clone());
+
+                    // Tell server of IP
+                    self.send_ip(local_ip.clone())
+                },
                 Some(old_local_ip) => {
 
                     // If old local ip does not match current local ip - we must 
                     // server to remove of our old IP and add our new IP!
-                    if old_local_ip != new_local_ip {
-                        self.send_ip(Some(old_local_ip), new_local_ip.clone())
+                    if old_local_ip != local_ip {
+                        // Update local IP
+                        self.update_local_ip(local_ip.clone());
+
+                        // Tell server of IP
+                        self.send_ip(local_ip.clone())
                     } 
                     // Update remote even if local has not changed
                     // In case remote has forgot us due to restart or something
@@ -168,7 +171,7 @@ impl core::Karta for KartaSite {
                         // in wrong order it might add new ip and then remove it
                         // since they are the same. This guarantees that even if
                         // server is poorly coded it won't remove our ip :)
-                        self.send_ip(None, new_local_ip.clone())
+                        self.send_ip(local_ip.clone())
                     } 
                     // Do nothing - all is good! :)
                     else {
