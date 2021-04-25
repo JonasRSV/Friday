@@ -182,6 +182,8 @@ def get_train_ops(distance: Distance,
 
 
 def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
+    # TODO(jonasrsv): Try dropping first 2 MFCC features
+    # To make invariant to loudness (gain)
     # return audio.mfcc_feature(signal=signal,
                               # coefficients=27,
                               # sample_rate=sample_rate,
@@ -200,6 +202,8 @@ def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     #                          num_mel_bins=128,
     #                          lower_edge_hertz=1,
     #                          upper_edge_hertz=4000)
+    # Because https://www.quora.com/What-are-the-advantages-of-using-spectrogram-vs-MFCC-as-feature-extraction-for-speech-recognition-using-deep-neural-network
+    # Tony says Mel filterbanks is slightly ahead, so we try it! :D
     return audio.mel_spectrogram_feature(signal=signal,
                                          sample_rate=sample_rate,
                                          frame_length=512,
