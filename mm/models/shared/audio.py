@@ -60,7 +60,7 @@ def mfcc_feature(signal: tf.Tensor, coefficients: int,
         log_mel_spectrograms)[..., :coefficients])
 
 
-def log_mel_spectrogram_feature(signal: tf.Tensor,
+def mel_spectrogram_feature(signal: tf.Tensor,
                             frame_length=1024,
                             frame_step=256,
                             fft_length=1024,
@@ -103,4 +103,4 @@ def log_mel_spectrogram_feature(signal: tf.Tensor,
     mel_spectrograms.set_shape(spectrograms.shape[:-1].concatenate(
         linear_to_mel_weight_matrix.shape[-1:]))
 
-    return tf.math.log(mel_spectrograms + 1e-8)
+    return mel_spectrograms
