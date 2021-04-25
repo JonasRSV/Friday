@@ -5,10 +5,10 @@ import { Container, Row, Col } from 'sveltestrap';
 import Keyword from './Keyword.svelte';
 import WaveBanner from "./../../banners/WaveBanner.svelte"
 import IoMdMicrophone from 'svelte-icons/io/IoMdMicrophone.svelte'
+import FaSync from 'svelte-icons/fa/FaSync.svelte'
 import { FridayAPI } from "./../../FridayAPI.js"
 import { playAudio, extractAudioBlob } from "./../../core/Audio";
 import { onMount } from "svelte";
-
 
 export let deactivate;
 
@@ -58,12 +58,19 @@ let onRecordClick = (e) => {
     recordings.push({
       "id": recording.id,
       "keyword": "",
-      "selecting": false
+      "selecting": false,
+      "is_new": true,
     });
 
     is_recording = false;
     recordings = recordings;
   });
+}
+
+let onSyncClick = (e) => {
+    is_syncing = true;
+    syncWithFriday();
+    e.stopPropagation()
 }
 
 let captureEvent = (e) => {
@@ -74,19 +81,8 @@ let captureEvent = (e) => {
 
       return v;
     })
-    
-    e.stopPropagation();
-  // If we are syncing, do nothing and wait until sync is done
-  // syncing should trigger a re-render of something else.
-  } else if (is_syncing) {
-    e.stopPropagation();
-
-  // otherwise start syncing with friday
-  } else {
-    is_syncing = true;
-    syncWithFriday();
-    e.stopPropagation()
-  }
+  } 
+  e.stopPropagation()
 }
 
 async function syncWithFriday()  {
@@ -97,7 +93,7 @@ async function syncWithFriday()  {
     }
   });
 
-  await FridayAPI.setExamples(examples);
+  FridayAPI.setExamples(examples);
   await (new Promise(resolve => setTimeout(resolve, 1000)));
   is_syncing = false;
   deactivate();
@@ -112,12 +108,14 @@ onMount (async () => {
             "id": cid,
             "keyword": examples[cid],
             "selecting": false,
+            "is_new": false,
           }
         } else {
           return {
             "id": cid,
             "keyword": "",
             "selecting": false,
+            "is_new": false,
           }
         }
       });
@@ -145,17 +143,20 @@ onMount (async () => {
   overflow: scroll;
 }
 
-.top-separator {
-   height: 100px;
-}
-
-.mic-icon {
+.opt-icon {
   height: 60px;
 }
 
-.mic-icon:hover {
+.opt-icon:hover {
   opacity: 0.9;
   cursor: pointer;
+}
+
+.opt-container {
+  height: 100px;
+  width: 120px;
+  margin-left: 15px;
+  margin-right: 15px;
 }
 
 .middle-screen {
@@ -168,16 +169,28 @@ onMount (async () => {
   transform: translate(-50%, -50%);
 }
 
-.mic-container {
-  height: 100px;
-  width: 120px;
-}
+
 
 .recording {
   position: relative;
   width: 350px;
   padding-right: 15px;
   padding-left: 15px;
+}
+
+.bottom-options {
+  position: fixed;
+  bottom: 0px;
+  width: 100%;
+  height: 150px;
+  background-color: rgba(47, 54, 64,0.97);
+  padding-top: 20px;
+
+}
+
+.margin-top-bottom {
+  margin-top: 100px;
+  margin-bottom: 200px;
 }
 
 </style>
@@ -196,25 +209,12 @@ onMount (async () => {
 </div>
 {:else}
   <Container fluid>
-    <Row> 
-      <Col xs=12 sm=12 md=12 lg=12>
-        <div class="top-separator"></div>
-      </Col>
-    </Row>
-    <Row class="d-flex justify-content-center">
-      <div class="mic-container" on:click={onRecordClick}>
-        <WaveBanner>
-          <div class="mic-icon">
-            <IoMdMicrophone/>
-          </div>
-        </WaveBanner>
-      </div>
-    </Row>
-    <div class="d-flex flex-wrap flex-row justify-content-center">
+    <div class="d-flex flex-wrap flex-row justify-content-center margin-top-bottom">
           {#each recordings as recording }
           <div class="recording my-3">
             <Keyword id={recording.id} 
                      bind:keyword={recording.keyword}
+                       is_new={recording.is_new}
                        onRemoveClick={() => onRemoveClick(recording)}
                        onPlayClick={() => onPlayClick(recording)}
                        bind:selecting={recording.selecting}
@@ -223,6 +223,23 @@ onMount (async () => {
           {/each}
     </div>
   </Container>
+  <div class="bottom-options d-flex flex-row justify-content-center">
+      <div class="opt-container" on:click={onRecordClick}>
+        <WaveBanner>
+          <div class="opt-icon">
+            <IoMdMicrophone/>
+          </div>
+        </WaveBanner>
+      </div>
+
+      <div class="opt-container" on:click={onSyncClick}>
+        <WaveBanner>
+          <div class="opt-icon">
+            <FaSync/>
+          </div>
+        </WaveBanner>
+      </div>
+  </div>
 {/if}
 </div>
 

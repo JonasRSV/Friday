@@ -1,7 +1,7 @@
 <script>
 import CommandWidget from "./CommandWidget.svelte";
 import Mechanic from "./Mechanic.svelte";
-import AddCommandButton from "./action/AddCommandButton.svelte";
+import AddCommandButton from "./command/AddCommandButton.svelte";
 import Header from "./Header.svelte";
 import { Spinner } from 'sveltestrap';
 import { onMount } from "svelte";
@@ -39,7 +39,7 @@ let commandsToScripts = () => {
 let syncFriday = () => FridayAPI.setBoundScripts(commandsToScripts(commands));
 
 let removeCommand = command => {
-  // Removes the action
+  // Removes the command
   commands = commands.filter(elem => elem.id != command.id);
 
   // Syncs with friday
@@ -76,8 +76,8 @@ onMount (async () => {
 
 
   // TODO While developing mechanic
-  // commandAtMechanic = commands[0];
-  // displayMechanic = true;
+  /*commandAtMechanic = commands[0];*/
+  /*displayMechanic = true;*/
 
 
 });

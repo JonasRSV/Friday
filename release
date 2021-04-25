@@ -38,8 +38,12 @@ create_pi_release () {
   echo "${fg_magenta}Copying 'web/nightout/release/' 'releases/release-raspberrypi3/' ${fg_reset}"
   cp -r web/nightout/release releases/release-raspberrypi3
 
-  echo "${fg_magenta}Renaming 'releases/release-raspberrypi3/release' 'releases/release-raspberrypi3/nightout'${fg_reset}"
-  mv releases/release-raspberrypi3/release releases/release-raspberrypi3/nightout
+
+  GUI_DIR=releases/release-raspberrypi3/nightout
+  if [ -d "$GUI_DIR" ]; then rm -Rf $GUI_DIR; fi
+
+  echo "${fg_magenta}Renaming 'releases/release-raspberrypi3/release' '$GUI_DIR'${fg_reset}"
+  mv releases/release-raspberrypi3/release $GUI_DIR
 
   echo "${fg_magenta}Creating 'releases/release-raspberrypi3/recordings' '${fg_reset}"
   mkdir -p releases/release-raspberrypi3/recordings
@@ -54,15 +58,15 @@ create_linux_release () {
 }
 
 print_help() {
-      echo ""
-      echo ""
-      echo "${fg_green}  ******** Friday release script ******** ${fg_black}"
-      echo " "
-      echo "${fg_white} options:"
-      echo "-h, --help  show brief help"
-      echo "${fg_magenta}-pi --armv7-unknown-linux-gnueabinhf${fg_white},   E.g Raspberry Pi (2, 3..)s"
-      echo "${fg_magenta}-li --x86_64-unknown-linux-gnu${fg_white},  Common Desktops and laptops (running linux)"
-      exit 0
+  echo ""
+  echo ""
+  echo "${fg_green}  ******** Friday release script ******** ${fg_black}"
+  echo " "
+  echo "${fg_white} options:"
+  echo "-h, --help  show brief help"
+  echo "${fg_magenta}-pi --armv7-unknown-linux-gnueabinhf${fg_white},   E.g Raspberry Pi (2, 3..)s"
+  echo "${fg_magenta}-li --x86_64-unknown-linux-gnu${fg_white},  Common Desktops and laptops (running linux)"
+  exit 0
 }
 
 

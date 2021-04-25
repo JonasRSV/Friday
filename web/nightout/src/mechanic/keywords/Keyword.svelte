@@ -11,6 +11,7 @@ export let keyword;
 export let selecting;
 export let onRemoveClick;
 export let onPlayClick;
+export let is_new;
 
 let renaming = false;
 
@@ -88,10 +89,25 @@ let localClick = (handler) => (e) => {
   top: -25px;
   left: 10px;
 }
+.new_banner {
+  position: absolute;
+  top: -20px;
+  left: 0px;
+  height: 22px;
+  font: medium;
+  color: rgb(225, 177, 44);
+  font-weight: bold;
+}
 
 </style>
 
 
+<div class="keyword">
+{#if is_new}
+  <div class="new_banner">
+    New!
+  </div>
+{/if}
 
 {#if renaming && selecting}
   <WaveBanner>
@@ -145,5 +161,4 @@ let localClick = (handler) => (e) => {
   </WaveBanner>
 </div>
 {/if}
-
-
+</div>

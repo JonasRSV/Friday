@@ -150,7 +150,7 @@ FridayAPI.getKeywords().then(server_keywords => keywords = server_keywords);
     </div>
   {:else if controlBuilderActive}
     <div class="fixed-above" on:click={deActMechanic}>
-        <svelte:component this={control} command={command} sync={sync} />
+      <svelte:component this={control} command={command} sync={sync} deactivate={deActMechanic}/>
     </div>
   {:else if controlPickerActive}
     <div class="fixed-above" on:click={deActControlPicker}>
