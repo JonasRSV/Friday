@@ -49,7 +49,7 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>,
 
     }
 
-fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError> {
+fn get_recording_device(conf: &RecordingConfig) -> Result<cpal::Device, FridayError> {
     //for host in cpal::available_hosts().iter() {
     //friday_logging::info!("Found Host {}", host.name());
     //}
@@ -67,12 +67,24 @@ fn get_recording_device(_: &RecordingConfig) -> Result<cpal::Device, FridayError
     // to make this code work - but would be better if this code could
     // recognize what device has recording capabilities and then use it
 
+    match cpal::default_host().input_devices() {
+        Err(err) => frierr!("Failed to read input devices, Reason: {:?}", err),
+        Ok(mut device_it) => 
+            match device_it.find(|device| match device.name() {
+                Err(err) => {
+                    friday_logging::error!("Device name error {:?} ... Ignoring device", err);
 
-    return match cpal::default_host().default_input_device() {
-        Some(device) => Ok(device),
-        None => frierr!("Could not find any default input device for recording")
-    };
-
+                    false
+                },
+                Ok(name) => name == conf.device
+            }) {
+                Some(device) => {
+                    friday_logging::info!("Found recording device {}", conf.device);
+                    Ok(device)
+                }
+                None => frierr!("Could not find any device matching {}", conf.device)
+            }
+    }
 }
 
 pub struct CPALIStream {
@@ -179,7 +191,8 @@ mod tests {
         let r = RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
-            loudness: 1
+            loudness: 1,
+            device: "default".to_owned()
         };
 
 
@@ -208,7 +221,8 @@ mod tests {
         let r = RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
-            loudness: 1
+            loudness: 1,
+            device: "default".to_owned()
         };
 
 
@@ -240,7 +254,8 @@ mod tests {
         let r = RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
-            loudness: 1
+            loudness: 1,
+            device: "default".to_owned()
         };
 
 

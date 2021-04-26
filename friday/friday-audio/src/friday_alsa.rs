@@ -16,7 +16,7 @@ impl ALSAIStream {
 
             if let Some(io) = io {
                 friday_logging::info!("device {} io: {:?}", name, io);
-                if io != alsa::Direction::Playback {
+                if io != alsa::Direction::Capture {
                     continue;
                 }
             }
@@ -55,7 +55,8 @@ mod tests {
         let r = RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
-            loudness: 1
+            loudness: 1,
+            device: "default".to_owned()
         };
 
         ALSAIStream::record(&r).expect("Failed to record with ALSAIStream");

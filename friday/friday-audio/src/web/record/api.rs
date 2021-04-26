@@ -219,7 +219,8 @@ mod tests {
         let r = crate::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
-            loudness: 1
+            loudness: 1,
+            device: "default".to_owned()
         };
 
 
@@ -262,7 +263,8 @@ mod tests {
         let r = crate::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
-            loudness: 1
+            loudness: 1,
+            device: "default".to_owned()
         };
 
 
@@ -306,7 +308,8 @@ mod tests {
         let r = crate::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
-            loudness: 1
+            loudness: 1,
+            device: "default".to_owned()
                 
         };
 
@@ -363,6 +366,7 @@ mod tests {
             sample_rate: 8000,
             model_frame_size: 16000,
             loudness: 1,
+            device: "default".to_owned()
         };
 
 
