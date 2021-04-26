@@ -57,7 +57,7 @@ def mfcc_feature(signal: tf.Tensor, coefficients: int,
 
     # Extract MFCC's
     return normalize_mfcc(tf.signal.mfccs_from_log_mel_spectrograms(
-        log_mel_spectrograms)[..., 2:coefficients])
+        log_mel_spectrograms)[..., coefficients])
 
 
 def mel_spectrogram_feature(signal: tf.Tensor,

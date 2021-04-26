@@ -185,7 +185,7 @@ def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     # TODO(jonasrsv): Try dropping first 2 MFCC features
     # To make invariant to loudness (gain)
     return audio.mfcc_feature(signal=signal,
-                              coefficients=40,
+                              coefficients=27,
                               sample_rate=sample_rate,
                               frame_length=512,
                               frame_step=256,
