@@ -1,7 +1,7 @@
 
 <script>
 import { Spinner } from 'sveltestrap';
-import { Container, Row, Col } from 'sveltestrap';
+import { Container } from 'sveltestrap';
 import Keyword from './Keyword.svelte';
 import WaveBanner from "./../../banners/WaveBanner.svelte"
 import IoMdMicrophone from 'svelte-icons/io/IoMdMicrophone.svelte'
@@ -17,7 +17,15 @@ let recordings = []
 let is_syncing = false;
 let is_recording = false;
 
+// element with this ID should be put into focus
+let focus_id = "";
+
 let audio_cache = {}
+
+let newestRender = (element) => {
+  element.focus();
+  element.scrollIntoView();
+}
 
 let onRemoveClick = (state) => {
   state.selecting = false;
@@ -55,6 +63,10 @@ let onRecordClick = (e) => {
   is_recording = true;
   // Rename recording on device
   FridayAPI.recordingNew().then(recording => {
+
+    // Put focus on new element
+    focus_id = recording.id;
+
     recordings.push({
       "id": recording.id,
       "keyword": "",
@@ -93,10 +105,10 @@ async function syncWithFriday()  {
     }
   });
 
-  FridayAPI.setExamples(examples);
-  await (new Promise(resolve => setTimeout(resolve, 1000)));
-  is_syncing = false;
-  deactivate();
+  FridayAPI.setExamples(examples).then(_ => {
+    is_syncing = false;
+    deactivate();
+  })
 }
 
 onMount (async () => { 
@@ -211,15 +223,27 @@ onMount (async () => {
   <Container fluid>
     <div class="d-flex flex-wrap flex-row justify-content-center margin-top-bottom">
           {#each recordings as recording }
-          <div class="recording my-3">
-            <Keyword id={recording.id} 
-                     bind:keyword={recording.keyword}
-                       is_new={recording.is_new}
-                       onRemoveClick={() => onRemoveClick(recording)}
-                       onPlayClick={() => onPlayClick(recording)}
-                       bind:selecting={recording.selecting}
-                       />
-          </div>
+            {#if recording.id == focus_id}
+              <div class="recording my-3" use:newestRender>
+                <Keyword id={recording.id} 
+                           bind:keyword={recording.keyword}
+                           is_new={recording.is_new}
+                           onRemoveClick={() => onRemoveClick(recording)}
+                           onPlayClick={() => onPlayClick(recording)}
+                           bind:selecting={recording.selecting}
+                           />
+              </div>
+            {:else}
+              <div class="recording my-3">
+                <Keyword id={recording.id} 
+                           bind:keyword={recording.keyword}
+                           is_new={recording.is_new}
+                           onRemoveClick={() => onRemoveClick(recording)}
+                           onPlayClick={() => onPlayClick(recording)}
+                           bind:selecting={recording.selecting}
+                           />
+              </div>
+            {/if}
           {/each}
     </div>
   </Container>

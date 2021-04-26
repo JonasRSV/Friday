@@ -31,6 +31,7 @@ export class FridayAPI {
     // TODO: how to do this better?
     // For dev
     //static prefix = "http://" + window.location.host.slice(0, -5) + ":8000";
+    //static prefix = "http://0.0.0.0:8000";
     // For production
     static prefix = "";
 
@@ -44,10 +45,12 @@ export class FridayAPI {
     // Gets the DDL examples
     static getExamples = () => APIGetExamples(this.prefix);
     static setExamples = (examples) => {
-      return APISetExamples(this.prefix, JSON.stringify(examples)).then(r => {
+      return APISetExamples(this.prefix, JSON.stringify(examples)).then(json => {
         // clear cache so next getExamples or getKeywords gets new
         APIClearExamplesCache();
         APIClearKeywordsCache();
+
+        return json;
       });
     }
 

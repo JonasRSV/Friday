@@ -23,5 +23,5 @@ export async function APISetExamples(prefix, data) {
                 method: "PUT",
                 body: data
             }
-        );
+        ).then(response => response.json());
 }

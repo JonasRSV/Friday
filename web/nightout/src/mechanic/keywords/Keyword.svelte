@@ -113,7 +113,13 @@ let localClick = (handler) => (e) => {
   <WaveBanner>
     <div class="d-flex flex-row justify-content-center" on:click={localClick(() => null)}>
       <form on:submit={submitRenaming} class="col-10">
-        <input id="name" value={keyword} class="col-12 text-center input" type="text" aria-label="Large" aria-describedby="inputGroup-sizing-sm">
+        <input autocomplete="off" 
+               id="name" 
+               value={keyword} 
+               class="col-12 text-center input" 
+               type="text" 
+               aria-label="Large" 
+               aria-describedby="inputGroup-sizing-sm">
       </form>
     </div>
   </WaveBanner>

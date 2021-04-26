@@ -28,24 +28,10 @@ let onBannerClickLocal = (e, component) => {
     opacity: 0.8;
   }
 
-  .title-text {
-    font-size: 22pt;
-  }
-
-  .empty-space {
-    height: 20px;
-  }
-
 </style>
 
 
 <Container fluid class="container-keywords">
-  <Row class="text-center">
-    <Col xs=12 sm=12 md=12 lg=12>
-      <div class="title-text">I will...</div>
-    </Col>
-  </Row>
-  <div class="empty-space"></div>
   <Row> 
     <Col xs=1 sm=2 md=2 lg=2></Col>
     <Col xs=10 sm=8 md=8 lg=8>
@@ -57,6 +43,5 @@ let onBannerClickLocal = (e, component) => {
   </Row>
 
 
-  <div class="empty-space"></div>
 </Container>
 
