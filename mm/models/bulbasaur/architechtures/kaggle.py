@@ -41,10 +41,10 @@ def kaggle_cnn(x: tf.Tensor,
         x = tf.keras.layers.GlobalMaxPooling2D(name="kaggle_cnn_mp")(x)
         print("x", x)
 
-        x = tf.compat.v1.layers.Dropout(rate=0.1, name="kaggle_cnn_dropout")(
-            x, training=mode == tf.estimator.ModeKeys.TRAIN,
-            )
-        print("x", x)
+        #x = tf.compat.v1.layers.Dropout(rate=0.1, name="kaggle_cnn_dropout")(
+        #    x, training=mode == tf.estimator.ModeKeys.TRAIN,
+        #    )
+        #print("x", x)
         x = tf.compat.v1.layers.Dense(512, activation=tf.nn.relu, name="kaggle_cnn_1d")(x)
         print("x", x)
 
