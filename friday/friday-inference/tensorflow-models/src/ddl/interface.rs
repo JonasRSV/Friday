@@ -12,7 +12,7 @@ use friday_web;
 
 use std::path::PathBuf;
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock, RwLockWriteGuard, Mutex};
+use std::sync::{Arc, RwLock, RwLockWriteGuard, Mutex, MutexGuard};
 
 use serde_derive::{Deserialize, Serialize};
 use serde_json;
@@ -143,37 +143,28 @@ impl DDL {
     }
 
     /// Runs the DDL models projection operation
-    fn project(&mut self, audio: &Vec<i16>) -> Result<Vec<f32>, FridayError> {
-        match self.model.lock() {
-            Err(err) => frierr!("Failed to aquire lock for DDL model {}", err),
-            Ok(model) => {
-                let mut input_audio = model.input_audio.clone();
-                let mut output_projection = model.output_projection.clone();
+    fn project(&mut self, model: &MutexGuard<DDLModel>, audio: &Vec<i16>) -> Result<Vec<f32>, FridayError> {
+        let mut input_audio = model.input_audio.clone();
+        let mut output_projection = model.output_projection.clone();
 
-                input_audio.set_data(audio);
+        input_audio.set_data(audio);
 
-                model.model.clone().run_projection(
-                    &mut input_audio, 
-                    &mut output_projection
-                );
+        model.model.clone().run_projection(
+            &mut input_audio, 
+            &mut output_projection
+        );
 
-                return Ok(output_projection.get_data::<f32>());
-
-            }
-
-
-        }
-
+        return Ok(output_projection.get_data::<f32>());
     }
 
     /// Adds a new example to the examples
-    fn add(&mut self, examples: &mut RwLockWriteGuard<Examples>, name: &String, file_name: &String) {
+    fn add(&mut self, model: &MutexGuard<DDLModel>, examples: &mut RwLockWriteGuard<Examples>, name: &String, file_name: &String) {
         match self.files.read_audio(file_name) {
             Err(err) => friday_logging::error!("Failed to add example - file name: {} - Reason: {:?}", 
                 file_name.clone(),
                 err),
                 Ok((audio, _)) => {
-                    match self.project(&audio) {
+                    match self.project(model, &audio) {
                         Err(err) => friday_logging::error!("Failed to project using DDL model {:?}", err),
                         Ok(embedding) => {
                             examples.ids.push(file_name.to_owned());
@@ -186,11 +177,11 @@ impl DDL {
     }
 
     /// Updates an exisiting example 
-    fn update(&mut self, examples: &mut RwLockWriteGuard<Examples>, name: &String, file_name: &String, index: usize) {
+    fn update(&mut self, model: &MutexGuard<DDLModel>, examples: &mut RwLockWriteGuard<Examples>, name: &String, file_name: &String, index: usize) {
         match self.files.read_audio(file_name) {
             Err(err) => friday_logging::error!("Failed to add example {:?}", err),
             Ok((audio, _)) => {
-                match self.project(&audio) {
+                match self.project(model, &audio) {
                     Err(err) => friday_logging::error!("Failed to project using DDL model {:?}", err),
                     Ok(embedding) => {
                         examples.ids[index] = file_name.to_owned();
@@ -202,61 +193,74 @@ impl DDL {
         }
     }
 
+    /// Syncs all examples in memory
     fn sync(&mut self) -> Result<(), FridayError> {
-        match self.examples.clone().write() {
-            Err(err) => frierr!("Failed to read RWLocked examples - Reason: {}", err),
-            Ok(mut examples) => {
+        // Lock model in outerscope here to avoid a race-condition with model inference, we 
+        // pass this model to the update and add to do projection.
 
-                let audio = examples.audio.clone();
-                let ids = examples.ids.clone();
-                let names = examples.names.clone();
-                // Add or Update any new / existing examples
-                for (file_name, name) in audio.iter() {
-                    match ids.iter().position(|_id| _id == file_name) {
-                        Some(id_index) => {
+        // In a previous iteration update & add locked the model but that causes a race condition
+        // since this function locks the examples. The program ends up in a deadlock where this
+        // thread holds the examples and the inference thread holds the model.
+        match self.model.clone().lock() {
+            Err(err) =>  frierr!("Sync failed to aquire lock for DDL model - Reason: {}", err),
+            Ok(model) =>  match self.examples.clone().write() {
+                Err(err) => frierr!("Failed to read RWLocked examples - Reason: {}", err),
+                Ok(mut examples) => {
 
-                            // This happends if for some reason an audio file is assigned a
-                            // different keyword
-                            if names[id_index] != name.to_owned() {
-                                friday_logging::debug!("Updating example ({}, {}) -> ({}, {})",
+                    let audio = examples.audio.clone();
+                    let ids = examples.ids.clone();
+                    let names = examples.names.clone();
+                    // Add or Update any new / existing examples
+                    for (file_name, name) in audio.iter() {
+                        match ids.iter().position(|_id| _id == file_name) {
+                            Some(id_index) => {
+
+                                // This happends if for some reason an audio file is assigned a
+                                // different keyword
+                                if names[id_index] != name.to_owned() {
+                                    friday_logging::debug!("Updating example ({}, {}) -> ({}, {})",
                                     names[id_index], ids[id_index], name, file_name);
-                                self.update(&mut examples, &name, &file_name, id_index)
+                                    self.update(&model, &mut examples, &name, &file_name, id_index)
+                                }
+                            },
+                            // Audio file is not yet present as an example so we add it
+                            None => {
+                                friday_logging::debug!("Adding example ({}, {})", name, file_name);
+                                self.add(&model, &mut examples, &name, &file_name)
                             }
-                        },
-                        // Audio file is not yet present as an example so we add it
-                        None => {
-                            friday_logging::debug!("Adding example ({}, {})", name, file_name);
-                            self.add(&mut examples, &name, &file_name)
                         }
                     }
-                }
 
-                //// Remove any stale examples 
-                let mut index_offset = 0;
-                for (index, id) in examples.ids.clone().iter().enumerate() {
-                    if !examples.audio.contains_key(id) {
-                        friday_logging::debug!("Removing example ({}, {})", names[index], ids[index]);
-                        examples.names.remove(index - index_offset);
-                        examples.ids.remove(index - index_offset);
-                        examples.embeddings.remove(index - index_offset);
+                    //// Remove any stale examples 
+                    let mut index_offset = 0;
+                    for (index, id) in examples.ids.clone().iter().enumerate() {
+                        if !examples.audio.contains_key(id) {
+                            friday_logging::debug!("Removing example ({}, {})", names[index], ids[index]);
+                            examples.names.remove(index - index_offset);
+                            examples.ids.remove(index - index_offset);
+                            examples.embeddings.remove(index - index_offset);
 
-                        // Everytime we remove an element the 'index' variable is off by one more.
-                        // We compensate for this with this offset variable.
-                        //
-                        // This works because we loop from left to right.
-                        //
-                        // Meaning if we remove element 0, then element 1 is the new 0 so
-                        // subtraction works, if we loop right to left this would not
-                        // work. Or if we removed in random order it would not work either.
-                        index_offset += 1;
+                            // Everytime we remove an element the 'index' variable is off by one more.
+                            // We compensate for this with this offset variable.
+                            //
+                            // This works because we loop from left to right.
+                            //
+                            // Meaning if we remove element 0, then element 1 is the new 0 so
+                            // subtraction works, if we loop right to left this would not
+                            // work. Or if we removed in random order it would not work either.
+                            index_offset += 1;
 
+                        }
                     }
+
+
+                    Ok(())
                 }
-
-
-                Ok(())
             }
+
         }
+
+
     }
 }
 
