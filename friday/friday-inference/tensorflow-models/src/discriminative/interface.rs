@@ -170,6 +170,10 @@ impl friday_inference::Model for Discriminative {
             .expect("(tensorflow-models): Failed to extract input dims from model")
             .clone() as usize;
     }
+
+    fn reset(&mut self) -> Result<(), FridayError> {
+        Ok(())
+    }
 }
 
 pub struct WebDiscriminative{

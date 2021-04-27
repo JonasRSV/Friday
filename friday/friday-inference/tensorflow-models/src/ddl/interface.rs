@@ -332,6 +332,12 @@ impl friday_inference::Model for DDL {
     fn expected_frame_size(&self) -> usize {
         return self.frame_size;
     }
+
+    /// This function is called when the VAD deems the audio signal stops containing voice
+    /// It can be used to implement predictions that depend on information from many frames.
+    fn reset(&mut self) -> Result<(), FridayError> {
+        Ok(())
+    }
 }
 
 pub struct WebDDL{

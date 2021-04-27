@@ -41,6 +41,7 @@ impl RecordingConfig {
 }
 
 
+pub mod bandpass;
 pub mod friday_cpal; 
 pub mod friday_alsa;
 pub mod recorder;

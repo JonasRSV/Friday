@@ -1,4 +1,4 @@
-use crate::core::SpeakDetector;
+use crate::core::{SpeakDetector, VADResponse};
 use serde_derive::{Deserialize, Serialize};
 
 use friday_storage;
@@ -66,9 +66,13 @@ impl PeakBasedDetector {
 }
 
 impl SpeakDetector for PeakBasedDetector {
-    fn detect(&mut self, audio: &Vec<i16>) -> bool {
+    fn detect(&mut self, audio: &Vec<i16>) -> VADResponse {
         let peaks = PeakBasedDetector::peaks(audio, self.min_peak_height, self.verbose);
-        return peaks > self.min_peaks;
+        if peaks > self.min_peaks {
+            VADResponse::Voice
+        } else {
+            VADResponse::Silence
+        }
     }
 }
 
@@ -95,7 +99,7 @@ mod tests {
             verbose: Some(true)
         });
 
-        assert!(detector.detect(&voice_audio));
-        assert!(!detector.detect(&quiet_audio));
+        assert!(detector.detect(&voice_audio) == VADResponse::Voice);
+        assert!(detector.detect(&quiet_audio) == VADResponse::Silence);
     }
 }

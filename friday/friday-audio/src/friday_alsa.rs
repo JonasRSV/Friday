@@ -44,6 +44,10 @@ impl Recorder for ALSAIStream {
     fn sample_rate(&self) -> u32 {
         8000
     }
+
+    fn clear(&self) -> Result<(), FridayError> {
+        todo!()
+    }
 }
 
 

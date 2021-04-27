@@ -1,4 +1,4 @@
-use crate::core::SpeakDetector;
+use crate::core::{SpeakDetector, VADResponse};
 use serde_derive::{Deserialize, Serialize};
 
 use friday_storage;
@@ -47,7 +47,7 @@ impl EnergyBasedDetector {
 }
 
 impl SpeakDetector for EnergyBasedDetector {
-    fn detect(&mut self, audio: &Vec<i16>) -> bool {
+    fn detect(&mut self, audio: &Vec<i16>) -> VADResponse {
         let energy = EnergyBasedDetector::energy(audio);
 
         if self.verbose {
@@ -55,7 +55,11 @@ impl SpeakDetector for EnergyBasedDetector {
                 self.energy_threshold, energy);
         }
 
-        return energy > self.energy_threshold;
+        if energy > self.energy_threshold {
+            VADResponse::Voice
+        } else {
+            VADResponse::Silence
+        }
     }
 }
 
@@ -81,7 +85,7 @@ mod tests {
             verbose: Some(true)
         });
 
-        assert!(detector.detect(&voice_audio));
-        assert!(!detector.detect(&quiet_audio));
+        assert!(detector.detect(&voice_audio) == VADResponse::Voice);
+        assert!(detector.detect(&quiet_audio) == VADResponse::Silence);
     }
 }

@@ -11,6 +11,8 @@ pub enum Prediction {
 }
 
 pub trait Model {
+
+    fn reset(&mut self) -> Result<(), FridayError>;
     fn predict(&mut self, v :&Vec<i16>) -> Result<Prediction, FridayError>;
     fn expected_frame_size(&self) -> usize;
 }
@@ -36,6 +38,10 @@ impl Model for DummyModel {
 
     fn expected_frame_size(&self) -> usize {
         return 16000;
+    }
+
+    fn reset(&mut self) -> Result<(), FridayError> {
+        Ok(())
     }
 }
 

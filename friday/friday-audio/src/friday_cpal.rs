@@ -7,6 +7,7 @@ use friday_error::{frierr, propagate, FridayError};
 use friday_logging;
 use crate::recorder::Recorder;
 use crate::RecordingConfig;
+use crate::bandpass::FIR;
 
 use std::thread;
 use std::time;
@@ -29,7 +30,7 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>,
                     // To avoid overflowing issues
                     match i16sample.checked_mul(loudness) {
                         Some(v) => q.push(v),
-                        None => q.push(i16sample)
+                        None => q.push(32767 * i16sample.signum())
 
                     };
                 }
@@ -90,12 +91,12 @@ fn get_recording_device(conf: &RecordingConfig) -> Result<cpal::Device, FridayEr
 pub struct CPALIStream {
     config: RecordingConfig,
     _stream: cpal::Stream,
-    buffer: Arc<Mutex<CircularQueue<i16>>>
+    buffer: Arc<Mutex<CircularQueue<i16>>>,
 
+    fir: FIR
 }
 
-// TODO(jonasrsv) Why does CPAL flag recording as not thread safe?
-// If things break, this is likely a culprit
+// If things break, this is possibly a culprit
 // It should be threadsafe though since we're using sync primitives for our audio buffer
 unsafe impl Send for CPALIStream { }
 
@@ -140,10 +141,16 @@ impl CPALIStream {
                             .map_or_else(
                                 |err| frierr!("Recording Failed {}", err),
                                 |_| {
-                                    Ok(Arc::new(Mutex::new(CPALIStream{
-                                        config: conf.clone(),
-                                        _stream: stream,
-                                        buffer: read_buffer})))
+                                    match FIR::new() {
+                                        Err(err) => frierr!("Failed to create FIR, Reason {:?}", err),
+                                        Ok(fir) => Ok(Arc::new(Mutex::new(CPALIStream{
+                                            config: conf.clone(),
+                                            _stream: stream,
+                                            buffer: read_buffer,
+                                            fir
+                                        })))
+
+                                    }
                                 })
 
                     });
@@ -153,11 +160,13 @@ impl CPALIStream {
 
 impl Recorder for CPALIStream {
     fn read(&self) -> Option<Vec<i16>> {
-        return match self.buffer.lock() {
+        match self.buffer.lock() {
             Ok(guard) => {
                 let mut data: Vec<i16> = Vec::with_capacity(self.config.model_frame_size);
                 data.extend(guard.asc_iter());
                 data.resize(self.config.model_frame_size, 0);
+
+                //data = self.fir.pass(&data);
                 return Some(data);
             }
             Err(err) => {
@@ -166,7 +175,7 @@ impl Recorder for CPALIStream {
 
                 // To not spam the living #!#! out of the audio device mutex if we get a poison
                 // error
-                thread::sleep(time::Duration::from_secs(1));
+                thread::sleep(time::Duration::from_secs(10));
 
                 None
             }
@@ -176,6 +185,16 @@ impl Recorder for CPALIStream {
 
     fn sample_rate(&self) -> u32 {
         self.config.sample_rate
+    }
+
+    fn clear(&self) -> Result<(), FridayError> {
+        match self.buffer.lock() {
+            Err(err) => frierr!("Failed to aquire audio buffer lock, Reason: {:?}", err),
+            Ok(mut buffer) => {
+                buffer.clear();
+                Ok(())
+            }
+        }
     }
 }
 
@@ -254,8 +273,8 @@ mod tests {
         let r = RecordingConfig {
             sample_rate: 8000,
             model_frame_size: 16000,
-            loudness: 1,
-            device: "default".to_owned()
+            loudness: 3,
+            device: "sysdefault:CARD=MICCU100BK".to_owned()
         };
 
 
