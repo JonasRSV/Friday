@@ -14,6 +14,7 @@ friday-audio = { path = "friday-audio" }
 friday-vad = { path = "friday-vad" }
 friday-error = { path = "friday-error" }
 friday-storage= { path = "friday-storage" }
+friday-signal= { path = "friday-signal" }
 
 friday-vendor = { path = "friday-vendor" }
 vendor-scripts = { path = "friday-vendor/vendor-scripts" }

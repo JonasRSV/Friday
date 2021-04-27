@@ -12,7 +12,7 @@ use friday_web;
 
 use std::path::PathBuf;
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock, RwLockWriteGuard, Mutex, MutexGuard};
+use std::sync::{Arc, RwLock, RwLockWriteGuard, Mutex, MutexGuard, RwLockReadGuard};
 
 use serde_derive::{Deserialize, Serialize};
 use serde_json;
@@ -24,7 +24,11 @@ pub struct Config {
     sensitivity: f32,
 
     // First entry is a file-name second is command name
-    audio: HashMap<String, String>
+    audio: HashMap<String, String>,
+
+    // Frames inference does smoothing over
+    frames: usize
+
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +57,34 @@ struct DDLModel {
 
 unsafe impl Send for DDLModel { }
 
+impl DDLModel {
+    fn distances(&self, examples: &RwLockReadGuard<Examples>, audio: &Vec<i16>) -> Vec<f32> {
+        let mut input_embeddings = self.input_embeddings.clone();
+        let mut input_audio = self.input_audio.clone();
+        let mut output_distances = self.output_distances.clone();
+
+        // Set the 'unknown' dimension
+        input_embeddings.dims[0] = examples.embeddings.len() as i64;
+        output_distances.dims[0] = examples.embeddings.len() as i64;
+
+        // set the data
+        input_audio.set_data(audio);
+        input_embeddings.set_data(&examples.embeddings);
+
+
+        // run inference
+        self.model.clone().run_distances(
+            &mut input_audio,
+            &mut input_embeddings, 
+            &mut output_distances);
+
+        return output_distances.get_data::<f32>();
+
+    }
+
+
+}
+
 
 #[derive(Clone)]
 pub struct DDL {
@@ -65,7 +97,12 @@ pub struct DDL {
 
     frame_size: usize,
 
-    files: friday_storage::files::Files
+    files: friday_storage::files::Files,
+
+    // State used for smoothed predictions
+    distances: Vec<Vec<f32>>,
+    // Total frames we use for state
+    frames: usize
 }
 
 impl DDL {
@@ -128,7 +165,10 @@ impl DDL {
 
                                             export_dir: config.export_dir,
                                             frame_size,
-                                            files
+                                            files,
+
+                                            distances: Vec::new(),
+                                            frames: config.frames //TODO: If this works well, add it as a configurable value
                                         };
 
                                         // Run first sync to load audio files from disk
@@ -259,17 +299,72 @@ impl DDL {
             }
 
         }
-
-
     }
+
+    /// Given new inferred distance use the state we have to return a new MAP of the posterior
+    fn update_posterior(&mut self, inferred_distances: &Vec<f32>) -> Option<Vec<f32>> {
+        self.distances.push(inferred_distances.clone());
+        if self.distances.len() > self.frames {
+            self.distances.remove(0);
+        }
+
+        // Rest of code expects this invariant.
+        if self.distances.len() != self.frames || self.distances.len() < 1 {
+            return None
+        }
+
+
+        // invariant guarantees this not to cause an error
+        let map_size = self.distances.first().unwrap().len();
+
+
+        // Checking for final invariant
+        for v in self.distances.iter() {
+
+            // This should not happend, but we have to deal with it if it does
+            if v.len() != map_size {
+                friday_logging::error!("posterior got mixed size distances, purging..");
+
+                self.distances = Vec::new();
+
+                return None;
+
+            }
+        }
+
+
+        // map is now the mean of the distances
+        let mut map = vec![0.0; map_size];
+        for v in self.distances.iter() {
+            for (i, val) in v.iter().enumerate() {
+                map[i] += val;
+            }
+        }
+
+        map = map.iter().map(|val| val / self.distances.len() as f32).collect();
+
+
+        Some(map)
+    }
+}
+
+fn argmin(a: &Vec<f32>) -> usize {
+    a.iter()
+    .enumerate()
+    .min_by_key(|k| FloatOrd(k.1.clone()))
+    .map(|k| k.0)
+    .expect("failed to get argmin").clone()
 }
 
 impl friday_inference::Model for DDL {
     fn predict(&mut self, v :&Vec<i16>) -> Result<friday_inference::Prediction, FridayError> {
 
-        match self.model.lock() {
-            Ok(model) => match self.examples.read() {
-                Ok(examples) => match self.sensitivity.read() {
+        match self.model.clone().lock() {
+            Err(err) => frierr!("Failed to aquire lock for DDL model - Reason: {}", err),
+            Ok(model) => match self.examples.clone().read() {
+                Err(err) => frierr!("Failed to read RWLocked examples - Reason: {}", err),
+                Ok(examples) => match self.sensitivity.clone().read() {
+                    Err(err) => frierr!("Failed to read RWLocked sensitivity - Reason: {}", err),
                     Ok(sensitivity) => {
 
                         if examples.embeddings.len() == 0 {
@@ -277,54 +372,47 @@ impl friday_inference::Model for DDL {
                             return Ok(friday_inference::Prediction::Inconclusive);
                         }
 
+                        let inferred_distances = model.distances(&examples, v);
 
-                        let mut input_embeddings = model.input_embeddings.clone();
-                        let mut input_audio = model.input_audio.clone();
-                        let mut output_distances = model.output_distances.clone();
+                        match self.update_posterior(&inferred_distances) {
+                            None => {
+                                // For logging purposes
+                                let min_inferred_distance_index = argmin(&inferred_distances);
 
-                        // Set the 'unknown' dimension
-                        input_embeddings.dims[0] = examples.embeddings.len() as i64;
-                        output_distances.dims[0] = examples.embeddings.len() as i64;
+                                friday_logging::info!("D({}) = {}", 
+                                    examples.names[min_inferred_distance_index], 
+                                    inferred_distances[min_inferred_distance_index]);
 
-                        // set the data
-                        input_audio.set_data(&v);
-                        input_embeddings.set_data(&examples.embeddings);
+                                Ok(friday_inference::Prediction::Inconclusive)
+                            },
+                            Some(map) => {
+                                let min_inferred_distance_index = argmin(&inferred_distances);
+                                let min_map_distance_index = argmin(&map);
+
+                                friday_logging::info!("D({}) = {} -- M({}) = {}", 
+                                    examples.names[min_inferred_distance_index], 
+                                    inferred_distances[min_inferred_distance_index],
+                                    examples.names[min_map_distance_index],
+                                    map[min_map_distance_index]);
 
 
-                        // run inference
-                        model.model.clone().run_distances(
-                            &mut input_audio,
-                            &mut input_embeddings, 
-                            &mut output_distances);
+                                if map[min_map_distance_index] < sensitivity.clone()  {
+                                    return Ok(friday_inference::Prediction::Result {
+                                        class: examples.names[min_map_distance_index].clone()
+                                    })
+                                }
 
-                        let distances = output_distances.get_data::<f32>();
+                                return Ok(friday_inference::Prediction::Inconclusive);
 
-                        let min_distance_index = distances
-                            .iter()
-                            .enumerate()
-                            .min_by_key(|k| FloatOrd(k.1.clone()))
-                            .map(|k| k.0)
-                            .expect("failed to get max").clone();
+                            }
 
-                        friday_logging::info!("D({}) = {}", examples.names[min_distance_index], 
-                            distances[min_distance_index]);
-
-                        if distances[min_distance_index] < sensitivity.clone() {
-                            return Ok(friday_inference::Prediction::Result {
-                                class: examples.names[min_distance_index].clone()
-                            })
                         }
 
-                        return Ok(friday_inference::Prediction::Inconclusive);
+
 
                     },
-                    Err(err) => frierr!("Failed to read RWLocked sensitivity - Reason: {}", err)
-
                 },
-                Err(err) => frierr!("Failed to read RWLocked examples - Reason: {}", err)
-
             }
-            Err(err) => frierr!("Failed to aquire lock for DDL model - Reason: {}", err)
         }
 
     }
@@ -336,6 +424,7 @@ impl friday_inference::Model for DDL {
     /// This function is called when the VAD deems the audio signal stops containing voice
     /// It can be used to implement predictions that depend on information from many frames.
     fn reset(&mut self) -> Result<(), FridayError> {
+        self.distances = Vec::new();
         Ok(())
     }
 }
@@ -393,7 +482,9 @@ impl WebDDL{
                     Ok(Config {
                         export_dir: self.ddl.export_dir.clone(),
                         sensitivity: sensitivity.clone(),
-                        audio: audio.clone()
+                        audio: audio.clone(),
+                        frames: self.ddl.frames
+                            
                     })
                 }
                 Err(err) => frierr!("Failed to write RWLocked examples - Reason: {}", err)
@@ -453,7 +544,8 @@ impl WebDDL{
                             let config = Config {
                                 export_dir: self.ddl.export_dir.clone(),
                                 audio: examples.audio.clone(),
-                                sensitivity: sensitivity.clone()
+                                sensitivity: sensitivity.clone(),
+                                frames: self.ddl.frames
                             };
 
                             match friday_storage::config::write_config(&config, "ddl.json") {
@@ -533,7 +625,8 @@ mod tests {
                 ("955-184-642-144.wav".to_owned(), "1234".to_owned()),
             ].iter().cloned().collect(),
             export_dir: PathBuf::from("test-resources/ddl_apr_13_eu"),
-            sensitivity: 2.0
+            sensitivity: 2.0,
+            frames: 1
         };
 
         let mut model = DDL::model_from_config(config).expect("Failed to load Config");
@@ -566,7 +659,8 @@ mod tests {
                 ("955-184-642-144.wav".to_owned(), "1234".to_owned()),
             ].iter().cloned().collect(),
             export_dir: PathBuf::from("test-resources/ddl_apr_13_eu"),
-            sensitivity: 2.0
+            sensitivity: 2.0,
+            frames: 1
         };
 
         let model = DDL::model_from_config(config).expect("Failed to load Config");
@@ -610,7 +704,8 @@ mod tests {
                 ("hello-123.wav".to_owned(), "kalle".to_owned()),
             ].iter().cloned().collect(),
             export_dir: PathBuf::from("test-resources/ddl_apr_13_eu"),
-            sensitivity: 2.0
+            sensitivity: 2.0,
+            frames: 1
         };
 
         let model = DDL::model_from_config(config.clone()).expect("Failed to load Config");

@@ -1,6 +1,7 @@
 use friday_vendor;
 use friday_vendor::DispatchResponse;
 use friday_vendor::Vendor;
+use friday_signal;
 
 
 use friday_audio;
@@ -40,7 +41,8 @@ pub fn serve_friday<M, S, V, R>(
     vad: &mut S, 
     model: &mut M, 
     vendors: &Vec<Box<V>>, 
-    shared_istream: Arc<Mutex<R>>) 
+    shared_istream: Arc<Mutex<R>>,
+    composer: &mut friday_signal::Composer) 
     where M: Model,
           S: SpeakDetector,
           V: Vendor + ?Sized,
@@ -58,10 +60,13 @@ pub fn serve_friday<M, S, V, R>(
 
               // State to keep track if previous audio was inferred on
               // If we go from inference to silence we reset any state the model might have.
-              let mut previous_was_inference = true;
+              let mut previous_was_inference = false;
 
               // Run forever-loop
               friday_logging::info!("Listening..");
+
+              // Friday is listening
+              composer.send(&friday_signal::core::Signal::StartListening);
               while running.load(Ordering::SeqCst) {
                   std::thread::sleep(std::time::Duration::from_millis(250));
 
@@ -77,6 +82,7 @@ pub fn serve_friday<M, S, V, R>(
                       Ok(istream) => 
                           match istream.read() {
                               Some(audio) => {
+
                                   match vad.detect(&audio) {
                                       VADResponse::Voice => {
                                           // VAD got voice so we will run inference
@@ -84,18 +90,25 @@ pub fn serve_friday<M, S, V, R>(
                                           // state.
                                           previous_was_inference = true;
 
+                                          // Friday starts inferring
+                                          composer.send(&friday_signal::core::Signal::StartInferring);
+
                                           match model.predict(&audio) {
                                               Ok(prediction) => match prediction {
                                                   friday_inference::Prediction::Result{
                                                       class,
                                                   } => {
                                                       friday_logging::info!("Dispatching {}", class);
-                                                      dispatch(vendors, class);
+
+                                                      // Friday starts dispatching
+                                                      composer.send(&friday_signal::core::Signal::StartDispatching);
 
                                                       // Sleep to clear the replay buffer
                                                       //std::thread::sleep(std::time::Duration::from_millis(2000));
 
 
+                                                      // Clear buffer of any trace of the signal
+                                                      // that trigged this command
                                                       match istream.clear() {
                                                           Err(err) => {
                                                               friday_logging::fatal!(
@@ -106,7 +119,11 @@ pub fn serve_friday<M, S, V, R>(
                                                           Ok(()) => ()
                                                       };
 
+                                                      // Dispatch the command
+                                                      dispatch(vendors, class);
 
+                                                      // Friday stops dispatching
+                                                      composer.send(&friday_signal::core::Signal::StopDispatching);
                                                   },
                                                   friday_inference::Prediction::Silence => (),
                                                   friday_inference::Prediction::Inconclusive => ()
@@ -118,6 +135,8 @@ pub fn serve_friday<M, S, V, R>(
                                       },
                                       VADResponse::Silence => {
                                           if previous_was_inference {
+                                              composer.send(&friday_signal::core::Signal::StopInferring);
+
                                               match model.reset() {
                                                   Ok(()) => friday_logging::debug!("Model was reset"),
                                                   Err(err) => {

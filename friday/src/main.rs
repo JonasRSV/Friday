@@ -2,12 +2,12 @@ mod tests;
 mod serving;
 
 use friday_vendor;
-
 use vendor_scripts;
-
 use friday_audio;
-
 use friday_vad;
+use friday_discovery;
+use friday_logging;
+use friday_signal;
 
 use friday_inference;
 use friday_inference::Model;
@@ -15,11 +15,10 @@ use tensorflow_models;
 
 use friday_web::server::Server;
 
-use friday_discovery;
-
-use friday_logging;
 
 use std::sync::{Arc, Mutex};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 
 fn main() {
@@ -103,8 +102,17 @@ fn main() {
     let mut vad = friday_vad::vad_peaks::PeakBasedDetector::new()
         .expect("Failed to create VAD - PeakBasedDetector");
 
+    let mut composer = friday_signal::Composer::new().expect("Failed to construct signal composer");
+
+    composer.register_devices(
+        vec![
+            //Rc::new(RefCell::new(friday_signal::mock::MockDevice{}))
+            
+        ]
+    );
+
     // Serve friday using the main thread
-    serving::serve_friday(&mut vad, &mut model, &vendors, istream);
+    serving::serve_friday(&mut vad, &mut model, &vendors, istream, &mut composer);
 
     friday_logging::info!("Shutting Down Webserver.. Might take a few seconds");
     web_handle.stop();

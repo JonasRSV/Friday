@@ -574,6 +574,7 @@ dependencies = [
  "friday-error",
  "friday-inference",
  "friday-logging",
+ "friday-signal",
  "friday-storage",
  "friday-vad",
  "friday-vendor",
@@ -637,6 +638,14 @@ version = "0.1.0"
 dependencies = [
  "ansi_term 0.12.1",
  "humantime 2.0.1",
+]
+
+[[package]]
+name = "friday-signal"
+version = "0.1.0"
+dependencies = [
+ "friday-error",
+ "friday-logging",
 ]
 
 [[package]]

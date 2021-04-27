@@ -1,8 +1,8 @@
 {
   "export_dir": "test-resources/ddl_apr_13_eu",
-  "sensitivity": 0.6,
+  "sensitivity": 0.4,
   "audio": {
-    "631-363-848-139.wav": "illuminati",
-    "108-489-219-80.wav": "illuminati"
-  }
+    "222-354-318-566.wav": "kalas"
+  },
+  "frames": 2
 }
