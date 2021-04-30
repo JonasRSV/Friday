@@ -143,6 +143,12 @@ if __name__ == '__main__':
         AudioAugmentations()
     ]
 
+    anchor_map_fns = [
+        LengthFilter(max_length=args.clip_length, min_length=0.0),
+        TextUpperCase(),
+        RandomBiPadding(length=args.clip_length),
+    ]
+
     utterances = meta_pass(args.source)
     writers = Writers(sink_prefix=args.sink_prefix,
                       expected_file_size=args.expected_file_size,
@@ -159,7 +165,7 @@ if __name__ == '__main__':
 
                 # Lazy way of avoiding to check for mismatches between doFn and the mapFn
                 try:
-                    anchor = apply_map_fn(anchor, map_fns)
+                    anchor = apply_map_fn(anchor, anchor_map_fns)
                     positive = apply_map_fn(positive, map_fns)
                     negative = apply_map_fn(negative, map_fns)
 
