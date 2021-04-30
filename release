@@ -53,7 +53,42 @@ create_pi_release () {
 } 
 
 create_linux_release () {
-  echo "${fg_magenta}I am not implemented ${fg_reset}"
+  echo "${fg_magenta}Creating linux x86_64 release ${fg_reset}"
+
+  echo "${fg_magenta}Creating 'releases/release-linux' ${fg_reset}"
+  mkdir -p releases/release-linux
+
+  echo "${fg_magenta}Copying 'bin/friday-x86_64-unknown-linux-gnu' 'releases/release-linux' ${fg_reset}"
+  cp bin/friday-x86_64-unknown-linux-gnu releases/release-linux
+
+  echo "${fg_magenta}Copying 'releases/*.json' 'releases/release-linux' ${fg_reset}"
+  cp releases/*.json releases/release-linux
+
+  echo "${fg_magenta}Copying 'releases/models' 'releases/release-linux' ${fg_reset}"
+  cp -r releases/models releases/release-linux
+
+  echo "${fg_magenta}Copying 'releases/discovery' 'releases/release-linux' ${fg_reset}"
+  cp -r releases/discovery releases/release-linux
+
+  echo "${fg_magenta}Copying 'friday/friday-vendor/vendor-scripts/test-resources/scripts' 'releases/release-linux' ${fg_reset}"
+  cp -r friday/friday-vendor/vendor-scripts/test-resources/scripts releases/release-linux
+
+  echo "${fg_magenta}Copying 'web/nightout/release/' 'releases/release-linux/' ${fg_reset}"
+  cp -r web/nightout/release releases/release-linux
+
+
+  GUI_DIR=releases/release-linux/nightout
+  if [ -d "$GUI_DIR" ]; then rm -Rf $GUI_DIR; fi
+
+  echo "${fg_magenta}Renaming 'releases/release-linux/release' '$GUI_DIR'${fg_reset}"
+  mv releases/release-linux/release $GUI_DIR
+
+  echo "${fg_magenta}Creating 'releases/release-linux/recordings' '${fg_reset}"
+  mkdir -p releases/release-linux/recordings
+
+
+  echo "${fg_green}Release successful! Release should be in releases/release-linux! :) ${fg_reset}"
+
 
 }
 
