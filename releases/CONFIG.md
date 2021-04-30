@@ -77,11 +77,13 @@ The following configuration makes it so that when 'illuminati' is uttered friday
 
 ## vad_peaks.json
 
+```javascript
 {
   "min_peaks": 4,
   "min_peak_height": 13000,
   "verbose": true
 }
+```
 
 **min_peaks** the minimum number of peaks with 'min_peak_height' that need to be present in the audio to pass
 
@@ -93,9 +95,11 @@ The following configuration makes it so that when 'illuminati' is uttered friday
 ## discovery/kartasite.json
 
 
+```javascript
 {
   "site_url": "https://discoverfriday.se/ping"
 }
+```
 
 
 **site_url** url to site it will ping with information to make it possible to find your Friday on https://discoverfriday.se/ (your device name will show up on that page and it will link to your Fridays local IP.
