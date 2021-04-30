@@ -49,7 +49,7 @@ impl Scripts {
         friday_storage::config::get_config_directory().map_or_else(
             propagate!("Failed to create get config directory for 'Scripts' Vendor"), 
             |mut config_dir| {
-                // We store all scripts in 'CONFIG_ROOT/recordings'
+                // We store all scripts in 'CONFIG_ROOT/scripts'
                 config_dir.push("scripts");
                 friday_storage::files::Files::new(config_dir).map_or_else(
                     propagate!("Failed to create 'Files' for 'Scripts' vendor"),
