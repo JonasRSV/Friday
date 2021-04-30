@@ -2,7 +2,6 @@
 
 Friday is a keyword spotting based voice assistant. The main feature is that it is wake word free, offline and uses few-shot learning to add new keywords. 
 
-- [Features](#features)
 - [Demo](#demo)
 - [Installation](#installation)
 - [Releases](#releases)
@@ -10,9 +9,8 @@ Friday is a keyword spotting based voice assistant. The main feature is that it 
 - [Architecture](#architecture)
 
 
-## Demo
 
-TODO..
+TODO.. Demo
 
 
 ## Installation
