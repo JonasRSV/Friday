@@ -42,46 +42,9 @@ The Friday project consists of three components
 
 The main binary found under [/friday](friday) contains the following modules
 
-- [friday inference](friday/friday-inference)
-- [friday vad](friday/friday-vad)
-- [friday web](friday/friday-web)
-- [friday storage](friday/friday-storage)
-- [friday vendor](friday/friday-vendor)
-- [friday audio](friday/friday-audio)
-- [friday discovery](friday/friday-discovery)
-- [friday signal](friday/friday-signal)
-- [friday logging](friday/friday-logging)
-- [friday error](friday/friday-error)
-
-
 ![diagram](art/friday-binary.png)
 
-the error, logging and storage modules are used by all other modules for things such as logging, error handling and loading / storing configurations or other files. Moreover, Friday has 3 main logic flows. 
-
-1. Inference flow
-2. Web flow
-3. Discovery flow
-
-Each flow runs in separate threads.
-
-The **inference flow** 
-
-1. read audio chunk using some implementation of the [Recorder trait](friday/friday-audio/src/recorder.rs) in **friday-audio**. 
-2. Use  **friday-vad** (voice activity detection) an implementation of [SpeakDetector trait](friday/friday-vad/src/core.rs).
-3. If **friday-vad** determines audio to contain no voice - return to 1.
-4. Use **friday-inference** an implementation of [Model trait](friday/friday-inference/src/lib.rs) to find what, if any, keyword is in speech.
-5. If **friday-inference** finds no keyword - return to 1.
-6. Use **friday-vendor** to dispatch commands to all known vendors. Anything implementing the [Vendor trait](friday/friday-vendor/src/lib.rs) can dispatch actions.
-
-
-The **Web flow**
-
-Each of the modules in the inference flow also exposes web endpoints. The audio module exposes endpoint to record audio and store it as files on the assistant. Implementations of models have their own specific endpoints as well and implementations of vendors too. All of these endpoints are used to get information about the inference flow and to modify its components, for example by adding keywords to implementations of inference or by connecting keywords to implementations of vendors. The web flow also serves a website that can interact with Fridays API and function as a GUI.
-
-The **Discovery flow**
-
-This flow is supposed to make usage of friday easier e.g helping to connect to wifi and finding the GUI etc. Currently it only does one thing, every 1 hour it pings https://discoverfriday.se and it sends its name and local IP, so that one can find any devices on your local network by visiting https://discoverfriday.se 
-
+audio is recorded with **friday-audio**, **friday-vad** is a low resource barrier to **friday-inference**. **friday-vad** executes keywords spotted by **friday-inference**. Each module uses the utility modules **friday-error**, **friday-logging** and **friday-storage** for persistance, logging and error handling. Each module also implements endpoint via **friday-web** which is used to get information and set information via an API. This enables adding keywords and configuring the assistant via a WebGUI. **friday-discovery** exposes functionality to make finding the assistant eaiser. **friday-signal** is under development but is ment to be used by the assistant to send physical signals, such as noise or light to indicate to the user at what stage of the inference pipeline the model is at.
 
 
 ### Models 
