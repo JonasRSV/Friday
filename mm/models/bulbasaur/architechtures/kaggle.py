@@ -13,7 +13,7 @@ def kaggle_cnn(x: tf.Tensor,
                                        kernel_size=(7, 3),
                                        activation=tf.nn.relu,
                                        name="kaggle_cnn_1_c")(x)
-        print("x", x)
+        #print("x", x)
         #x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 3), strides=(1, 3),
                                             # name="kaggle_cnn_1_m")(x)
         x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 3), strides=(1, 1), name="kaggle_cnn_1_m")(x)
