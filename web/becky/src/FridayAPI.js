@@ -31,9 +31,9 @@ export class FridayAPI {
     // TODO: how to do this better?
     // For dev
     //static prefix = "http://" + window.location.host.slice(0, -5) + ":8000";
-    //static prefix = "http://0.0.0.0:8000";
+    static prefix = "http://0.0.0.0:8000";
     // For production
-    static prefix = "";
+    //static prefix = "";
 
     static getDeviceName = () => APIGetDeviceName(this.prefix);
     static setDeviceName = (name) => APISetDeviceName(
@@ -64,6 +64,19 @@ export class FridayAPI {
         APIClearBoundScriptsCache();
       });
     }
+
+    // Technically not an API endpoint, but a representation of scripts atm
+    static getCommands = () => 
+      APIGetBoundScripts(this.prefix).then(scripts => {
+
+        commands = [];
+        for (var key in scripts) {
+          commands.push(new Command(key, scripts[key]));
+        }
+
+        return commands;
+      })
+
     static getAllScripts = () => APIGetAllScripts(this.prefix);
 
     // Recording API

@@ -1,13 +1,18 @@
 <script>
 import { onMount } from "svelte";
+import { Command } from "../core/Command.js";
 /*import { FridayAPI } from "./FridayAPI.js"*/
-import Main from "./components/Main.svelte"
 
-let component = Main;
-let setComponent = (c) => component = c;
+
+export let setComponent;
+
+
 
 onMount (async () => { 
+
+
   console.log("Mounting app")
+
 });
 
 
@@ -16,9 +21,13 @@ onMount (async () => {
 
 <style>
 
+
 </style>
 
-<svelte:component this={component} setComponent={setComponent}/>
+<main>
+  <div>Commands</div>
+</main>
+
 
 
 
