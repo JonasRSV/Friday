@@ -10,62 +10,14 @@ if os.getcwd() not in sys.path:
 from models.bulbasaur.inference.simple import Simple
 from enum import Enum
 
-from pipelines.evaluate.query_by_example.usability_pipeline import run as usability_run
-from pipelines.evaluate.query_by_example.resources_pipeline import run as resource_run
-from pipelines.evaluate.query_by_example.metrics import personal
-from pipelines.evaluate.query_by_example.metrics.storage import append
-from pipelines.evaluate.query_by_example.metrics import distance
-from pipelines.evaluate.query_by_example.core import Pipelines
-from pipelines.evaluate.query_by_example.personal_pipeline import run as personal_run
-from pipelines.evaluate.query_by_example.google_speech_commands_pipeline import run as google_run
-
-
 class Bulbasaur(Enum):
     Simple = "Simple"
 
 
 def run_google_speech_commands_pipeline(model_fn):
+    # TODO:
     keywords = ["dog", "down", "learn", "left", "seven", "sheila"]
 
-    df = google_run(model_fn(), keywords=keywords)
-
-    append("google_speech_commands_results.csv", df)
-
-
-def run_personal_pipeline(model_fn):
-    (a, b), keywords = personal_run(model_fn())
-
-    df = distance.metrics_per_distance(a, 100, len(b), keywords)
-    append("metrics_per_distance.csv", df)
-    # distance.metrics(a, keywords=keywords)
-
-    print("max efficacy", df["efficacy"].max())
-    distance_maximizing_efficacy = df.iloc[df["efficacy"].argmax()]["distance"]
-    print("best distance", distance_maximizing_efficacy)
-    print(a)
-
-    b = distance.b_from_a(a, keywords, distance_maximizing_efficacy)
-    b["timestamp"] = time.time()
-    # print("b\n", b)
-    # print("b from a\n", distance.b_from_a(a, keywords, distance_maximizing_efficacy))
-
-    append("confusion-matrix.csv", b)
-    # df = personal.main(df=b, keywords=keywords)
-    # df["model"] = model.name()
-    # append("personal.csv", df)
-
-    print(df)
-
-def run_resource_pipeline(model_fn):
-    """Runs resource evaluation pipeline."""
-    df = resource_run(model_fn, K=30, N=100)
-    append("latency.csv", df)
-
-def run_usability_pipeline(model_fn):
-    """Runs resource evaluation pipeline."""
-    df = usability_run(model_fn)
-
-    append("usability.csv", df)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
