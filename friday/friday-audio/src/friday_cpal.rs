@@ -7,7 +7,6 @@ use friday_error::{frierr, propagate, FridayError};
 use friday_logging;
 use crate::recorder::Recorder;
 use crate::RecordingConfig;
-use crate::bandpass::FIR;
 
 use std::thread;
 use std::time;
@@ -34,7 +33,7 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>,
 
                     };
                 }
-        }
+            }
 
         match buffer.lock() {
             Ok(mut guard) => insert(input, &mut guard, loudness_contant),
@@ -93,7 +92,6 @@ pub struct CPALIStream {
     _stream: cpal::Stream,
     buffer: Arc<Mutex<CircularQueue<i16>>>,
 
-    fir: FIR
 }
 
 // If things break, this is possibly a culprit
@@ -141,16 +139,11 @@ impl CPALIStream {
                             .map_or_else(
                                 |err| frierr!("Recording Failed {}", err),
                                 |_| {
-                                    match FIR::new() {
-                                        Err(err) => frierr!("Failed to create FIR, Reason {:?}", err),
-                                        Ok(fir) => Ok(Arc::new(Mutex::new(CPALIStream{
-                                            config: conf.clone(),
-                                            _stream: stream,
-                                            buffer: read_buffer,
-                                            fir
-                                        })))
-
-                                    }
+                                    Ok(Arc::new(Mutex::new(CPALIStream{
+                                        config: conf.clone(),
+                                        _stream: stream,
+                                        buffer: read_buffer,
+                                    })))
                                 })
 
                     });
@@ -166,7 +159,6 @@ impl Recorder for CPALIStream {
                 data.extend(guard.asc_iter());
                 data.resize(self.config.model_frame_size, 0);
 
-                //data = self.fir.pass(&data);
                 return Some(data);
             }
             Err(err) => {
