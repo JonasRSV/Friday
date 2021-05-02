@@ -1,19 +1,45 @@
 <script>
 import { onMount } from "svelte";
 import { Command } from "../core/Command.js";
+import { navigation } from "../core/Enums.js";
+import CommandBar from "./commands/CommandBar.svelte";
+import CommandEditor from "./commands/CommandEditor.svelte"
 /*import { FridayAPI } from "./FridayAPI.js"*/
 
 
+export let root;
 export let setComponent;
 
+let commands = []
 
 
 onMount (async () => { 
 
-
-  console.log("Mounting app")
+  // TODO: load from API
+  commands = [
+    new Command("hello", ["hi.py", "bye.py"]),
+    new Command("good bye", ["goodbye.sh", "bye.sh"])
+  ]
 
 });
+
+let onCommandClick = (c) => {
+  // Update our display component to the command editor and set
+  // the proper 'goBack' function
+  setComponent(
+    CommandEditor, {
+      goBack:  () => setComponent(
+        root, {
+          page: navigation.commands
+        }
+      ), 
+      command: c
+    }
+  );
+
+  console.log("Clicked on", c.id);
+
+};
 
 
 
@@ -24,9 +50,10 @@ onMount (async () => {
 
 </style>
 
-<main>
-  <div>Commands</div>
-</main>
+
+{#each commands as command (command.id)}
+  <CommandBar bind:command={command} click={() => onCommandClick(command)}/>
+{/each}
 
 
 
