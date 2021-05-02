@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "illuminati": [
+    "ulf": [
       "hello_world.py"
     ]
   }

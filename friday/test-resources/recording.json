@@ -1,4 +1,4 @@
 {
   "loudness": 1,
-  "device": "sysdefault:CARD=MICCU100BK"
+  "device": "default"
 }

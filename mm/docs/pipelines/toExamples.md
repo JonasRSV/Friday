@@ -113,7 +113,7 @@ python3 scripts/librispeech_to_mfa.py \
   --prefix=libri-360
 ```
 
-Then we use the MFA forced aligner, begin with downloading it [montreal forced aligner](https://montreal-forced-aligner.readthedocs.io/en/latest/)
+Then we use the MFA, begin with downloading it [montreal forced aligner](https://montreal-forced-aligner.readthedocs.io/en/latest/)
 from its [release page](https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner/releases)
 
 ##### Linux
