@@ -2,9 +2,13 @@
 
 ---
 
-MM stands for model making - the general flow is as follows
+MM stands for Model Making
 
-1. Datasets are downloaded (see docs/datasets.md)
+This contains code for training the **deep distance learning** model used by friday.
+
+To train one yourself:
+
+1. Download as many dataset as possible (see docs/datasets)
 2. Datasets are converted to a common format (see docs/pipelines.md)
 3. Common format is preprocessed (see docs/pipelines.md)
 4. Splitting (see docs/pipelines.md)
