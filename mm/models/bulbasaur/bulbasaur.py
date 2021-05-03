@@ -126,6 +126,14 @@ def get_metric_ops(distance: Distance,
         distance.EUCLIDEAN: lambda *args: euclidean_triplet_loss(*args)
     }[distance](anchor_embeddings, positive_embeddings, negative_embeddings, margin)
 
+    distance_op = {
+        distance.COSINE: cosine_distance,
+        distance.EUCLIDEAN: euclidean_distance
+    }[distance]
+
+    correct = distance_op(anchor_embeddings, positive_embeddings) < distance_op(anchor_embeddings, negative_embeddings)
+    metric_ops["correct"] = tf.metrics.mean(correct)
+
     return loss_op, metric_ops
 
 
@@ -184,15 +192,15 @@ def get_train_ops(distance: Distance,
 def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     # TODO(jonasrsv): Try dropping first 2 MFCC features
     # To make invariant to loudness (gain)
-    return audio.mfcc_feature(signal=signal,
-                              coefficients=27,
-                              sample_rate=sample_rate,
-                              frame_length=512,
-                              frame_step=256,
-                              fft_length=512,
-                              num_mel_bins=120,
-                              lower_edge_hertz=1,
-                              upper_edge_hertz=4000)
+    #return audio.mfcc_feature(signal=signal,
+    #                          coefficients=27,
+    #                          sample_rate=sample_rate,
+    #                          frame_length=512,
+    #                          frame_step=256,
+    #                          fft_length=512,
+    #                          num_mel_bins=120,
+    #                          lower_edge_hertz=1,
+    #                          upper_edge_hertz=4000)
     # return audio.mfcc_feature(signal=signal,
     #                          coefficients=20,
     #                          sample_rate=sample_rate,
@@ -204,14 +212,14 @@ def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     #                          upper_edge_hertz=4000)
     # Because https://www.quora.com/What-are-the-advantages-of-using-spectrogram-vs-MFCC-as-feature-extraction-for-speech-recognition-using-deep-neural-network
     # Tony says Mel filterbanks is slightly ahead, so we try it! :D
-    #return audio.mel_spectrogram_feature(signal=signal,
-    #                                     sample_rate=sample_rate,
-    #                                     frame_length=512,
-    #                                     frame_step=256,
-    #                                     fft_length=512,
-    #                                     num_mel_bins=120,
-    #                                     lower_edge_hertz=1,
-    #                                     upper_edge_hertz=4000)
+    return audio.mel_spectrogram_feature(signal=signal,
+                                         sample_rate=sample_rate,
+                                         frame_length=512,
+                                         frame_step=256,
+                                         fft_length=512,
+                                         num_mel_bins=120,
+                                         lower_edge_hertz=1,
+                                         upper_edge_hertz=sample_rate / 2)
 
 
 def get_embedding(audio_signal: tf.Tensor, sample_rate: int, embedding_dim: int, mode: tf.estimator.ModeKeys):
@@ -223,7 +231,7 @@ def make_model_fn(distance: Distance,
                   embedding_dim: int,
                   summary_output_dir: str,
                   margin: float = 1.0,
-                  sample_rate: int = 8000,
+                  sample_rate: int = 16000,
                   save_summaries_every: int = 100,
                   learning_rate: float = 0.001):
     def model_fn(features, labels, mode, config, params):
@@ -351,7 +359,7 @@ def main():
                         type=float,
                         help="Length of audio in seconds")
     parser.add_argument("--sample_rate",
-                        default=8000,
+                        default=16000,
                         type=int,
                         help="Sample rate of the audio")
     parser.add_argument("--batch_size",

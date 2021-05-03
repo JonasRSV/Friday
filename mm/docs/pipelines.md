@@ -19,7 +19,13 @@ sudo apt-get install sox && sudo apt-get libsox-fmt-mp3
 Some environment variables are used
 
 ```bash 
+
 FRIDAY_DATA=data
+EXPERIMENT_NAME=$(date | tr " " "_")
+FRIDAY_SESSION=${FRIDAY_DATA?}/${EXPERIMENT_NAME?}
+
+mkdir -p $FRIDAY_SESSION
+```
 ```
 
 
@@ -74,7 +80,17 @@ python3 scripts/librispeech_to_mfa.py \
 
 ### Common Voice to MFA
 
-TODO..
+Convert a Common Voice dataset to the input format expected by MFA using
+
+```bash
+python3 scripts/common_voice_to_mfa.py \
+  --tsv=${FRIDAY_DATA?}/cv-corpus-6.1-2020-12-11/en/validated.tsv \
+  --clips=${FRIDAY_DATA?}/cv-corpus-6.1-2020-12-11/en/clips \
+  --sink=${FRIDAY_DATA?}/mfa_data\
+  --max_per_speaker=50\
+  --sample_rate=16000\
+  --prefix=cv
+```
 
 ### Alignment
 
@@ -92,9 +108,17 @@ Run alignment with
 The phoneme lexicon can be found on the [mfa](https://montreal-forced-aligner.readthedocs.io/en/latest/) website
 
 
-### Alignments to Word Dataset
+### MFA Alignments to Word Dataset
 
-TODO..
+```bash
+python3 pipelines/mfa_alignments_to_words_dataset.py\
+  --audio=${FRIDAY_DATA}/mfa_data \
+  --alignments=${FRIDAY_DATA}/mfa_data_aligned \
+  --sink=${FRIDAY_DATA}/words_dataset \
+  --sample_rate=16000 \
+  --min_word_length=5 \
+  --min_occurrences=5 
+```
 
 
 
@@ -103,15 +127,19 @@ TODO..
 We create the triplet dataset from the [Word dataset](#word-dataset).
 
 
-
-
-
-Some environment variables are used
-
-```bash 
-FRIDAY_DATA=data
-EXPERIMENT_NAME=$(date | tr " " "_")
-FRIDAY_SESSION=${FRIDAY_DATA?}/${EXPERIMENT_NAME?}
-
-mkdir -p $FRIDAY_SESSION
+```bash
+python3 pipelines/triplization.py\
+  --source=${FRIDAY_DATA}/words_dataset \
+  --sink_prefix=${FRIDAY_SESSION}/ptfexamples-dml-2 \
+  --sample_rate=16000 \
+  --clip_length=2 \
+  --expected_file_size=250 \
+  --expected_total_size=100000
+  
+# add augmentations to positive and negative
+# --augmentations\
 ```
+
+
+
+

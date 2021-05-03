@@ -19,6 +19,25 @@ This dataset is used for training. Go through their instructions on the website 
 
 [common voice](https://commonvoice.mozilla.org/sv-SE/datasets) is a open-source dataset provided by mozilla. 
 
+After downloading there should be a directory
+
+```bash
+$FRIDAY_DATA/cv-corpus-xxx/yy
+```
+
+and inside yy there should be
+
+```bash
+clips/
+dev.tsv
+invalidated.tsv
+other.tsv
+reported.tsv
+test.tsv
+train.tsv
+validated.tsv
+```
+
 ## LibriSpeech
 
 

@@ -30,7 +30,7 @@ class Background(Augmentation):
         for file in background_noises.glob("*.mp3"):
             print(f"Loading background noise {file}")
             resampled_audio = transformer.build_array(
-                input_filepath=str(file), sample_rate_in=sample_rate, )
+                input_filepath=str(file), sample_rate_in=sample_rate)
 
             self.noises.append(resampled_audio)
             self.density.append(len(resampled_audio))
@@ -41,6 +41,7 @@ class Background(Augmentation):
         self.clips = np.arange(len(self.noises))
 
     def apply(self, audio: np.ndarray, sample_rate: int):
+        audio = np.array(audio)
         if self.sample_rate != sample_rate:
             raise Exception(f"Background noise mismatching sample rate {sample_rate} != {self.sample_rate}")
 

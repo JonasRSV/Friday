@@ -1,6 +1,9 @@
 import tensorflow as tf
-import shared.tfexample_utils as tfexample_utils
 import numpy as np
+
+def int64list_feature(value):
+    """Returns an int64_list from a bool / enum / int / uint."""
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
 
 def get_anchor_text(example: tf.train.Example) -> str:
@@ -38,34 +41,36 @@ def bytes_feature(value):
 
 
 def create_example(
-        anchor: tf.train.Example,
-        positive: tf.train.Example,
-        negative: tf.train.Example) -> tf.train.Example:
-    assert tfexample_utils.get_sample_rate(anchor) == tfexample_utils.get_sample_rate(positive) \
-           == tfexample_utils.get_sample_rate(negative)
+        sample_rate: int,
+        anchor_audio: np.array,
+        anchor_text: str,
+        positive_audio: np.array,
+        positive_text: str,
+        negative_audio: np.array,
+        negative_text: str) -> tf.train.Example:
 
     features = tf.train.Features(
         feature=dict(
             anchor=bytes_feature(
-                np.array(tfexample_utils.get_audio(anchor), dtype=np.int16).tobytes()
+                np.array(anchor_audio, dtype=np.int16).tobytes()
             ),
             positive=bytes_feature(
-                np.array(tfexample_utils.get_audio(positive), dtype=np.int16).tobytes()
+                np.array(positive_audio, dtype=np.int16).tobytes()
             ),
             negative=bytes_feature(
-                np.array(tfexample_utils.get_audio(negative), dtype=np.int16).tobytes()
+                np.array(negative_audio, dtype=np.int16).tobytes()
             ),
-            anchor_text=tfexample_utils.bytes_feature(
-                tfexample_utils.get_text(anchor)
+            anchor_text=bytes_feature(
+                anchor_text.encode("utf-8")
             ),
-            positive_text=tfexample_utils.bytes_feature(
-                tfexample_utils.get_text(positive)
+            positive_text=bytes_feature(
+                positive_text.encode("utf-8")
             ),
-            negative_text=tfexample_utils.bytes_feature(
-                tfexample_utils.get_text(negative)
+            negative_text=bytes_feature(
+                negative_text.encode("utf-8")
             ),
-            sample_rate=tfexample_utils.int64list_feature([
-                tfexample_utils.get_sample_rate(positive)
+            sample_rate=int64list_feature([
+                int(sample_rate)
             ])))
 
     return tf.train.Example(features=features)

@@ -1,25 +1,9 @@
-import tensorflow as tf
-import shared.tfexample_utils as tfexample_utils
-from pipelines.preprocessing.abstract_preprocess_fn import PreprocessFn
 from typing import List
+import numpy as np
 
 
-class LengthFilter(PreprocessFn):
+def acceptable_length(max_length: float, min_length: float, audio: np.ndarray, sample_rate: int) -> bool:
+    if min_length <= (len(audio) / sample_rate) <= max_length:
+        return True
 
-    def __init__(self, max_length: float, min_length: float):
-        self.max_length = max_length
-        self.min_length = min_length
-
-        self.dropped_samples = 0
-        self.kept_samples = 0
-
-    def do(self, example: tf.train.Example) -> List[tf.train.Example]:
-        sample_rate = tfexample_utils.get_sample_rate(example)
-        audio = tfexample_utils.get_audio(example)
-
-        if self.min_length <= (len(audio) / sample_rate) <= self.max_length:
-            self.kept_samples += 1
-            return [example]
-
-        self.dropped_samples += 1
-        return []
+    return False

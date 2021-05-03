@@ -8,7 +8,6 @@ import textgrid
 import argparse
 import sox
 import pathlib
-import shared.tfexample_utils as tfexample_utils
 import tensorflow as tf
 from tqdm import tqdm
 from typing import Mapping
@@ -45,29 +44,30 @@ def alignments_pass(alignments: pathlib.Path) -> Alignments:
 class Writers:
     """Class containing the recordIO writers."""
 
-    def __init__(self, base: pathlib.Path, words: [str]):
+    def __init__(self, 
+                 transformer: sox.Transformer,
+                 base: pathlib.Path,
+                 words: [str]):
+        self.transformer = transformer
         self.base = base
         self.words = words
-
-        self.writers = {}
-        for word in words:
-            self.writers[word] = tf.io.TFRecordWriter(str(self.__path(word)))
+        self.word_counts = {word: 0 for word in words}
 
     def __path(self, word: str):
-        return self.base / f"tfexamples.{word}.mfa"
+        output_dir = self.base / word
+        if not output_dir.is_dir():
+            os.makedirs(output_dir)
+
+        self.word_counts[word] += 1
+        return self.base / word / f"mfa_align-{self.word_counts[word]}.wav"
 
     def write(self, word: str, sample_rate: int, audio: [int]):
-        example = tfexample_utils.create_example(
-            audio=audio,
-            text=word,
-            sample_rate=sample_rate
+        output_path = self.__path(word)
+
+        self.transformer.build_file(
+            input_array=np.array(audio, dtype=np.int16), sample_rate_in=sample_rate,
+            output_filepath=str(output_path)
         )
-
-        self.writers[word].write(example.SerializeToString())
-
-    def __del__(self):
-        for writer in self.writers.values():
-            writer.close()
 
 
 def get_words_to_convert(meta: Alignments,
@@ -80,20 +80,8 @@ def get_words_to_convert(meta: Alignments,
             and len(word) >= min_word_length
             ]
 
-
-def get_word_probabilities(meta: Alignments, words: [str], target_occurrences: float) -> [float]:
-    """A probability to include an occurrence of a word for each word.
-
-    This probability is used to try to make sure we get about 'target_occurrences' number of occurrences for each word,
-    where it is possible. We do it using probabilities to get a even spread to avoid just picking all occurrences from
-    one speaker.
-    """
-    return [min(target_occurrences / meta.word_counts[word], 1) for word in words]
-
-
 def create_datapoints(transformer: sox.Transformer,
                       writers: Writers,
-                      word_probability: Mapping[str, float],
                       grid: pathlib.Path,
                       audio: pathlib.Path):
     """Creates datapoints from a TextGrid."""
@@ -110,7 +98,7 @@ def create_datapoints(transformer: sox.Transformer,
             end_time = interval.maxTime
             text = interval.mark
 
-            if text in word_probability and word_probability[text] > np.random.rand():
+            if text in writers.word_counts:
                 start_sample = int(max((start_time - 0.1) * transformer.output_format["rate"], 0))
                 end_sample = int(min((end_time + 0.1) * transformer.output_format["rate"], resampled_audio.size))
 
@@ -127,15 +115,12 @@ def create_datapoints(transformer: sox.Transformer,
 def sample_pass(transformer: sox.Transformer,
                 writers: Writers,
                 words: [str],
-                probabilities: [float],
                 audio: pathlib.Path,
                 alignments: pathlib.Path):
     """Perform a pass to sample data for the dataset.
 
     During this pass the actual dataset is also created.
     """
-    word_probability = {word: probability for word, probability in zip(words, probabilities)}
-
     for speaker in tqdm(list(alignments.glob("*")), desc="Dataset Pass"):
 
         # To ignore hidden files etc.
@@ -143,7 +128,6 @@ def sample_pass(transformer: sox.Transformer,
             for grid in speaker.glob("*.TextGrid"):
                 create_datapoints(transformer=transformer,
                                   writers=writers,
-                                  word_probability=word_probability,
                                   grid=grid,
                                   audio=audio)
 
@@ -157,8 +141,6 @@ if __name__ == "__main__":
                         help="Minimum number of times a word should occur")
     parser.add_argument("--min_word_length", type=int, required=True,
                         help="Minimum length of word")
-    parser.add_argument("--target_occurrences", type=int, required=True,
-                        help="Number of times we aim for a word to occur")
     parser.add_argument("--sample_rate", type=int, default=8000,
                         help="Sample rate to convert data to.")
 
@@ -169,21 +151,16 @@ if __name__ == "__main__":
                                  args.min_occurrences,
                                  args.min_word_length)
     print(f"N words: {len(words)} ")
-    probabilities = get_word_probabilities(meta, words, args.target_occurrences)
-
-    words = words
-    probabilities = probabilities
 
     transformer = sox.Transformer()
     transformer.set_output_format(rate=args.sample_rate, channels=1)
 
-    writers = Writers(args.sink, words)
+    writers = Writers(transformer, args.sink, words)
 
     sample_pass(
         transformer=transformer,
         writers=writers,
         words=words,
-        probabilities=probabilities,
         audio=args.audio,
         alignments=args.alignments
     )

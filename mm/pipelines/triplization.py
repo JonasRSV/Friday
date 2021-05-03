@@ -4,14 +4,14 @@ import os
 # Some systems dont use the launching directory as root
 sys.path.append(os.getcwd())
 
+import numpy as np
 import tensorflow as tf
 import argparse
 import shared.tfexample_dma_utils as tfexample_dma_utils
 import random
-from pipelines.preprocessing.abstract_preprocess_fn import PreprocessFn
-from pipelines.preprocessing.uppercase_text import TextUpperCase
-from pipelines.preprocessing.filter_on_length import LengthFilter
-from pipelines.preprocessing.random_bipadding import RandomBiPadding
+import sox
+from pipelines.preprocessing.filter_on_length import acceptable_length
+from pipelines.preprocessing.random_bipadding import bipadding
 from pipelines.preprocessing.audio_augmentations import AudioAugmentations
 from tqdm import tqdm
 from typing import Dict, List
@@ -30,13 +30,18 @@ class Utterances:
 
 def meta_pass(source: Path) -> Utterances:
     meta = Utterances()
-    for example in source.glob("tfexamples*"):
-        keyword = example.stem.split(".")[1]
+    for word in source.glob("*"):
+        if word.stem.startswith("."):
+            print("ignoring hidden file", word)
+            continue
+
+        keyword = word.stem
+        ##print("keywords", keyword)
 
         if keyword not in meta.word_files:
             meta.word_files[keyword] = []
 
-        meta.word_files[keyword].append(example)
+        meta.word_files[keyword] = list(word.glob("*"))
 
     meta.words = list(meta.word_files.keys())
 
@@ -50,17 +55,28 @@ class Writers:
         self.expected_total_size = expected_total_size
 
         self.writers = [
-            tf.io.TFRecordWriter(f"{sink_prefix}-dml-{i}")
+            tf.io.TFRecordWriter(f"{sink_prefix}-{i}")
             for i in range(self.expected_total_size // self.expected_file_size)
         ]
 
         self.written_mb = 0
 
     def write(self,
-              anchor: tf.train.Example,
-              positive: tf.train.Example,
-              negative: tf.train.Example):
-        example = tfexample_dma_utils.create_example(anchor, positive, negative)
+              sample_rate: int,
+              anchor_audio: np.ndarray,
+              anchor_text: str,
+              positive_audio: np.ndarray,
+              positive_text: str,
+              negative_audio: np.ndarray,
+              negative_text: str):
+
+        example = tfexample_dma_utils.create_example(sample_rate,
+                                                     anchor_audio,
+                                                     anchor_text,
+                                                     positive_audio,
+                                                     positive_text,
+                                                     negative_audio,
+                                                     negative_text)
         example_bytes = example.SerializeToString()
 
         example_mbs = sys.getsizeof(example_bytes) / 1e6
@@ -71,11 +87,7 @@ class Writers:
         return example_mbs
 
 
-def sample_files(utterances: Utterances) -> (Path, Path, Path):
-    """Samples 3 files given all utterances.
-
-    Returns: (anchor: Path, positive: Path, negative: Path)
-    """
+def sample_triplet(transformer: sox.Transformer, utterances: Utterances) -> ((np.ndarray, str), (np.ndarray, str), (np.ndarray, str)):
     anchor = random.choice(utterances.words)
 
     negative = random.choice(utterances.words)
@@ -86,32 +98,30 @@ def sample_files(utterances: Utterances) -> (Path, Path, Path):
     positive_file = random.choice(utterances.word_files[anchor])
     negative_file = random.choice(utterances.word_files[negative])
 
-    return anchor_file, positive_file, negative_file
+   # print("anchor file", anchor_file)
+   # print("positive file", positive_file)
+   # print("negative file", negative_file)
 
+    anchor_word = anchor_file.parent.stem
+    anchor_audio = transformer.build_array(
+        input_filepath=str(anchor_file)
+    )
 
-def sample_triplets(samples: int, anchor_file: Path, positive_file: Path, negative_file: Path):
-    anchor_examples = list(tf.data.TFRecordDataset(filenames=[str(anchor_file)]))
-    positive_examples = list(tf.data.TFRecordDataset(filenames=[str(positive_file)]))
-    negative_examples = list(tf.data.TFRecordDataset(filenames=[str(negative_file)]))
+    positive_word = positive_file.parent.stem
+    positive_audio = transformer.build_array(
+        input_filepath=str(positive_file)
+    )
 
-    anchor_examples = [tf.train.Example.FromString(example.numpy())
-                       for example in random.choices(anchor_examples, k=samples)]
+    negative_word = negative_file.parent.stem
+    negative_audio = transformer.build_array(
+        input_filepath=str(negative_file)
+    )
 
-    positive_examples = [tf.train.Example.FromString(example.numpy())
-                         for example in random.choices(positive_examples, k=samples)]
+    #print("anchor-word", anchor_word)
+    #print("positive-word", positive_word)
+    #print("negative-word", negative_word)
 
-    negative_examples = [tf.train.Example.FromString(example.numpy())
-                         for example in random.choices(negative_examples, k=samples)]
-
-    return zip(anchor_examples, positive_examples, negative_examples)
-
-
-def apply_map_fn(example: tf.train.Example,
-                 map_fns: List[PreprocessFn]):
-    for map_fn in map_fns:
-        example = map_fn.do(example)[0]
-
-    return example
+    return (anchor_audio, anchor_word), (positive_audio, positive_word), (negative_audio, negative_word)
 
 
 if __name__ == '__main__':
@@ -127,27 +137,46 @@ if __name__ == '__main__':
     parser.add_argument('--clip_length', type=float,
                         help="All audio clips with length (seconds) longer than 'maximum_clip_length' will be chunked",
                         default=2)
+    parser.add_argument('--sample_rate', type=int,
+                        help="sample_rate of audio",
+                        default=16000)
     parser.add_argument("--expected_file_size", type=int, help="File size in MB",
                         default=100)
     parser.add_argument("--expected_total_size", type=int, help="File size in MB",
                         default=1 * 1000)
-    parser.add_argument("--samples_per_instance", type=int, help="Number of samples to create per 'file' triple",
-                        default=10)
+
+    parser.add_argument("--augmentations", action="store_true", help="If should use augmentations on audio")
 
     args = parser.parse_args()
 
-    map_fns = [
-        LengthFilter(max_length=args.clip_length, min_length=0.0),
-        TextUpperCase(),
-        RandomBiPadding(length=args.clip_length),
-        AudioAugmentations()
-    ]
+    if args.augmentations:
+        augmentations = AudioAugmentations(sample_rate=args.sample_rate)
+    def pn_map(audio: np.ndarray, text: str) -> (np.ndarray, str, bool):
+        if not acceptable_length(args.clip_length, 0, audio, args.sample_rate):
+            return (None, None, False)
 
-    anchor_map_fns = [
-        LengthFilter(max_length=args.clip_length, min_length=0.0),
-        TextUpperCase(),
-        RandomBiPadding(length=args.clip_length),
-    ]
+        audio = bipadding(args.clip_length, audio, args.sample_rate)
+        text = text.upper()
+
+        if args.augmentations:
+            audio = augmentations.do(audio, args.sample_rate)
+
+
+        return audio, text, True
+
+
+    def anchor_map(audio: np.ndarray, text: str) -> (np.ndarray, str, bool):
+        if not acceptable_length(args.clip_length, 0, audio, args.sample_rate):
+            return (None, None, False)
+
+        audio = bipadding(args.clip_length, audio, args.sample_rate)
+        text = text.upper()
+
+        return audio, text, True
+
+    transformer = sox.Transformer()
+    transformer.set_output_format(rate=args.sample_rate, channels=1)
+
 
     utterances = meta_pass(args.source)
     writers = Writers(sink_prefix=args.sink_prefix,
@@ -156,24 +185,25 @@ if __name__ == '__main__':
 
     with tqdm(total=writers.expected_total_size) as progress_bar:
         while writers.written_mb <= writers.expected_total_size:
-            anchor_file, positive_file, negative_file = sample_files(utterances)
+            (anchor_audio, anchor_text), \
+                (positive_audio, positive_text), \
+                (negative_audio, negative_text) = sample_triplet(transformer, utterances)
 
-            for anchor, positive, negative in sample_triplets(args.samples_per_instance,
-                                                              anchor_file=anchor_file,
-                                                              positive_file=positive_file,
-                                                              negative_file=negative_file):
+            #try:
+            (anchor_audio, anchor_text, anchor_ok) = anchor_map(anchor_audio, anchor_text)
+            (positive_audio, positive_text, positive_ok) = pn_map(positive_audio, positive_text)
+            (negative_audio, negative_text, negative_ok) = pn_map(negative_audio, negative_text)
 
-                # Lazy way of avoiding to check for mismatches between doFn and the mapFn
-                try:
-                    anchor = apply_map_fn(anchor, anchor_map_fns)
-                    positive = apply_map_fn(positive, map_fns)
-                    negative = apply_map_fn(negative, map_fns)
+            if anchor_ok == positive_ok == negative_ok == True:
+                written_mbs = writers.write(args.sample_rate,
+                                            anchor_audio,
+                                            anchor_text,
+                                            positive_audio,
+                                            positive_text,
+                                            negative_audio,
+                                            negative_text)
 
-                    written_mbs = writers.write(anchor=anchor,
-                                                positive=positive,
-                                                negative=negative)
-
-                    progress_bar.update(n=written_mbs)
-                except Exception as e:
-                    print(f"triplet construction failed, reason: {e}")
+                progress_bar.update(n=written_mbs)
+            #except Exception as e:
+            #    print(f"triplet construction failed, reason: {e}")
 
