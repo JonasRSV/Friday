@@ -28,12 +28,12 @@ class Visualizations(Enum):
 
 
 def efficacy(df: pd.DataFrame):
-    plt.figure(figsize=(15, 5))
+    plt.figure(figsize=(7, 3))
     sb.set_style("whitegrid")
 
     plots = ["accuracy_as_first", "accuracy_as_some_point", "accuracy_as_majority"]
     for (model, t), df in df.groupby(by=["model", "time"]):
-        name = f"{model}-{int(t) % 100}"
+        name = f"{model}"
 
         for index, plot_name in enumerate(plots, 1):
             plt.subplot(1, 3, index)
@@ -52,16 +52,20 @@ def efficacy(df: pd.DataFrame):
 
         # sb.lineplot(df["norm_distance"], optimal_eff, label="optimal")
 
-        plt.title(plot_name, fontsize=12)
-        plt.ylabel("efficacy", fontsize=12)
-        plt.xlabel("distance", fontsize=12)
+        plt.xlabel("")
+        plt.ylabel("")
+
+        plt.title(plot_name, fontsize=8)
         plt.ylim([0, 100])
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
+        plt.xticks(fontsize=7)
+        plt.yticks(fontsize=7)
 
-    plt.legend(fontsize=12, bbox_to_anchor=(-0.3, -0.2))
+    plt.text(-3.2, 50.0, "efficacy", fontsize=9)
+    plt.text(-1.0, -20.0, "distance", fontsize=9)
 
-    plt.savefig(get_plot_dir() / f"efficacy.png", bbox_inches="tight")
+    plt.legend(fontsize=7, ncol=4, bbox_to_anchor=(-0.2, -0.25))
+
+    plt.savefig(get_plot_dir() / f"efficacy.pdf", bbox_inches="tight")
     plt.show()
 
 
@@ -69,7 +73,7 @@ def false_positive_rate(df: pd.DataFrame):
     plt.figure(figsize=(10, 3))
     sb.set_style("whitegrid")
     for (model, t), df in df.groupby(by=["model", "time"]):
-        name = f"{model}-{int(t) % 100}"
+        name = f"{model}"
 
         sb.lineplot(df["norm_distance"], df["false_positive_rate"], label=name)
 
@@ -87,7 +91,7 @@ def accuracies(df: pd.DataFrame):
     sb.set_style("whitegrid")
     plots = ["accuracy_as_first", "accuracy_as_some_point", "accuracy_as_majority"]
     for (model, t), df in df.groupby(by=["model", "time"]):
-        name = f"{model}-{int(t) % 100}"
+        name = f"{model}"
 
         for index, plot_name in enumerate(plots, 1):
             plt.subplot(1, 3, index)
@@ -116,7 +120,7 @@ def confusion_matrix(df: pd.DataFrame):
     plt.figure(figsize=(16, rows * 7))
     sb.set_style("whitegrid")
     for i, ((model, t), df) in enumerate(groups[:rows * 2], 1):
-        name = f"{model}-{int(t) % 100}"
+        name = f"{model}"
 
         confusion_matrix = np.zeros((len(keywords) - 1, len(keywords)))
 
@@ -161,7 +165,7 @@ def latencies(df: pd.DataFrame):
         plt.ylabel("$\mathcal{L}(K)$", fontsize=20)
         plt.xlabel("K", fontsize=20)
 
-        plt.legend(bbox_to_anchor=(0.72, -0.25))
+        plt.legend(ncol=3, bbox_to_anchor=(0.84, -0.25))
         plt.savefig(get_plot_dir() / f"latencies.png", bbox_inches="tight")
         plt.show()
 
