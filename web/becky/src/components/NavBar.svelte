@@ -14,8 +14,6 @@ $: {
 }
 
 onMount (async () => { 
-  console.log("Mounting app")
-
 });
 
 
@@ -38,7 +36,8 @@ onMount (async () => {
 
 
 .commands {
-  background: url("/assets/icons/command-window.svg");
+  background: url("/assets/icons/command-navbar-icon.svg");
+  background-color: white;
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;
@@ -48,7 +47,8 @@ onMount (async () => {
 }
 
 .keywords {
-  background: url("/assets/icons/voice-message.svg") no-repeat;
+  background: url("/assets/icons/keyword-navbar-icon.svg") no-repeat;
+  background-color: white;
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;

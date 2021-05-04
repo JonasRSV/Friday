@@ -11,7 +11,6 @@ export async function APIGetKeywords(prefix) {
                 prefix + "/friday-inference/tensorflow-models/ddl/examples")
             .then(r => r.json())
             .then(j => {
-                // TODO: this should be done by the backend 
                 return Object.values(j).filter(onlyUnique)
             });
     }

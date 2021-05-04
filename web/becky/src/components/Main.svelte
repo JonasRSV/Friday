@@ -8,14 +8,12 @@ import { navigation } from "../core/Enums.js"
 
 
 export let setComponent;
-export let page = navigation.commands;
+export let page = navigation.keywords;
 export let root;
 
 let title = "Becky";
 
 onMount (async () => { 
-  console.log("Mounting app")
-
 });
 
 
@@ -28,13 +26,16 @@ main {
   text-align: center;
   padding: 1em;
   margin: 0 auto;
+
+  margin-bottom: 80px;
+
 }
 
 
 </style>
 
 
-<main>
+<main >
   <header class="mb-5">
     <h1>{title}</h1>
   </header>
@@ -42,10 +43,11 @@ main {
   {#if page == navigation.commands}
     <Commands setComponent={setComponent} root={root}/>
   {:else if page == navigation.keywords}
-    <Keywords setComponent={setComponent}/>
+    <Keywords setComponent={setComponent} root={root}/>
   {:else}
     <div>Unknown page {page}</div>
   {/if}
+
 
 </main>
 

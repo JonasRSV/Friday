@@ -12,7 +12,6 @@ let setComponent = (c, p) => {
 };
 
 onMount (async () => { 
-  console.log("Mounting app")
 });
 
 

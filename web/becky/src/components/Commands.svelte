@@ -21,6 +21,10 @@ onMount (async () => {
     new Command("good bye", ["goodbye.sh", "bye.sh"])
   ]
 
+
+  // When editing commandEditor
+ /*onCommandClick(commands[0]);*/
+
 });
 
 let onCommandClick = (c) => {
