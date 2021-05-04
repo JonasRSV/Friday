@@ -37,15 +37,15 @@ def convert_cv(transformer: sox.Transformer,
                 audio_without_stem = audio.split(".")[0]
 
                 input_audio_file = clips / audio
-                output_audio_file = speaker_sink / f"{prefix}-{audio_without_stem}.wav"
 
+                output_audio_file = speaker_sink / f"{prefix}-{audio_without_stem}.wav"
                 output_transcription_file = speaker_sink / f"{prefix}-{audio_without_stem}.lab"
 
-
-                transformer.build_file(input_filepath=str(input_audio_file), output_filepath=str(output_audio_file))
                 with open(str(output_transcription_file), "w") as o:
                     transcription = normalize_transcription(transcription)
                     o.write(transcription)
+
+                transformer.build_file(input_filepath=str(input_audio_file), output_filepath=str(output_audio_file))
             except Exception as e:
                 print(f"Failed to convert audio {audio} with sentence {transcription} reason: {str(e)}")
 
