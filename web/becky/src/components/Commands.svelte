@@ -4,6 +4,7 @@ import { Command } from "../core/Command.js";
 import { navigation } from "../core/Enums.js";
 import CommandBar from "./commands/CommandBar.svelte";
 import CommandEditor from "./commands/CommandEditor.svelte"
+import Add from "./Add.svelte";
 /*import { FridayAPI } from "./FridayAPI.js"*/
 
 
@@ -32,9 +33,13 @@ let onCommandClick = (c) => {
   // the proper 'goBack' function
   setComponent(
     CommandEditor, {
+      "root": CommandEditor,
+      "setComponent": setComponent,
       goBack:  () => setComponent(
         root, {
-          page: navigation.commands
+          page: navigation.commands,
+          "root": root,
+          "setComponent": setComponent
         }
       ), 
       command: c
@@ -44,6 +49,10 @@ let onCommandClick = (c) => {
   console.log("Clicked on", c.id);
 
 };
+
+let addClick = () => {
+  console.log("adding command");
+}
 
 
 
@@ -61,4 +70,5 @@ let onCommandClick = (c) => {
 
 
 
+<Add click={addClick} />
 

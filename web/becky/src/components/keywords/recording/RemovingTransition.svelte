@@ -1,6 +1,7 @@
 <script>
 import { onMount } from "svelte";
 
+export let clip;
 export let onSync;
 export let onSuccess;
 export let onFailure;
@@ -13,29 +14,29 @@ let failed = true;
 
 
 onMount (async () => { 
-  // TODO emulating recording atm
-  let recordingPromise = new Promise((resolve, _) => {
+  let removingPromise = new Promise((resolve, _) => {
     setTimeout(() => {
-      resolve("123-222-333-333.wav");
-    }, 3000);
+      resolve("ok");
+    }, 500);
   });
 
-  recordingPromise.then(recording => {
-    console.log("Got recording", recording);
+  removingPromise.then(status => {
+    console.log("Remove returned", status);
+
     failed = false;
     gotSync = true;
 
-    onSync(recording).then(res => {
+    onSync().then(res => {
       console.log("got sync", res)
 
       gotSuccess = true;
-      setTimeout(() => onSuccess(recording), 1000);
+      setTimeout(() => onSuccess(), 1000);
     })
   });
 
   setTimeout(() => {
     if (failed) {
-      console.log("Probably Failed recording..");
+      console.log("Failed removing recording..");
       onFailure();
     }
   }, 8000);
@@ -115,132 +116,6 @@ onMount (async () => {
   }
 }
 
-
-.loader-container {
-height: 40px;
-width: 160px;
-/*margin: 200px auto 0;*/
-}
-
-.loader-container > div {
-  position: relative;
-  display: inline-block;
-  background: #03A9F4;
-  height: 100%;
-  width: 10px;
-  margin: 0;
-  -webkit-animation: load 2.0s ease-in-out infinite;
-  animation: load 2.0s ease-in-out infinite;
-}
-
-.loader-container .rectangle-2 {
-  -webkit-animation-delay: 0.1s;
-  animation-delay: 0.1s;
-}
-
-.loader-container .rectangle-3 {
-  -webkit-animation-delay: 0.2s;
-  animation-delay: 0.2s;
-}
-
-.loader-container .rectangle-4 {
-  -webkit-animation-delay: 0.3s;
-  animation-delay: 0.3s;
-}
-
-.loader-container .rectangle-5 {
-  -webkit-animation-delay: 0.4s;
-  animation-delay: 0.4s;
-}
-
-.loader-container .rectangle-6 {
-  -webkit-animation-delay: 0.5s;
-  animation-delay: 0.5s;
-}
-
-@-moz-keyframes load {
-  0%,
-  100% {
-    -moz-transform: scaleY(1);
-    background: #03A9F4;
-  }
-  16.67% {
-    -moz-transform: scaleY(3);
-    background: #FF5722;
-  }
-  33.33% {
-    -moz-transform: scaleY(1);
-    background: #FF5252;
-  }
-  50% {
-    -moz-transform: scaleY(3);
-    background: #E91E63;
-  }
-  66.67% {
-    -moz-transform: scaleY(1);
-    background: #9C27B0;
-  }
-  83.34% {
-    -moz-transform: scaleY(3);
-    background: #673AB7;
-  }
-} 
-
-@-webkit-keyframes load {
-  0%,
-  100% {
-    -webkit-transform: scaleY(1);
-    background: #03A9F4;
-  }
-  16.67% {
-    -webkit-transform: scaleY(3);
-    background: #FF5722;
-  }
-  33.33% {
-    -webkit-transform: scaleY(1);
-    background: #FF5252;
-  }
-  50% {
-    -webkit-transform: scaleY(3);
-    background: #E91E63;
-  }
-  66.67% {
-    -webkit-transform: scaleY(1);
-    background: #9C27B0;
-  }
-  83.34% {
-    -webkit-transform: scaleY(3);
-    background: #673AB7;
-  }
-} 
-
-@keyframes load {
-  0%,
-  100% {
-    transform: scaleY(1);
-    background: #03A9F4;
-  }
-  16.67% {
-    transform: scaleY(3);
-    background: #FF5722;
-  }
-  33.33% {
-    transform: scaleY(1);
-    background: #FF5252;
-  }
-  50% {
-    transform: scaleY(3);
-    background: #E91E63;
-  }
-  66.67% {
-    transform: scaleY(1);
-    background: #9C27B0;
-  }
-  83.34% {
-    transform: scaleY(3);
-    background: #673AB7;
-  }
-}
 
 /**
  * Extracted from: SweetAlert
@@ -420,19 +295,13 @@ width: 160px;
 <div class="loader"></div>
 </div>
 {:else}
-<div class="loader-container middle-screen">
-    <div class="rectangle-1"></div>
-    <div class="rectangle-2"></div>
-    <div class="rectangle-3"></div>
-    <div class="rectangle-4"></div>
-    <div class="rectangle-5"></div>
-    <div class="rectangle-6"></div>
-    <div class="rectangle-5"></div>
-    <div class="rectangle-4"></div>
-    <div class="rectangle-3"></div>
-    <div class="rectangle-2"></div>
-    <div class="rectangle-1"></div> 
-  </div>
+<div class="middle-screen">
+  <header>
+    <h6 class="text-center">Removing </h6>
+    <p>{clip}</p>
+  </header>
+<div class="loader"></div>
+</div>
 {/if}
 
 

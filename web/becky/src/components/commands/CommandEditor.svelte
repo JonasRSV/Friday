@@ -1,15 +1,10 @@
 
 <script>
 import { onMount } from "svelte";
-import CommandEditorKeywords from "./edit/CommandEditorKeywords.svelte"
-import CommandEditorScripts from "./edit/CommandEditorScripts.svelte"
-/*import { FridayAPI } from "./FridayAPI.js"*/
+import ScriptBar from "./scripts/ScriptBar.svelte"
+import ScriptPick from "./scripts/ScriptPick.svelte"
 
-// self reference
 export let root;
-
-
-// 
 export let setComponent;
 
 export let goBack;
@@ -19,6 +14,27 @@ onMount (async () => {
 
 });
 
+let updateScripts = (nextScripts) => {
+  command.scripts = nextScripts;
+
+  setComponent(
+    root,
+    {
+      "root": root,
+      "setComponent": setComponent,
+      "goBack": goBack,
+      "command": command
+    }
+  );
+}
+
+let pickScripts = () => {
+  setComponent(ScriptPick,
+    {
+      currentScripts: command.scripts,
+      nextScripts: updateScripts
+    });
+}
 
 
 </script>
@@ -31,6 +47,13 @@ main {
   padding: 1em;
   margin: 0 auto;
 }
+
+
+.button {
+  display: flex;
+}
+
+
 </style>
 
 
@@ -43,11 +66,21 @@ main {
     </h1>
   </header>
 
-  <CommandEditorKeywords root={root} setComponent={setComponent} keyword={command.keyword}/>
-  <CommandEditorScripts root={root} setComponent={setComponent} scripts={command.scripts}/>
+  <div class="d-flex flex-row">
+    <h3 class="text-left col-6">scripts</h3>
+    <div class="d-flex col-6 flex-row justify-content-end"> 
+      <button class="button" on:click={pickScripts}> edit </button>
+    </div>
+  </div>
+  <hr>
 
 
-  <button on:click={goBack}>done</button>
+{#each command.scripts as script (script)}
+  <ScriptBar script={script}/>
+{/each}
+
+
+<button on:click={goBack}>done</button>
 
 </main> 
 

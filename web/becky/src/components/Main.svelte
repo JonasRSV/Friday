@@ -8,7 +8,7 @@ import { navigation } from "../core/Enums.js"
 
 
 export let setComponent;
-export let page = navigation.keywords;
+export let page = navigation.commands;
 export let root;
 
 let title = "Becky";

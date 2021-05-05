@@ -5,11 +5,16 @@ import Main from "./components/Main.svelte"
 
 let component = Main;
 let props = {}
+
 let setComponent = (c, p) => {
-  console.log("component", c, "props", p)
   props = p;
   component = c;
 };
+
+props = {
+  "setComponent": setComponent,
+  "root": component
+}
 
 onMount (async () => { 
 });
@@ -22,7 +27,7 @@ onMount (async () => {
 
 </style>
 
-<svelte:component this={component} root={component} setComponent={setComponent} {...props}/>
+<svelte:component this={component} {...props}/>
 
 
 
