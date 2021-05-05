@@ -1,4 +1,6 @@
 from .core import Augmentation
+from .reverb import Reverb
+from .speed import Speed
 from .gaussian_noise import GaussianNoise
 from .time_stretch import TimeStretch
 from .pitch_shift import PitchShift

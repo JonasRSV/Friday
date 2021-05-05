@@ -130,14 +130,14 @@ We create the triplet dataset from the [Word dataset](#word-dataset).
 ```bash
 python3 pipelines/triplization.py\
   --source=${FRIDAY_DATA}/words_dataset \
-  --sink_prefix=${FRIDAY_SESSION}/ptfexamples-dml-2 \
+  --sink_prefix=${FRIDAY_SESSION}/ptfexamples-dml-1 \
   --sample_rate=16000 \
   --clip_length=2 \
+  --augmentations\
   --expected_file_size=250 \
   --expected_total_size=100000
   
 # add augmentations to positive and negative
-# --augmentations\
 ```
 
 

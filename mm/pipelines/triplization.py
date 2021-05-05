@@ -95,8 +95,14 @@ def sample_triplet(transformer: sox.Transformer, utterances: Utterances) -> ((np
     while negative == anchor:
         negative = random.choice(utterances.words)
 
+
+
     anchor_file = random.choice(utterances.word_files[anchor])
+
     positive_file = random.choice(utterances.word_files[anchor])
+    while positive_file == anchor_file:
+        positive_file = random.choice(utterances.word_files[anchor])
+
     negative_file = random.choice(utterances.word_files[negative])
 
    # print("anchor file", anchor_file)
@@ -152,6 +158,9 @@ if __name__ == '__main__':
 
     if args.augmentations:
         augmentations = AudioAugmentations(sample_rate=args.sample_rate)
+
+        pn_augmented = False
+
     def pn_map(audio: np.ndarray, text: str) -> (np.ndarray, str, bool):
         if not acceptable_length(args.clip_length, 0, audio, args.sample_rate):
             return (None, None, False)
@@ -159,8 +168,11 @@ if __name__ == '__main__':
         audio = bipadding(args.clip_length, audio, args.sample_rate)
         text = text.upper()
 
-        if args.augmentations:
-            audio = augmentations.do(audio, args.sample_rate)
+        if args.augmentations and np.random.rand() < 0.7:
+            audio = augmentations.do(audio)
+            pn_augmented = True
+        else:
+            pn_augmented = False
 
 
         return audio, text, True
@@ -172,6 +184,12 @@ if __name__ == '__main__':
 
         audio = bipadding(args.clip_length, audio, args.sample_rate)
         text = text.upper()
+
+        if args.augmentations:
+            if not pn_augmented:
+                audio = augmentations.do(audio)
+            elif np.random.rand() < 0.7:
+                audio = augmentations.do(audio)
 
         return audio, text, True
 

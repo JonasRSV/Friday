@@ -1,43 +1,44 @@
-import lilbrosa
+import librosa
+import time
+from pipelines.preprocessing.audio_augmentations import AudioAugmentations
+from pipelines.preprocessing.random_bipadding import bipadding
 import argparse
 import simpleaudio
 import random
 import numpy as np
 from pathlib import Path
 
-tf.compat.v1.enable_eager_execution()
-
 #TODO: 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--prefix", type=Path, required=True)
-
+    parser.add_argument("--augment", action="store_true")
+    parser.add_argument("--sample_rate", type=int, default=16000)
     args = parser.parse_args()
-    print(args.prefix)
 
-    for serialized_example in tf.data.TFRecordDataset(filenames=[
-        str(random.choice(list(args.prefix.glob("*"))))
-    ]):
-        example = tf.train.Example()
-        example.ParseFromString(serialized_example.numpy())
+    words = list(args.prefix.glob("*"))
+    print("words", len(words))
 
-        anchor = tfexample_dma_utils.get_anchor_audio(example)
-        positive = tfexample_dma_utils.get_positive_audio(example)
-        negative = tfexample_dma_utils.get_negative_audio(example)
+    augmentor = AudioAugmentations(args.sample_rate)
 
-        anchor_text = tfexample_dma_utils.get_anchor_text(example)
-        positive_text = tfexample_dma_utils.get_positive_text(example)
-        negative_text = tfexample_dma_utils.get_negative_text(example)
+    while True:
+        word = random.choice(words)
+        print("word", word)
 
-        sample_rate = tfexample_dma_utils.get_sample_rate(example)
+        audio_file = random.choice(list(word.glob("*")))
+        print("file", audio_file)
 
-        print("Anchor", anchor_text)
-        simpleaudio.play_buffer(anchor, 1, 2,
-                                sample_rate=sample_rate).wait_done()
-        print("Positive", positive_text)
-        simpleaudio.play_buffer(positive, 1, 2,
-                                sample_rate=sample_rate).wait_done()
-        print("Negative", negative_text)
-        simpleaudio.play_buffer(negative, 1, 2,
-                                sample_rate=sample_rate).wait_done()
+        content, sr = librosa.load(audio_file, sr=args.sample_rate)
+        content = (content * 2**15).astype(np.int16)
+
+        content = bipadding(2, content, sr)
+        if args.augment:
+            content = augmentor.do(content)
+
+        print("content", content)
+
+        simpleaudio.play_buffer(content, 1, 2,
+                                sample_rate=args.sample_rate).wait_done()
+
+        time.sleep(1)
 
