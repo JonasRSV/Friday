@@ -43,6 +43,6 @@ export let initKeywords = () => {
       }
 
       resolve(keywords);
-    }, 500);
+    }, 1000);
   });
 }

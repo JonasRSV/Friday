@@ -10,7 +10,7 @@ export let initCommands = () => {
         "when": ["where.sh", "cool.sh"]
       }
       resolve(commands);
-    }, 500);
+    }, 1000);
   });
 }
 

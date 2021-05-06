@@ -2,6 +2,7 @@
 import { onMount } from "svelte";
 /*import { FridayAPI } from "./FridayAPI.js"*/
 import Main from "./components/Main.svelte";
+import LoadingScreen from "./components/LoadingScreen.svelte";
 import { initCommands } from "./core/Command.js";
 import { initKeywords } from "./core/Keyword.js";
 
@@ -38,7 +39,7 @@ onMount (async () => {
 {#if renderComponent}
 <svelte:component this={component} {...props}/>
 {:else}
-  <div> loading.. </div>
+  <LoadingScreen />
 {/if}
 
 
