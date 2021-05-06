@@ -1,6 +1,6 @@
 # Raspberry Pi 3 
 
-- [prerequisites](#prerequisites)
+- [Prerequisites](#prerequisites)
 - [Setting up Raspberry Pi](#raspberry-pi)
 - [Installing Assistant](#installation)
   - [Releases](#releases)
