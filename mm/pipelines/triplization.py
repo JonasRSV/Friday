@@ -156,29 +156,30 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    positive_augmented = False
+
     if args.augmentations:
         augmentations = AudioAugmentations(sample_rate=args.sample_rate)
 
-        pn_augmented = False
-
-    def pn_map(audio: np.ndarray, text: str) -> (np.ndarray, str, bool):
+    def pn_map(audio: np.ndarray, text: str, positive: bool) -> (np.ndarray, str, bool):
+        global positive_augmented
         if not acceptable_length(args.clip_length, 0, audio, args.sample_rate):
             return (None, None, False)
 
         audio = bipadding(args.clip_length, audio, args.sample_rate)
         text = text.upper()
 
-        if args.augmentations and np.random.rand() < 0.7:
+        if args.augmentations and np.random.rand() < 0.5:
             audio = augmentations.do(audio)
-            pn_augmented = True
-        else:
-            pn_augmented = False
 
+            if positive:
+                positive_augmented = True
 
         return audio, text, True
 
 
     def anchor_map(audio: np.ndarray, text: str) -> (np.ndarray, str, bool):
+        global positive_augmented
         if not acceptable_length(args.clip_length, 0, audio, args.sample_rate):
             return (None, None, False)
 
@@ -186,10 +187,12 @@ if __name__ == '__main__':
         text = text.upper()
 
         if args.augmentations:
-            if not pn_augmented:
+            if not positive_augmented:
                 audio = augmentations.do(audio)
-            elif np.random.rand() < 0.7:
+            elif np.random.rand() < 0.5:
                 audio = augmentations.do(audio)
+
+        positive_augmented = False
 
         return audio, text, True
 
@@ -208,21 +211,22 @@ if __name__ == '__main__':
                 (positive_audio, positive_text), \
                 (negative_audio, negative_text) = sample_triplet(transformer, utterances)
 
-            #try:
-            (anchor_audio, anchor_text, anchor_ok) = anchor_map(anchor_audio, anchor_text)
-            (positive_audio, positive_text, positive_ok) = pn_map(positive_audio, positive_text)
-            (negative_audio, negative_text, negative_ok) = pn_map(negative_audio, negative_text)
+            try:
+                (positive_audio, positive_text, positive_ok) = pn_map(positive_audio, positive_text, True)
+                (negative_audio, negative_text, negative_ok) = pn_map(negative_audio, negative_text, False)
 
-            if anchor_ok == positive_ok == negative_ok == True:
-                written_mbs = writers.write(args.sample_rate,
-                                            anchor_audio,
-                                            anchor_text,
-                                            positive_audio,
-                                            positive_text,
-                                            negative_audio,
-                                            negative_text)
+                (anchor_audio, anchor_text, anchor_ok) = anchor_map(anchor_audio, anchor_text)
 
-                progress_bar.update(n=written_mbs)
-            #except Exception as e:
-            #    print(f"triplet construction failed, reason: {e}")
+                if anchor_ok == positive_ok == negative_ok == True:
+                    written_mbs = writers.write(args.sample_rate,
+                                                anchor_audio,
+                                                anchor_text,
+                                                positive_audio,
+                                                positive_text,
+                                                negative_audio,
+                                                negative_text)
+
+                    progress_bar.update(n=written_mbs)
+            except Exception as e:
+                print(f"triplet construction failed, reason: {e}")
 

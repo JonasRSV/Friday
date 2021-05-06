@@ -98,10 +98,10 @@ Run alignment with
 
 ```bash
 ./data/montreal-forced-aligner/bin/mfa_align \
-  ${FRIDAY_DATA}/mfa_data \
-  ${FRIDAY_DATA}/librispeech/word_phoneme_lexicon.txt \
+  ${FRIDAY_DATA?}/mfa_data \
+  ${FRIDAY_DATA?}/librispeech/word_phoneme_lexicon.txt \
   data/montreal-forced-aligner/pretrained_models/english.zip \
-  ${FRIDAY_DATA}/mfa_data_aligned \
+  ${FRIDAY_DATA?}/mfa_data_aligned \
   -t /tmp
 ```
 
@@ -112,9 +112,9 @@ The phoneme lexicon can be found on the [mfa](https://montreal-forced-aligner.re
 
 ```bash
 python3 pipelines/mfa_alignments_to_words_dataset.py\
-  --audio=${FRIDAY_DATA}/mfa_data \
-  --alignments=${FRIDAY_DATA}/mfa_data_aligned \
-  --sink=${FRIDAY_DATA}/words_dataset \
+  --audio=${FRIDAY_DATA?}/mfa_data \
+  --alignments=${FRIDAY_DATA?}/mfa_data_aligned \
+  --sink=${FRIDAY_DATA?}/words_dataset \
   --sample_rate=16000 \
   --min_word_length=5 \
   --min_occurrences=5 
@@ -129,15 +129,14 @@ We create the triplet dataset from the [Word dataset](#word-dataset).
 
 ```bash
 python3 pipelines/triplization.py\
-  --source=${FRIDAY_DATA}/words_dataset \
-  --sink_prefix=${FRIDAY_SESSION}/ptfexamples-dml-1 \
+  --source=${FRIDAY_DATA?}/words_dataset \
+  --sink_prefix=${FRIDAY_SESSION?}/ptfexamples-dml-1 \
   --sample_rate=16000 \
   --clip_length=2 \
   --augmentations\
   --expected_file_size=250 \
   --expected_total_size=100000
   
-# add augmentations to positive and negative
 ```
 
 
