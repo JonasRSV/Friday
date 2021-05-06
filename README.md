@@ -4,7 +4,7 @@ Friday is a keyword spotting based voice assistant. The main feature is that it 
 
 - [Try it Out](#try-it-out)
 - [Contributing](#contributing)
-- [Architecture](#architecture)
+  - [Architecture](#architecture)
 
 
 
