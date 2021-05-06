@@ -31,7 +31,7 @@ TODO flash SD card etc..
 
 ## Installation
 
-In order to install the assistant you need to build or use an existing release
+In order to install the assistant you need to build or use an existing release, then deploy that release on the raspberry pi. 
 
 ### Releases
 
