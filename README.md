@@ -20,7 +20,7 @@ Follow one of the platform guides to set it up. The raspberry pi guide is the mo
 
 ## Contributing
 
-This is mainly a project for building an assitant that I myself use, but contributions are welcome that would make it usable for others. Help with general documentation, contributions of [models](mm), contributions to [core assistant code](friday) or contributions to the [user-interface](web/becky) are most welcome. Although it might be hard to start contributing directly because of a lack of documentation. An attempt of a project overview is given in the following section:
+This is mainly a project for building an assistant that I myself use, but contributions are welcome that would make it usable for others. Help with general documentation, contributions of [models](mm), contributions to [core assistant code](friday) or contributions to the [user-interface](web/becky) are most welcome. Although it might be hard to start contributing directly because of a lack of documentation. An attempt of a project overview is given in the following section:
 
 ### Architecture
 
