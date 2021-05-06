@@ -28,13 +28,17 @@ onMount (async () => {
   cursor: pointer;
 }
 
+.vertical {
+  height: 100%;
+}
+
 
 
 
 </style>
 
 <div class="bar mb-3 shadow rounded text-center d-flex justify-content-center">
-  <div class="d-flex flex-column justify-content-center font-weight-light">
+  <div class="vertical d-flex flex-column justify-content-center font-weight-light">
     {script}
   </div>
 </div>

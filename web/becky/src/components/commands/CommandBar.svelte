@@ -3,7 +3,7 @@ import { onMount } from "svelte";
 /*import { FridayAPI } from "./FridayAPI.js"*/
 
 export let click;
-export let command;
+export let keyword;
 
 
 
@@ -29,14 +29,19 @@ onMount (async () => {
   cursor: pointer;
 }
 
+.vertical {
+  height: 100%;
+}
 
 
 
 </style>
 
-<button class="bar mb-3 shadow rounded text-center d-flex justify-content-center" on:click={click}>
-  <div class="d-flex flex-column justify-content-center font-weight-light">
-    {command.keyword}
+<button class="bar mb-3 shadow rounded text-center d-flex flex-row justify-content-center" on:click={click}>
+  <div class="vertical d-flex flex-column justify-content-center font-weight-light">
+    <div>
+    {keyword}
+    </div>
   </div>
 </button>
 

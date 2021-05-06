@@ -1,8 +1,11 @@
 <script>
 import { onMount } from "svelte";
 /*import { FridayAPI } from "./FridayAPI.js"*/
-import Main from "./components/Main.svelte"
+import Main from "./components/Main.svelte";
+import { initCommands } from "./core/Command.js";
+import { initKeywords } from "./core/Keyword.js";
 
+let renderComponent = false;
 let component = Main;
 let props = {}
 
@@ -17,6 +20,11 @@ props = {
 }
 
 onMount (async () => { 
+  initCommands().then(_ => {
+    initKeywords().then(_ => {
+      renderComponent = true;
+    });
+  });
 });
 
 
@@ -27,7 +35,11 @@ onMount (async () => {
 
 </style>
 
+{#if renderComponent}
 <svelte:component this={component} {...props}/>
+{:else}
+  <div> loading.. </div>
+{/if}
 
 
 

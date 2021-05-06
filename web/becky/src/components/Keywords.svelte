@@ -1,6 +1,7 @@
 <script>
 import { onMount } from "svelte";
 import { navigation } from "../core/Enums.js";
+import { keywords } from "../core/Keyword.js";
 import KeywordBar from "./keywords/KeywordBar.svelte";
 import KeywordEditor from "./keywords/KeywordEditor.svelte";
 import NameInput from "./keywords/NameInput.svelte";
@@ -35,15 +36,20 @@ export let onKeywordClick = (keyword, clips) => {
 // If true, it is possible to add keywords in this window
 export let addable = true;
 
-
 let getName = false;
-
-let keywords = {}
+let renderedKeywords = {}
 
 // Sync keywords to Friday 
-let syncFriday = () => {
+let syncFriday = (keyword, clips) => {
   console.log("syncing to friday model..");
-  console.log("syncing", keywords);
+  console.log("syncing", keyword, clips);
+
+  if (clips.length == 0) {
+    delete keywords[keyword];
+  } else {
+    keywords[keyword] = clips;
+  }
+  
   let syncingPromise = new Promise((resolve, _) => {
     setTimeout(() => {
       resolve("ok");
@@ -65,44 +71,18 @@ let addKeyword = (name) => {
 
 
 onMount (async () => { 
-  keywords = {
-      "hello": [
-        "123-222-333-111.wav",
-        "223-222-333-111.wav",
-        "223-333-333-111.wav",
-      ],
-
-      "hi": [
-        "123-222-333-111.wav",
-        "223-222-333-111.wav",
-        "223-333-333-111.wav",
-      ],
-      "whats up": [
-        "123-222-333-111.wav",
-        "223-222-333-111.wav",
-        "223-333-333-111.wav",
-      ],
-      "lights on": [
-        "123-222-333-111.wav",
-        "223-222-333-111.wav",
-        "223-333-333-111.wav",
-      ],
-      "lights off": [
-        "123-222-333-111.wav",
-        "223-222-333-111.wav",
-        "223-333-333-111.wav",
-      ],
-      "cookie time": [
-        "123-222-333-111.wav",
-        "223-222-333-111.wav",
-        "223-333-333-111.wav",
-      ],
-      "good night": [
-        "123-222-333-111.wav",
-        "223-222-333-111.wav",
-        "223-333-333-111.wav",
-      ]
+  // Clean up any empty keywords since they are not persisted on the assistant
+  // anyway.
+  for (var [keyword, clips] of Object.entries(keywords)) {
+    if (clips.length == 0) {
+      delete keywords[keyword];
+    }
   }
+
+  renderedKeywords = keywords;
+
+
+  
 });
 
 
@@ -115,7 +95,7 @@ onMount (async () => {
 
 </style>
 
-{#each Object.entries(keywords) as [keyword, clips] (keyword)}
+{#each Object.entries(renderedKeywords) as [keyword, clips] (keyword)}
   <KeywordBar bind:keyword={keyword} click={() => onKeywordClick(keyword, clips)}/>
 {/each}
 

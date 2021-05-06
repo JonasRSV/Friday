@@ -11,19 +11,23 @@ export let click;
     bottom: 20%;
     right: 5%;
 
-    width: 72px;
-    height: 72px;
+    width: 72px !important;
+    height: 72px !important;
 
     border-radius: 50%;
 
-    background-color: pink;
+    background-color: green;
     color: black;
-    font-size: 36pt;
+    overflow: hidden;
 
     border: solid 1px purple;
 
     justify-content: center
+  }
 
+  .plus {
+    font-size: 30pt;
+    height: 100%;
 
   }
 
@@ -31,7 +35,9 @@ export let click;
 
 
 
-<button class="add-button shadow text-center" on:click={click}> + </button>
+<button class="d-flex add-button shadow text-center flex-row justify-content-center" on:click={click}> 
+  <div class="plus d-flex flex-column justify-content-center">+</div>
+</button>
 
 
 

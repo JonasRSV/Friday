@@ -1,9 +1,18 @@
 
-export class Command {
-  constructor(keyword, scripts) {
-    // keyword is a unique identifier of this command
-    this.id = keyword;
-    this.keyword = keyword;
-    this.scripts = scripts;
-  }
+
+export let commands = {};
+
+export let initCommands = () => {
+  return new Promise((resolve, _) => {
+    setTimeout(() => {
+      commands = {
+        "hello": ["what.py", "who.py"],
+        "when": ["where.sh", "cool.sh"]
+      }
+      resolve(commands);
+    }, 500);
+  });
 }
+
+export let setCommands = (c) => commands = c;
+

@@ -1,26 +1,24 @@
 <script>
 import { onMount } from "svelte";
-import { Command } from "../core/Command.js";
 import { navigation } from "../core/Enums.js";
 import CommandBar from "./commands/CommandBar.svelte";
 import CommandEditor from "./commands/CommandEditor.svelte"
+import { commands } from "../core/Command.js";
 import Add from "./Add.svelte";
+import KeywordPick from "./commands/KeywordPick.svelte";
 /*import { FridayAPI } from "./FridayAPI.js"*/
 
 
 export let root;
 export let setComponent;
 
-let commands = []
+let renderedCommands = []
+let pickKeyword = false;
 
+// TODO: load from API onMount
 
 onMount (async () => { 
-
-  // TODO: load from API
-  commands = [
-    new Command("hello", ["hi.py", "bye.py"]),
-    new Command("good bye", ["goodbye.sh", "bye.sh"])
-  ]
+  renderedCommands = commands;
 
 
   // When editing commandEditor
@@ -28,31 +26,53 @@ onMount (async () => {
 
 });
 
-let onCommandClick = (c) => {
+
+let onCommandClick = (keyword, scripts) => {
   // Update our display component to the command editor and set
   // the proper 'goBack' function
   setComponent(
     CommandEditor, {
       "root": CommandEditor,
       "setComponent": setComponent,
+      "removeCommand": () => {
+        delete commands[keyword];
+
+        /*TODO: Remove from Friday*/
+        console.log("commands", commands);
+
+        setComponent(
+          root, {
+            page: navigation.commands,
+            "root": root,
+            "setComponent": setComponent,
+        })
+      },
       goBack:  () => setComponent(
         root, {
           page: navigation.commands,
           "root": root,
-          "setComponent": setComponent
+          "setComponent": setComponent,
         }
       ), 
-      command: c
+      "keyword": keyword,
+      "scripts": scripts
     }
   );
 
-  console.log("Clicked on", c.id);
+  console.log("Clicked on", keyword);
 
 };
 
-let addClick = () => {
-  console.log("adding command");
+let toggleKeywordPick = () => pickKeyword = !pickKeyword;
+
+let addCommand = (keyword) => {
+  toggleKeywordPick();
+
+  commands[keyword] = [];
+
+  onCommandClick(keyword, commands[keyword]);
 }
+
 
 
 
@@ -63,12 +83,14 @@ let addClick = () => {
 
 </style>
 
-
-{#each commands as command (command.id)}
-  <CommandBar bind:command={command} click={() => onCommandClick(command)}/>
+{#each Object.entries(renderedCommands) as [keyword, scripts] (keyword)}
+  <CommandBar keyword={keyword} click={() => onCommandClick(keyword, scripts)}/>
 {/each}
 
 
 
-<Add click={addClick} />
+<Add click={toggleKeywordPick} />
 
+{#if pickKeyword}
+  <KeywordPick goBack={toggleKeywordPick} newCommand={addCommand} />
+{/if}

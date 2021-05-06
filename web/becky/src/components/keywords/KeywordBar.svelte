@@ -30,12 +30,15 @@ onMount (async () => {
 }
 
 
+.vertical {
+  height: 100%;
+}
 
 
 </style>
 
 <button class="bar mb-3 shadow rounded text-center d-flex justify-content-center" on:click={click}>
-  <div class="d-flex flex-column justify-content-center font-weight-light">
+  <div class="vertical d-flex flex-column justify-content-center font-weight-light">
     {keyword}
   </div>
 </button>

@@ -46,7 +46,7 @@ let removeClip = (clip) => {
      "clip": clip,
      "onSync": () => {
        clips = clips.filter((item) => item != clip); 
-       return syncFriday();
+       return syncFriday(keyword, clips);
      },
      "onSuccess": () => {
         // go back to this component
@@ -91,7 +91,7 @@ let onRecordingClick = () => {
     RecordingTransition, {
      "onSync": (clip) => {
         clips.push(clip);
-        return syncFriday();
+        return syncFriday(keyword, clips);
      },
      "onSuccess": (recording) => {
         // go back to this component
