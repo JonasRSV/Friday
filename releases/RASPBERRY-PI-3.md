@@ -1,4 +1,8 @@
 # Raspberry Pi 3 
 
 
-TODO..
+## Prerequisites
+
+![hardware](../art/raspberry-pi-guide-hardware.png)
+
+
