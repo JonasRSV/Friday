@@ -12,10 +12,10 @@ TODO.. Demo
 
 # Try it Out
 
-Follow one of the platform guides to set it up. The raspberry Pi Guide is the most comprehensive and contains information that might be useful for other platforms as well.
+Follow one of the platform guides to set it up. The raspberry pi guide is the most comprehensive and contains information that might be useful for other platforms as well.
 
-- [Guide for Linux](releases/LINUX-x86.md)
 - [Guide for Raspberry-Pi 3](releases/RASPBERRY-PI-3.md)
+- [Guide for Linux](releases/LINUX-x86.md)
 
 
 ## Contributing
