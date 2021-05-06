@@ -1,5 +1,7 @@
 # Raspberry Pi 3 
 
+This here is a comprehensive installation and configuratio Guide for setting up the Friday assistant on a Raspberry Pi.
+
 - [Prerequisites](#prerequisites)
 - [Setting up Raspberry Pi](#raspberry-pi)
 - [Installing Assistant](#installation)
