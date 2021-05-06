@@ -29,7 +29,7 @@ Friday consists of three components
 
 1. [Assistant Binary](#friday-binary), found in [friday](friday)
 2. [Model Development](#models), found in [mm](mm)
-3. [Web UI](#gui-&-web), found in [web](web)
+3. [GUI](web/becky), found in [web](web/becky)
 
 ### Friday Binary
 
