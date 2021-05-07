@@ -24,10 +24,11 @@ onMount (async () => {
 
 .button {
   height: 80px;
+  border: none;
 }
 
 .button:disabled {
-  background-color: green;
+  background-color: #ff6f00;
 }
 
 .button:disabled:hover  {
@@ -37,7 +38,7 @@ onMount (async () => {
 
 .commands {
   background: url("/assets/icons/command-navbar-icon.svg");
-  background-color: white;
+  background-color: #3a4750;
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;
@@ -48,7 +49,7 @@ onMount (async () => {
 
 .keywords {
   background: url("/assets/icons/keyword-navbar-icon.svg") no-repeat;
-  background-color: white;
+  background-color: #3a4750;
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;

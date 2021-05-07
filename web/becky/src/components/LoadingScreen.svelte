@@ -37,7 +37,7 @@ onMount (async () => {
 			}
 			
 			.hex-brick{
-			  background: #ABF8FF;
+			  background: #ffaa68;
 			  width: 30px;
 			  height: 17px;
 			  position: absolute;
@@ -352,15 +352,15 @@ onMount (async () => {
 			
 			@keyframes fade{
 				0%{
-					background: #ABF8FF;
+					background: #ffaa68;
 				}
 				
 				50%{
-					background: #90BBBF;
+					background: #ce9f7a;
 				}
 				
 				100%{
-					background: #ABF8FF;
+					background: #ffaa68;
 				}
 			}
 			
@@ -383,15 +383,15 @@ onMount (async () => {
 			
 			@-webkit-keyframes fade{
 				0%{
-					background: #ABF8FF;
+					background: #ffaa68;
 				}
 				
 				50%{
-					background: #389CA6;
+					background: #ff6f00;
 				}
 				
 				100%{
-					background: #ABF8FF;
+					background: #ffaa68;
 				}
 			}
 

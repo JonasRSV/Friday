@@ -36,7 +36,7 @@ export let onKeywordClick = (keyword, clips) => {
 // If true, it is possible to add keywords in this window
 export let addable = true;
 
-let getName = false;
+let getName = true;
 let renderedKeywords = {}
 
 // Sync keywords to Friday 

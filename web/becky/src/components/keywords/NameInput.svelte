@@ -15,7 +15,7 @@ onMount (async () => {
 });
 
 // name in input field
-let input = "...";
+let input = "Name here";
 
 // if input is acceptable
 let acceptable = true;
@@ -51,13 +51,20 @@ let inputValidator = () => acceptable = ! (input in keywords);
 
 
   .options {
+    padding-bottom: 25px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 25px;
     color: white;
-    width: 100%;
-    right: 0;
-    left: 0;
+    width: 90%;
+    right: 10%;
+    left: 10%;
+
+    background-color: #3a4750;
   }
 
   .middle-screen {
+    width: 100%;
     position: fixed;
     margin: 0 auto;
     top: 50%;
@@ -65,35 +72,69 @@ let inputValidator = () => acceptable = ! (input in keywords);
 
     /*To truly get it into the center*/
     transform: translate(-50%, -50%);
+
   }
 
   .button {
-    height: 80px;
+    height: 60px;
+    border: none;
   }
 
   .input {
+    display: block;
     width: 80%;
     height: 60px;
     font-size: 22pt;
+    text-align: center;
+
+    border: none;
+
+    background-color: #eeeeee;
+    font-family: Cambria;
+    font-size: 16px;
+  }
+
+  .input-container {
+    width: 100%;
   }
   
   .unacceptable {
     border-color: red;
   }
 
+  .button-container {
+    padding-left: 15%;
+    padding-right: 15%;
+      
+  }
+
+  .button-add {
+    background-color: #ff6f00;
+  }
+
+  .button-cancel {
+    background-color: rgba(0, 0, 0, 0);
+    border: solid 3px #ff6f00;
+  }
+
 
 </style>
 
 <div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{y: 800, duration: 500}}">
-  <div class="middle-screen options">
-    {#if acceptable}
-      <input class="mb-5 input" type="text" id="keyword" bind:value={input} on:input={inputValidator} use:focus autocomplete="off">
-    {:else}
-      <input class="mb-5 input unacceptable" type="text" id="keyword" bind:value={input} on:input={inputValidator} use:focus autocomplete="off">
-    {/if}
-    <div class="d-flex flex-row">
-      <button class="button col-6" on:click={cancel}> - </button>
-      <button class="button col-6" on:click={add}> + </button>
+  <div class="middle-screen rounded d-flex justify-content-center">
+    <div class="options rounded">
+      <div class="input-container d-flex flex-row justify-content-center">
+        {#if acceptable}
+          <input class="mb-5 input" type="text" id="keyword" bind:value={input} on:input={inputValidator} use:focus autocomplete="off">
+        {:else}
+          <input class="mb-5 input unacceptable" type="text" id="keyword" bind:value={input} on:input={inputValidator} use:focus autocomplete="off">
+        {/if}
+      </div>
+      <div class="button-container d-flex flex-row">
+        <button class="button button-cancel col-5" on:click={cancel}> - </button>
+        <div class="col-2"> </div>
+        <button class="button button-add col-5" on:click={add}> + </button>
+      </div>
     </div>
   </div>
 </div>

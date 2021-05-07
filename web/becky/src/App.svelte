@@ -38,7 +38,37 @@ onMount (async () => {
 <style>
 
 :global(body, html) {
-  background-color: white;
+  background-color: #303841;
+  color: #eeeeee;
+  font-family: Helvetica;
+  font-family:Cambria,
+}
+
+:global(h1) {
+  font-family: Helvetica;
+  font-size: 39px;
+  font-weight: 700;
+}
+
+:global(h2) {
+  font-size: 31px;
+}
+
+:global(h3) {
+  font-size: 25px;
+}
+
+:global(h4) {
+  font-size: 20px;
+}
+
+:global(p) {
+  font-size: 16px;
+}
+
+:global(h2, h3, h4, p) {
+  font-family: Cambria;
+  font-weight: 700;
 }
 
 </style>

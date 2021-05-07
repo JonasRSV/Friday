@@ -21,7 +21,13 @@ onMount (async () => {
 .bar {
   height: 70px;
   width: 100%;
-  background-color: white;
+  background-color: #3a4750;
+  color: #eeeeee;
+  border: none;
+
+  -webkit-box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15); 
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+
 }
 
 .bar:hover {
@@ -38,8 +44,10 @@ onMount (async () => {
 </style>
 
 <button class="bar mb-3 shadow rounded text-center d-flex justify-content-center" on:click={click}>
-  <div class="vertical d-flex flex-column justify-content-center font-weight-light">
-    {keyword}
+  <div class="vertical d-flex flex-column justify-content-center">
+    <h2>
+      {keyword}
+    </h2>
   </div>
 </button>
 

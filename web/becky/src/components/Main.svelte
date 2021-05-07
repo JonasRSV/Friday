@@ -8,10 +8,10 @@ import { navigation } from "../core/Enums.js"
 import { fade } from 'svelte/transition';
 
 export let setComponent;
-export let page = navigation.commands;
+export let page = navigation.keywords;
 export let root;
 
-let title = "Becky";
+let title = "B.E.C.K.Y";
 
 onMount (async () => { 
 });

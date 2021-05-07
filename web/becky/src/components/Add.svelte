@@ -8,7 +8,7 @@ export let click;
 
   .add-button {
     position: fixed;
-    bottom: 20%;
+    bottom: 15%;
     right: 5%;
 
     width: 72px !important;
@@ -16,11 +16,11 @@ export let click;
 
     border-radius: 50%;
 
-    background-color: green;
-    color: black;
+    background-color: #00ffc2;
+    color: #303841;
     overflow: hidden;
 
-    border: solid 1px purple;
+    border: none;
 
     justify-content: center
   }
