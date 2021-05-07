@@ -15,7 +15,7 @@ onMount (async () => {
 });
 
 // name in input field
-let input = "Name here";
+let input = "";
 
 // if input is acceptable
 let acceptable = true;
@@ -98,9 +98,15 @@ let inputValidator = () => acceptable = ! (input in keywords);
   .input-container {
     width: 100%;
   }
+
+  .input:focus {
+    outline: none;
+  }
   
   .unacceptable {
-    border-color: red;
+    border: 5px solid rgba(194, 56, 56, 0.9);
+    -webkit-box-shadow: 0px 0px 25px 5px #C23838; 
+    box-shadow: 0px 0px 25px 5px #C23838;
   }
 
   .button-container {
