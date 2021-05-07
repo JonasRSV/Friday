@@ -32,6 +32,7 @@ if __name__ == "__main__":
         sample_rate = tfexample_dma_utils.get_sample_rate(example)
 
         print(len(anchor))
+        print((anchor.max()))
 
         print("Anchor", anchor_text)
         simpleaudio.play_buffer(anchor, 1, 2,
