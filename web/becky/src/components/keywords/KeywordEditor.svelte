@@ -17,15 +17,15 @@ export let goBack;
 export let syncFriday;
 
 // newest recorded clip
-export let newestClip = null;
+export let newestClip = "111-222-333-111.wav";
 // if true we're in the recording flow
-export let recordingFlow = false;
+export let recordingFlow = true;
 
 
 // show options of this clip
 // don't show if null
-let showingClip = clips[0];
-let showClipOptions = true;
+let showingClip = null;
+let showClipOptions = false;
 
 onMount (async () => { 
 });
