@@ -24,8 +24,8 @@ export let recordingFlow = false;
 
 // show options of this clip
 // don't show if null
-let showingClip = null;
-let showClipOptions = false;
+let showingClip = clips[0];
+let showClipOptions = true;
 
 onMount (async () => { 
 });
@@ -138,7 +138,7 @@ let onRecordingClick = () => {
 <style>
 
 .recording {
-  background: url("/assets/icons/recording-icon.svg");
+  background: url("/assets/icons/record-clip-mic.svg");
   background-color: #ff6f00;
   background-position: center;
   background-size: contain;
@@ -162,17 +162,38 @@ main {
 
 .goback-icon {
   position: fixed;
-  top: 20px;
+  top: 35px;
   left: 20px;
+
+  height: 60px;
+  width: 60px;
+
+  background: url("/assets/icons/keyword-editor-goback.svg");
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-origin: content-box;
+  padding: 5px;
+  z-index: 10;
+
+  border: none;
 }
+
+.keyword-header {
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+}
+
 </style>
 
 
 
 
 <main>
-  <header class="mb-5">
-    <h1>
+  <header class="mb-5 d-flex flex-row justify-content-center">
+    <h1 class="keyword-header" >
       {keyword}
     </h1>
   </header>
@@ -182,7 +203,7 @@ main {
     <ClipBar bind:clip={clip} click={() => onClipClick(clip)}/>
   {/each}
 
-  <button class="goback-icon" on:click={goBack}>done</button>
+  <button class="goback-icon" on:click={goBack}></button>
 
   {#if showClipOptions }
     <ClipOptions bind:show={showClipOptions} clip={showingClip} remove={removeClip} play={playClip}/>

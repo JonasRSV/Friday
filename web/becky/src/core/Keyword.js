@@ -4,6 +4,11 @@ export let initKeywords = () => {
   return new Promise((resolve, _) => {
     setTimeout(() => {
       keywords = {
+          "superfra": [
+            "123-222-333-111.wav",
+            "223-222-333-111.wav",
+            "223-333-333-111.wav",
+          ],
           "hello": [
             "123-222-333-111.wav",
             "223-222-333-111.wav",

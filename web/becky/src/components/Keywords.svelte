@@ -82,10 +82,7 @@ onMount (async () => {
 
   renderedKeywords = keywords;
 
-
-
-  onKeywordClick("hello", keywords["hello"]);
-
+  onKeywordClick("superfra", keywords["superfra"]);
   
 });
 

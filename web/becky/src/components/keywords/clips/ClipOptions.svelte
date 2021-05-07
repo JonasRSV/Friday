@@ -33,10 +33,20 @@ onMount (async () => {
 
 
   .options {
+    padding-bottom: 25px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 25px;
     color: white;
+    width: 90%;
+    right: 10%;
+    left: 10%;
+
+    background-color: #3a4750;
   }
 
   .middle-screen {
+    width: 100%;
     position: fixed;
     margin: 0 auto;
     top: 50%;
@@ -46,29 +56,60 @@ onMount (async () => {
     transform: translate(-50%, -50%);
   }
 
+  .play-button {
+    height: 50px;
+    border-radius: 10px;
+    background-color: #ff6f00;
+    border: none;
+
+  }
+
+  .remove-button {
+    height: 50px;
+    border-radius: 10px;
+    border: solid 2px #ff6f00;
+    background-color: #3a4750;
+
+  }
+
+  .done-button {
+    height: 50px;
+    border-radius: 10px;
+    border: none;
+
+    background: url("/assets/icons/keyword-name-ok.svg");
+    background-color: #ff6f00;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    padding: 5px;
+    z-index: 10;
+
+  }
+
+
+
 
 </style>
 
 <div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{ y: 800, duration: 500 }}">
-  <div class="middle-screen options">
-    <header>
-      <h3>
-        {clip}
-      </h3>
-    </header>
-      <div class="d-flex flex-row">
-        <div class="col-6">
-          <button on:click={() => play(clip)}>
-            play
-          </button>
+  <div class="middle-screen d-flex flex-row justify-content-center">
+    <div class="options rounded">
+      <header class="mb-5 mt-3">
+        <h3>
+          {clip}
+        </h3>
+      </header>
+        <div class="d-flex flex-row justify-content-center pl-4 pr-4">
+          <button class="play-button mb-4 col-12" on:click={() => play(clip)}> play </button>
         </div>
-        <div class="col-6">
-          <button on:click={() => remove(clip)}>
-            remove
-          </button>
+        <div class="d-flex flex-row pl-4 pr-4">
+          <button class="remove-button col-5" on:click={() => remove(clip)}> remove </button>
+          <div class="col-2"> </div>
+          <button class="done-button col-5" on:click={() => show=false}> </button>
         </div>
-      </div>
-      <button on:click={() => show=false}> done</button>
+    </div>
   </div>
 </div>
 
