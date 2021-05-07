@@ -139,13 +139,15 @@ let onRecordingClick = () => {
 
 .recording {
   background: url("/assets/icons/recording-icon.svg");
-  background-color: white;
+  background-color: #ff6f00;
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;
   background-origin: content-box;
   padding: 5px;
   z-index: 10;
+
+  border: none;
 }
 
 .button {
@@ -156,6 +158,12 @@ main {
   text-align: center;
   padding: 1em;
   margin: 0 auto;
+}
+
+.goback-icon {
+  position: fixed;
+  top: 20px;
+  left: 20px;
 }
 </style>
 
@@ -174,7 +182,7 @@ main {
     <ClipBar bind:clip={clip} click={() => onClipClick(clip)}/>
   {/each}
 
-  <button on:click={goBack}>done</button>
+  <button class="goback-icon" on:click={goBack}>done</button>
 
   {#if showClipOptions }
     <ClipOptions bind:show={showClipOptions} clip={showingClip} remove={removeClip} play={playClip}/>
