@@ -4,7 +4,6 @@ import { navigation } from "../core/Enums.js"
 
 
 export let page;
-export let bottom;
 
 // Code executed on variable updates
 $: {
@@ -59,37 +58,18 @@ onMount (async () => {
 
 </style>
 
-{#if bottom}
-  <nav class="fixed-bottom nav d-flex flex-row">
-  {#if page == navigation.commands}
-    <button class="commands button col-6" disabled> </button>
-  {:else}
-    <button class="commands button col-6" on:click={() => page = navigation.commands}> </button>
-  {/if}
-  
-
-  {#if page == navigation.keywords}
-    <button class="keywords button col-6" disabled> </button>
-  {:else}
-    <button class="keywords button col-6" on:click={() => page = navigation.keywords}> </button>
-  {/if}
-
-</nav>
+<nav class="fixed-bottom nav d-flex flex-row">
+{#if page == navigation.commands}
+  <button class="commands-disabled commands button col-6" disabled> </button>
 {:else}
-  <nav class="nav d-flex flex-row">
-  {#if page == navigation.commands}
-    <button class="commands button col-6" disabled> </button>
-  {:else}
-    <button class="commands button col-6" on:click={() => page = navigation.commands}> </button>
-  {/if}
-  
+  <button class="commands-enabled commands button col-6" on:click={() => page = navigation.commands}> </button>
+{/if}
 
-  {#if page == navigation.keywords}
-    <button class="keywords button col-6" disabled> </button>
-  {:else}
-    <button class="keywords button col-6" on:click={() => page = navigation.keywords}> </button>
-  {/if}
+
+{#if page == navigation.keywords}
+  <button class="keywords-disabled keywords button col-6" disabled> </button>
+{:else}
+  <button class="keywords-enabled keywords button col-6" on:click={() => page = navigation.keywords}> </button>
+{/if}
 
 </nav>
-
-{/if}

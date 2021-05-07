@@ -39,7 +39,7 @@ main {
   <header class="mb-5">
     <h1>{title}</h1>
   </header>
-  <NavBar bind:page={page} bottom />
+  <NavBar bind:page={page} />
   {#if page == navigation.commands}
     <Commands setComponent={setComponent} root={root}/>
   {:else if page == navigation.keywords}
