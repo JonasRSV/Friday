@@ -43,6 +43,7 @@ onMount (async () => {
     left: 10%;
 
     background-color: #3a4750;
+    border-radius: 10px;
   }
 
   .middle-screen {
@@ -57,23 +58,39 @@ onMount (async () => {
   }
 
   .play-button {
-    height: 50px;
+    height: 80px;
     border-radius: 10px;
-    background-color: #ff6f00;
     border: none;
+
+    background: url("/assets/icons/play.svg");
+    background-color: #ff6f00;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    padding: 15px;
+    z-index: 10;
 
   }
 
   .remove-button {
-    height: 50px;
+    height: 60px;
     border-radius: 10px;
-    border: solid 2px #ff6f00;
+
+    background: url("/assets/icons/trashcan.svg");
+    border: solid 3px #ff6f00;
     background-color: #3a4750;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    padding: 10px;
+    z-index: 10;
 
   }
 
   .done-button {
-    height: 50px;
+    height: 60px;
     border-radius: 10px;
     border: none;
 
@@ -83,7 +100,7 @@ onMount (async () => {
     background-size: contain;
     background-repeat: no-repeat;
     background-origin: content-box;
-    padding: 5px;
+    padding: 10px; 
     z-index: 10;
 
   }
@@ -95,17 +112,17 @@ onMount (async () => {
 
 <div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{ y: 800, duration: 500 }}">
   <div class="middle-screen d-flex flex-row justify-content-center">
-    <div class="options rounded">
+    <div class="options">
       <header class="mb-5 mt-3">
         <h3>
           {clip}
         </h3>
       </header>
         <div class="d-flex flex-row justify-content-center pl-4 pr-4">
-          <button class="play-button mb-4 col-12" on:click={() => play(clip)}> play </button>
+          <button class="play-button mb-4 col-12" on:click={() => play(clip)}> </button>
         </div>
         <div class="d-flex flex-row pl-4 pr-4">
-          <button class="remove-button col-5" on:click={() => remove(clip)}> remove </button>
+          <button class="remove-button col-5" on:click={() => remove(clip)}> </button>
           <div class="col-2"> </div>
           <button class="done-button col-5" on:click={() => show=false}> </button>
         </div>

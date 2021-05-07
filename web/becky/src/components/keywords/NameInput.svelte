@@ -60,6 +60,8 @@ let inputValidator = () => acceptable = ! (input in keywords);
     right: 10%;
     left: 10%;
 
+    border-radius: 10px;
+
     background-color: #3a4750;
   }
 
@@ -144,7 +146,7 @@ let inputValidator = () => acceptable = ! (input in keywords);
 
 <div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{y: 800, duration: 500}}">
   <div class="middle-screen rounded d-flex justify-content-center">
-    <div class="options rounded">
+    <div class="options">
       <div class="input-container d-flex flex-row justify-content-center">
         {#if acceptable}
           <input class="mb-5 input" type="text" id="keyword" bind:value={input} on:input={inputValidator} use:focus autocomplete="off">
