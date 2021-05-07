@@ -92,6 +92,7 @@ let inputValidator = () => acceptable = ! (input in keywords);
     background-color: #eeeeee;
     font-family: Cambria;
     font-size: 16px;
+    border-radius: 10px;
   }
 
   .input-container {
@@ -109,12 +110,27 @@ let inputValidator = () => acceptable = ! (input in keywords);
   }
 
   .button-add {
+    background: url("/assets/icons/keyword-name-ok.svg") no-repeat;
     background-color: #ff6f00;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    padding: 5px;
+    border-radius: 10px;
   }
 
   .button-cancel {
-    background-color: rgba(0, 0, 0, 0);
     border: solid 3px #ff6f00;
+    background-color: rgba(0, 0, 0, 0);
+    background: url("/assets/icons/keyword-name-cancel.svg") no-repeat;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    padding: 5px;
+    border-radius: 10px;
+
   }
 
 
@@ -131,9 +147,9 @@ let inputValidator = () => acceptable = ! (input in keywords);
         {/if}
       </div>
       <div class="button-container d-flex flex-row">
-        <button class="button button-cancel col-5" on:click={cancel}> - </button>
+        <button class="button button-cancel col-5" on:click={cancel}></button>
         <div class="col-2"> </div>
-        <button class="button button-add col-5" on:click={add}> + </button>
+        <button class="button button-add col-5" on:click={add}></button>
       </div>
     </div>
   </div>
