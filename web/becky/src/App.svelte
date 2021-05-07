@@ -48,6 +48,7 @@ onMount (async () => {
   font-family: Helvetica;
   font-size: 39px;
   font-weight: 700;
+  margin-top: 25px;
 }
 
 :global(h2) {
