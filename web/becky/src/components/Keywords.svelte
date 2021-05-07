@@ -59,9 +59,10 @@ let syncFriday = (keyword, clips) => {
   return syncingPromise;
 }
 
-let addClick = () => getName = true;
-let cancel = () => getName = false;
+let toggleGetName = () => getName = !getName;
+
 let addKeyword = (name) => {
+  toggleGetName();
   // Create empty keyword and jump into editor
   keywords[name] = []
   onKeywordClick(name, keywords[name]);
@@ -101,11 +102,11 @@ onMount (async () => {
 
 
 {#if addable}
-  <Add click={addClick} />
+  <Add click={toggleGetName} />
 {/if}
 
 {#if getName}
-  <NameInput cancel={cancel} addKeyword={addKeyword} keywords={keywords} />
+  <NameInput cancel={toggleGetName} addKeyword={addKeyword} keywords={keywords} />
 {/if}
 
 

@@ -5,7 +5,7 @@ import NavBar from "./NavBar.svelte"
 import Commands from "./Commands.svelte"
 import Keywords from "./Keywords.svelte"
 import { navigation } from "../core/Enums.js"
-
+import { fade } from 'svelte/transition';
 
 export let setComponent;
 export let page = navigation.commands;
@@ -35,7 +35,7 @@ main {
 </style>
 
 
-<main >
+<main>
   <header class="mb-5">
     <h1>{title}</h1>
   </header>

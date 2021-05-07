@@ -2,6 +2,7 @@
 import { onMount } from "svelte";
 import { keywords } from "../../core/Keyword.js";
 import { commands } from "../../core/Command.js";
+import { fly } from 'svelte/transition';
 /*import { FridayAPI } from "./FridayAPI.js"*/
 
 
@@ -79,7 +80,7 @@ onMount (async () => {
 
 </style>
 
-<div class="layover">
+<div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{y: 800, duration: 500}}">
   <div class="middle-screen options">
       {#each pickableKeywords as keyword (keyword)}
         <button class="bar mb-3 shadow rounded text-center d-flex justify-content-center" 

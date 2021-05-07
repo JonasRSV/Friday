@@ -1,7 +1,9 @@
 <script>
 import { onMount } from "svelte";
+import { fly } from 'svelte/transition';
 /*import { FridayAPI } from "./FridayAPI.js"*/
 
+export let show;
 export let clip;
 export let remove;
 export let play;
@@ -47,7 +49,7 @@ onMount (async () => {
 
 </style>
 
-<div class="layover">
+<div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{ y: 800, duration: 500 }}">
   <div class="middle-screen options">
     <header>
       <h3>
@@ -66,7 +68,7 @@ onMount (async () => {
           </button>
         </div>
       </div>
-      <button on:click={() => clip=null}> done</button>
+      <button on:click={() => show=false}> done</button>
   </div>
 </div>
 

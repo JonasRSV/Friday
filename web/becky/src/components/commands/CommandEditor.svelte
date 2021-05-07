@@ -48,6 +48,11 @@ let pickScripts = () => {
 
 let toggleTrippleDot = () => showTrippleDotOption = !showTrippleDotOption;
 
+let remove = () => {
+  toggleTrippleDot();
+  removeCommand();
+}
+
 
 </script>
 
@@ -117,6 +122,6 @@ main {
 
 {#if showTrippleDotOption}
   <CommandTrippleDotOption goBack={toggleTrippleDot} 
-  remove={removeCommand}/>
+  remove={remove}/>
 {/if}
 

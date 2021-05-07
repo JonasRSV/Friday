@@ -25,6 +25,7 @@ export let recordingFlow = false;
 // show options of this clip
 // don't show if null
 let showingClip = null;
+let showClipOptions = false;
 
 onMount (async () => { 
 });
@@ -41,6 +42,8 @@ let onRecordingFlowRetry = (clip) => {
 }
 
 let removeClip = (clip) => {
+  showClipOptions = false;
+
   setComponent(
     RemovingTransition, {
      "clip": clip,
@@ -85,7 +88,11 @@ let playClip = (clip) => {
   console.log("Playing", clip);
 }
 
-let onClipClick = (clip) => showingClip = clip;
+let onClipClick = (clip) => {
+  showingClip = clip;
+  showClipOptions = true;
+}
+
 let onRecordingClick = () => {
   setComponent(
     RecordingTransition, {
@@ -169,8 +176,8 @@ main {
 
   <button on:click={goBack}>done</button>
 
-  {#if showingClip != null}
-    <ClipOptions bind:clip={showingClip} remove={removeClip} play={playClip}/>
+  {#if showClipOptions }
+    <ClipOptions bind:show={showClipOptions} clip={showingClip} remove={removeClip} play={playClip}/>
   {/if}
 
   {#if recordingFlow}

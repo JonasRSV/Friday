@@ -1,5 +1,6 @@
 <script>
 import { onMount } from "svelte";
+import { fly } from 'svelte/transition';
 /*import { FridayAPI } from "./FridayAPI.js"*/
 
 
@@ -83,7 +84,7 @@ let inputValidator = () => acceptable = ! (input in keywords);
 
 </style>
 
-<div class="layover">
+<div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{y: 800, duration: 500}}">
   <div class="middle-screen options">
     {#if acceptable}
       <input class="mb-5 input" type="text" id="keyword" bind:value={input} on:input={inputValidator} use:focus autocomplete="off">

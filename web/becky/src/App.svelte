@@ -1,5 +1,7 @@
 <script>
 import { onMount } from "svelte";
+import { fade } from 'svelte/transition';
+
 /*import { FridayAPI } from "./FridayAPI.js"*/
 import Main from "./components/Main.svelte";
 import LoadingScreen from "./components/LoadingScreen.svelte";
@@ -32,14 +34,21 @@ onMount (async () => {
 
 </script>
 
+
 <style>
+
+:global(body, html) {
+  background-color: white;
+}
 
 </style>
 
 {#if renderComponent}
-<svelte:component this={component} {...props}/>
+<div in:fade>
+  <svelte:component this={component} {...props}/>
+</div>
 {:else}
-  <LoadingScreen />
+<LoadingScreen />
 {/if}
 
 

@@ -1,5 +1,6 @@
 <script>
 import { onMount } from "svelte";
+import { fly } from 'svelte/transition';
 /*import { FridayAPI } from "./FridayAPI.js"*/
 
 export let remove;
@@ -46,7 +47,7 @@ onMount (async () => {
 
 </style>
 
-<div class="layover">
+<div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{ y: 800, duration: 500 }}">
   <div class="middle-screen options">
       <button on:click={() => remove()}> remove </button>
       <button on:click={goBack}> done</button>

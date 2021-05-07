@@ -10,13 +10,17 @@ let gotSuccess = false;
 
 let failed = true;
 
+let randomName = () => {
+  return Math.ceil(Math.random() * 1000) + "-" + Math.ceil(Math.random() * 1000) + "-" + Math.ceil(Math.random() * 1000) + "-" + Math.ceil(Math.random(1000)) + ".wav"
+}
+
 
 
 onMount (async () => { 
   // TODO emulating recording atm
   let recordingPromise = new Promise((resolve, _) => {
     setTimeout(() => {
-      resolve("123-222-333-333.wav");
+      resolve(randomName());
     }, 3000);
   });
 
