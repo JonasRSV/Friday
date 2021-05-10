@@ -15,7 +15,7 @@ export let click;
     width: 72px !important;
     height: 72px !important;
 
-    border-radius: 100%;
+    border-radius: 50%;
 
     background-color: #00ffc2;
     color: #303841;

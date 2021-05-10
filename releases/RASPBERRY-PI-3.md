@@ -9,6 +9,8 @@ This here is a installation and configuration guide for setting up the Friday as
     - [Prebuilt](#prebuilt)
     - [Build](#build)
   - [Deploying](#deploying)
+    - [Installing libtensorflow](#installing-libtensorflow)
+    - [Installing Assistant on Pi](#installing-assistant-on-pi)
   - [Configuring](#configuring)
 
 ## Prerequisites
@@ -72,7 +74,7 @@ Use
 ifconfig | grep inet
 ```
 
-to see only the rows with ipv4 addresses. For future reference in the guide the PIs ip will be refered to as
+to see only the rows with ip addresses. For future reference in the guide the PIs ip will be refered to as
 
 ```bash
 PIIP=..
@@ -157,7 +159,115 @@ zip -r pi-release.zip releases/release-raspberrypi3
 
 ### Deploying 
 
-TODO.. copy release to assistant, make sure libtensorflow is installed and voila run it!
+The second step is deploying the release on the raspberry pi.  The first time you do this you also have to install libtensorflow on your raspberry pi, it is used by the assistant to serve its deep learning models. 
+
+#### Installing libtensorflow
+
+libtensorflow is provided under friday/platforms.Resources/libtensorflow-unknown-linux-pi32.zip copy it to your pi using
+
+```bash
+scp platforms.Resources/libtensorflow-unknown-linux-pi32.zip ${PIUSER?}@${PIIP?}:/home/${PIUSER?}
+```
+
+connect to your pi
+
+
+```bash
+ssh ${PIUSER?}@${PIIP?}
+```
+
+under /home/pi you should see libtensorflow-unknown-linux-pi32.zip, open it with
+
+```bash
+unzip libtensorflow-unknown-linux-pi32.zip
+```
+
+Move the files to the system library and update the cache
+
+```bash
+sudo mv *.so /usr/lib && sudo ldconfig
+```
+
+You should see them when running the following command
+
+```bash
+ldconfig -p | grep tensorflow
+```
+
+If so, the installation of libtensorflow went well.
+
+
+#### Installing Assistant on Pi
+
+Assuming you got your hands on a release from the first step, move it to the assistant.
+
+```bash
+scp pi-release.zip ${PIUSER?}@${PIIP?}:/home/${PIUSER?}
+```
+
+then connect to the pi and open it with 
+
+
+```bash
+unzip pi-release.zip
+```
+
+you should now have 'release-raspberrypi3' in '/home/pi'
+
+
+With this you should be able to start the assistant. Go into the release-raspberrypi3 folder and run
+
+```bash
+FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf
+```
+
+However it will quit, with the following message:
+
+```bash
+pi@raspberrypi:~/release-raspberrypi3$ FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf
+2021-05-10T16:15:37Z model.rs:232 - (tensorflow-models): Loading models/ddl_apr_13_eu
+2021-05-10 17:15:37.836410: I tensorflow/cc/saved_model/reader.cc:31] Reading SavedModel from: models/ddl_apr_13_eu
+2021-05-10 17:15:37.847020: I tensorflow/cc/saved_model/reader.cc:54] Reading meta graph with tags { serve }
+2021-05-10 17:15:37.892163: I tensorflow/cc/saved_model/loader.cc:182] Restoring SavedModel bundle.
+2021-05-10 17:15:38.031820: I tensorflow/cc/saved_model/loader.cc:132] Running initialization op on SavedModel bundle.
+2021-05-10 17:15:38.072427: I tensorflow/cc/saved_model/loader.cc:285] SavedModel load for tags { serve }; Status: success. Took 235980 microseconds.
+2021-05-10T16:15:38Z model.rs:281 - (tensorflow-models): Successfully loaded session from saved model
+2021-05-10T16:15:38Z model.rs:84 - Loading tensor audio
+2021-05-10T16:15:38Z model.rs:118 - Successfully loaded tensor "audio"
+2021-05-10T16:15:38Z model.rs:84 - Loading tensor embeddings
+2021-05-10T16:15:38Z model.rs:118 - Successfully loaded tensor "embeddings"
+2021-05-10T16:15:38Z model.rs:84 - Loading tensor project
+2021-05-10T16:15:38Z model.rs:118 - Successfully loaded tensor "project"
+2021-05-10T16:15:38Z model.rs:84 - Loading tensor distances
+2021-05-10T16:15:38Z model.rs:118 - Successfully loaded tensor "distances"
+ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
+ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
+ALSA lib pcm_dsnoop.c:575:(snd_pcm_dsnoop_open) The dsnoop plugin supports only capture stream
+ALSA lib pcm_dsnoop.c:638:(snd_pcm_dsnoop_open) unable to open slave
+ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
+ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
+ALSA lib pcm_dsnoop.c:575:(snd_pcm_dsnoop_open) The dsnoop plugin supports only capture stream
+ALSA lib pcm_dsnoop.c:638:(snd_pcm_dsnoop_open) unable to open slave
+thread 'main' panicked at 'Failed to start audio recording:
+
+--- Friday Error ---
+
+
+0   friday-audio/src/friday_cpal.rs:108:17 Could not setup any recording device...
+1   friday-audio/src/friday_cpal.rs:86:25 Could not find any device matching default
+
+
+--- End ---
+', src/main.rs:38:10
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+```
+
+This is expected since we have not plugged in the microphone yet. If you got some other type of error, please open an issue. In the final section we will be configuring the assistant, this involves plugging in the microphone and selecting configurations to make it work as well as possible in your environment.
+
+
+
+
 
 
 ### Configuring
