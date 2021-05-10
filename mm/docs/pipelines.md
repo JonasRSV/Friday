@@ -130,7 +130,7 @@ We create the triplet dataset from the [Word dataset](#word-dataset).
 ```bash
 python3 pipelines/triplization.py\
   --source=${FRIDAY_DATA?}/words_dataset \
-  --sink_prefix=${FRIDAY_SESSION?}/ptfexamples-dml-2 \
+  --sink_prefix=${FRIDAY_SESSION?}/ptfexamples-dml-5 \
   --sample_rate=16000 \
   --clip_length=2 \
   --augmentations\

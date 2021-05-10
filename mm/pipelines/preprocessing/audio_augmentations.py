@@ -16,7 +16,7 @@ class AudioAugmentations:
             #a.Shift(min_rate=-500, max_rate=500),
             #a.Gain(min_gain=0.8, max_gain=1.3),
             #a.Speed()
-            #a.Reverb()
+            a.Reverb(),
             a.Background(background_noises=pathlib.Path(f"{os.getenv('FRIDAY_DATA', default='data')}/background_noise"),
                          sample_rate=sample_rate,
                          min_voice_factor=0.7,
@@ -27,7 +27,8 @@ class AudioAugmentations:
                 #0.3,
                 #0.3,
                 #0.25,
-                1.0,
+                0.8,
+                0.8,
                 0.3
             ]
         )
