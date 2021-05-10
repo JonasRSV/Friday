@@ -1,16 +1,8 @@
 {
   "scripts": {
-    "hello": [
-      "kalle.sh",
-      "hello_world.sh",
-      "hello_world.py"
-    ],
-    "ulf": [
-      "hello_world.sh",
-      "hello_world.py"
-    ],
-    "hi": [
-      "hello_world.sh"
+    "tänd ljuset": [
+      "hello_world.py",
+      "hello_mars.sh"
     ]
   }
 }

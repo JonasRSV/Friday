@@ -2,13 +2,9 @@
   "export_dir": "test-resources/ddl_apr_13_eu",
   "sensitivity": 0.4,
   "audio": {
-    "95-83-390-277.wav": "orolig",
-    "64-449-710-730.wav": "hi",
-    "952-293-983-207.wav": "hello",
-    "163-864-650-650.wav": "hello",
-    "840-81-457-47.wav": "hello",
-    "686-419-15-813.wav": "hello",
-    "357-535-775-870.wav": "hello"
+    "595-221-349-469.wav": "tänd ljuset",
+    "85-418-988-118.wav": "släck ljuset",
+    "402-792-942-498.wav": "släck ljuset"
   },
   "frames": 2
 }

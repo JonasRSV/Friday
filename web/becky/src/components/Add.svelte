@@ -7,6 +7,7 @@ export let click;
 <style>
 
   .add-button {
+    display: inline-block;
     position: fixed;
     bottom: 15%;
     right: 5%;
@@ -14,7 +15,7 @@ export let click;
     width: 72px !important;
     height: 72px !important;
 
-    border-radius: 50%;
+    border-radius: 100%;
 
     background-color: #00ffc2;
     color: #303841;
@@ -22,30 +23,30 @@ export let click;
 
     border: none;
 
-    justify-content: center
+    font-size: 30pt;
+
+    text-align: center;
+    vertical-align: middle;
+    line-height: 72px;
+
   }
 
-
-  .plus {
+  .add-button:before {
+    content: "\FF0B";
     position: absolute;
-    margin: 0 auto;
-    top: 28px;
-    left: 36px;
-
-    /*To truly get it into the center*/
-    transform: translate(-50%, -50%);
-
-    font-size: 40pt;
-
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
   }
+
+
 
 </style>
 
 
 
-<button class="d-flex add-button shadow text-center flex-row justify-content-center" on:click={click}> 
-  <div class="plus d-flex flex-column justify-content-center">+</div>
-</button>
+<button class="add-button shadow text-center" on:click={click}></button>
 
 
 
