@@ -79,13 +79,13 @@ onMount (async () => {
   .retry-button {
     border: none;
 
-    background: url("/assets/icons/keyword-name-ok.svg");
+    background: url("/assets/icons/retry.svg");
     background-color: #ff6f00;
     background-position: center;
     background-size: contain;
     background-repeat: no-repeat;
     background-origin: content-box;
-    padding: 10px; 
+    padding: 20px; 
     z-index: 10;
 
   }
@@ -99,7 +99,7 @@ onMount (async () => {
     background-size: contain;
     background-repeat: no-repeat;
     background-origin: content-box;
-    padding: 10px; 
+    padding: 15px; 
     z-index: 10;
 
   }
@@ -114,7 +114,7 @@ onMount (async () => {
     background-size: contain;
     background-repeat: no-repeat;
     background-origin: content-box;
-    padding: 10px; 
+    padding: 15px; 
     z-index: 10;
 
   }
@@ -128,7 +128,7 @@ onMount (async () => {
     background-size: contain;
     background-repeat: no-repeat;
     background-origin: content-box;
-    padding: 10px; 
+    padding: 15px; 
     z-index: 10;
   }
 

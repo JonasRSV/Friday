@@ -6,7 +6,7 @@ import CommandEditor from "./commands/CommandEditor.svelte"
 import { commands } from "../core/Command.js";
 import Add from "./Add.svelte";
 import KeywordPick from "./commands/KeywordPick.svelte";
-/*import { FridayAPI } from "./FridayAPI.js"*/
+import { FridayAPI } from "./../FridayAPI.js"
 
 
 export let root;
@@ -22,7 +22,7 @@ onMount (async () => {
 
 
   // When editing commandEditor
- /*onCommandClick(commands[0]);*/
+ /*onCommandClick("hello", commands["hello"]);*/
 
 });
 
@@ -37,8 +37,8 @@ let onCommandClick = (keyword, scripts) => {
       "removeCommand": () => {
         delete commands[keyword];
 
-        /*TODO: Remove from Friday*/
-        console.log("commands", commands);
+        // Update assistant
+        FridayAPI.setBoundScripts(commands);
 
         setComponent(
           root, {
@@ -58,9 +58,6 @@ let onCommandClick = (keyword, scripts) => {
       "scripts": scripts
     }
   );
-
-  console.log("Clicked on", keyword);
-
 };
 
 let toggleKeywordPick = () => pickKeyword = !pickKeyword;
@@ -69,6 +66,9 @@ let addCommand = (keyword) => {
   toggleKeywordPick();
 
   commands[keyword] = [];
+
+  // Update assistant
+  FridayAPI.setBoundScripts(commands);
 
   onCommandClick(keyword, commands[keyword]);
 }

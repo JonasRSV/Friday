@@ -1,5 +1,6 @@
 <script>
 import { onMount } from "svelte";
+import { FridayAPI } from "../../../FridayAPI.js";
 
 export let onSync;
 export let onSuccess;
@@ -10,30 +11,19 @@ let gotSuccess = false;
 
 let failed = true;
 
-let randomName = () => {
-  return Math.ceil(Math.random() * 1000) + "-" + Math.ceil(Math.random() * 1000) + "-" + Math.ceil(Math.random() * 1000) + "-" + Math.ceil(Math.random(1000)) + ".wav"
-}
-
-
 
 onMount (async () => { 
-  // TODO emulating recording atm
-  let recordingPromise = new Promise((resolve, _) => {
-    setTimeout(() => {
-      resolve(randomName());
-    }, 3000);
-  });
+  let recordingPromise = FridayAPI.recordingNew();
 
   recordingPromise.then(recording => {
-    console.log("Got recording", recording);
     failed = false;
     gotSync = true;
 
-    onSync(recording).then(res => {
+    onSync(recording.id).then(res => {
       console.log("got sync", res)
 
       gotSuccess = true;
-      setTimeout(() => onSuccess(recording), 1000);
+      setTimeout(() => onSuccess(recording.id), 1000);
     })
   });
 

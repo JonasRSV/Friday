@@ -54,7 +54,6 @@ export class FridayAPI {
       });
     }
 
-    // Gets the keywords of the command e.g 'on' - 'off' etc
     static getKeywords = () => APIGetKeywords(this.prefix);
 
     static getBoundScripts = () => APIGetBoundScripts(this.prefix);

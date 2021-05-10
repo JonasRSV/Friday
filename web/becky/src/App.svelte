@@ -7,6 +7,7 @@ import Main from "./components/Main.svelte";
 import LoadingScreen from "./components/LoadingScreen.svelte";
 import { initCommands } from "./core/Command.js";
 import { initKeywords } from "./core/Keyword.js";
+import { initDevice } from "./core/Device.js";
 
 let renderComponent = false;
 let component = Main;
@@ -25,7 +26,10 @@ props = {
 onMount (async () => { 
   initCommands().then(_ => {
     initKeywords().then(_ => {
-      renderComponent = true;
+      initDevice().then(_ => {
+        // ugly fix for some race condition
+        setTimeout(() => renderComponent = true, 500);
+      });
     });
   });
 });
@@ -75,7 +79,7 @@ onMount (async () => {
 </style>
 
 {#if renderComponent}
-<div in:fade>
+<div in:fade class="main">
   <svelte:component this={component} {...props}/>
 </div>
 {:else}

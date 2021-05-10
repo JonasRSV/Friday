@@ -211,10 +211,6 @@ onMount (async () => {
 				margin-top: 69px;
 			}
 			
-			.c27{
-				margin-left: -79px;
-				margin-top: -15px;
-			}
 			
 			.c28{
 				margin-left: -95px;

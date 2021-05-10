@@ -1,5 +1,14 @@
+export let audioCache = {};
 
-export function extractAudioBlob(stream) {
+export function loadAudioBlob(id, stream) {
+  return extractAudioBlob(stream).then(url => {
+    audioCache[id] = url;
+
+    return "ok";
+  });
+}
+
+function extractAudioBlob(stream) {
 
   let reader = stream.body.getReader();
 
@@ -26,7 +35,10 @@ export function extractAudioBlob(stream) {
   return reader.read().then(processAudio);
 }
 
-export function playAudio(url) {
+export function playAudio(id) {
+    let url = audioCache[id];
+
+
     window.audio = new Audio();
     window.audio.src = url;
     window.audio.play();

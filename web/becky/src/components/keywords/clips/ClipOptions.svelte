@@ -110,9 +110,9 @@ onMount (async () => {
 
 </style>
 
-<div class="layover" in:fly="{{ y: 800, duration: 500 }}" out:fly="{{ y: 800, duration: 500 }}">
+<div class="layover" on:click={() => show=false} in:fly="{{ y: 800, duration: 500 }}" out:fly="{{ y: 800, duration: 500 }}">
   <div class="middle-screen d-flex flex-row justify-content-center">
-    <div class="options">
+    <div class="options" on:click={(e) => e.stopPropagation()}>
       <header class="mb-5 mt-3">
         <h3>
           {clip}

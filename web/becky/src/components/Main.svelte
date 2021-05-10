@@ -5,15 +5,17 @@ import NavBar from "./NavBar.svelte"
 import Commands from "./Commands.svelte"
 import Keywords from "./Keywords.svelte"
 import { navigation } from "../core/Enums.js"
-import { fade } from 'svelte/transition';
+import { getName } from "../core/Device.js"
+/*import { FridayAPI } from "../FridayAPI.js"*/
 
 export let setComponent;
 export let page = navigation.keywords;
 export let root;
 
-let title = "B.E.C.K.Y";
+let title = getName();
 
 onMount (async () => { 
+  /*title = getName();*/
 });
 
 

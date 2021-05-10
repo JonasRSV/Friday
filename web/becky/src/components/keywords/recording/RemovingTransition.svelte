@@ -70,7 +70,7 @@ onMount (async () => {
   animation: load7 1.2s infinite ease-in-out;
 }
 .loader {
-  color: #000000;
+  color: #ff6f00;
   font-size: 10px;
   margin: 80px auto;
   position: relative;
@@ -128,7 +128,7 @@ onMount (async () => {
   position: relative;
   border-radius: 50%;
   box-sizing: content-box;
-  border: 4px solid #4CAF50;
+  border: 4px solid #ff6f00;
 }
 
 .check-icon::before {
@@ -152,13 +152,13 @@ onMount (async () => {
     content: '';
     height: 100px;
     position: absolute;
-    background: #FFFFFF;
+    background: #303841;
     transform: rotate(-45deg);
 }
 
 .icon-line {
     height: 5px;
-    background-color: #4CAF50;
+    background-color: #ff6f00;
     display: block;
     border-radius: 2px;
     position: absolute;
@@ -191,7 +191,7 @@ onMount (async () => {
     border-radius: 50%;
     position: absolute;
     box-sizing: content-box;
-    border: 4px solid rgba(76, 175, 80, .5);
+    border: 4px solid rgba(255, 111, 0, .5);
 }
 
 .icon-fix {
@@ -202,7 +202,7 @@ onMount (async () => {
     height: 85px;
     position: absolute;
     transform: rotate(-45deg);
-    background-color: #FFFFFF;
+    background-color: #303841;
 }
 .success-checkmark {
     width: 80px;

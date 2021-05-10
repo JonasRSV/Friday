@@ -1,53 +1,38 @@
 export let keywords = {}
+import { FridayAPI } from "../FridayAPI";
 
 export let initKeywords = () => {
-  return new Promise((resolve, _) => {
-    setTimeout(() => {
-      keywords = {
-          "superfra": [
-            "123-222-333-111.wav",
-            "223-222-333-111.wav",
-            "223-333-333-111.wav",
-          ],
-          "hello": [
-            "123-222-333-111.wav",
-            "223-222-333-111.wav",
-            "223-333-333-111.wav",
-          ],
+  // does GC of unused recordings.. not most elegant solution
+  // but will do for now.
+  return FridayAPI.recordingClips().then(recordings => {
+    FridayAPI.getExamples().then(examples => {
 
-          "hi": [
-            "123-222-333-111.wav",
-            "223-222-333-111.wav",
-            "223-333-333-111.wav",
-          ],
-          "whats up": [
-            "123-222-333-111.wav",
-            "223-222-333-111.wav",
-            "223-333-333-111.wav",
-          ],
-          "lights on": [
-            "123-222-333-111.wav",
-            "223-222-333-111.wav",
-            "223-333-333-111.wav",
-          ],
-          "lights off": [
-            "123-222-333-111.wav",
-            "223-222-333-111.wav",
-            "223-333-333-111.wav",
-          ],
-          "cookie time": [
-            "123-222-333-111.wav",
-            "223-222-333-111.wav",
-            "223-333-333-111.wav",
-          ],
-          "good night": [
-            "123-222-333-111.wav",
-            "223-222-333-111.wav",
-            "223-333-333-111.wav",
-          ]
+      let recordingsToRemove = recordings.ids;
+      for (var [file, keyword] of Object.entries(examples)) {
+        if (!(keyword in keywords)) {
+          keywords[keyword] = [];
+        }
+
+        keywords[keyword].push(file);
+
+        recordingsToRemove = recordingsToRemove.filter(item => item != file);
       }
 
-      resolve(keywords);
-    }, 1000);
+      recordingsToRemove.forEach(clip => FridayAPI.recordingRemove(clip));
+
+      return "ok"
+    });
   });
+}
+
+export let keywordSync = () => {
+  let examples = { }
+
+  for (var [keyword, files] of Object.entries(keywords)) {
+    files.forEach(file => {
+      examples[file] = keyword;
+    });
+  }
+
+  return FridayAPI.setExamples(examples);
 }

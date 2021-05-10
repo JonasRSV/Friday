@@ -5,7 +5,8 @@ import ClipOptions from "./clips/ClipOptions.svelte";
 import RecordingOption from "./recording/RecordingOption.svelte"
 import RecordingTransition from "./recording/RecordingTransition.svelte";
 import RemovingTransition from "./recording/RemovingTransition.svelte";
-/*import { FridayAPI } from "./FridayAPI.js"*/
+import { loadAudioBlob, playAudio, audioCache } from "../../core/Audio.js";
+import { FridayAPI } from "../../FridayAPI.js"
 
 export let setComponent;
 export let root;
@@ -17,9 +18,9 @@ export let goBack;
 export let syncFriday;
 
 // newest recorded clip
-export let newestClip = "111-222-333-111.wav";
+export let newestClip = null;
 // if true we're in the recording flow
-export let recordingFlow = true;
+export let recordingFlow = false;
 
 
 // show options of this clip
@@ -84,9 +85,18 @@ let removeClip = (clip) => {
   );
 }
 
+
 let playClip = (clip) => {
-  console.log("Playing", clip);
-}
+  if (clip in audioCache) {
+    playAudio(clip);
+  } else {
+    FridayAPI.recordingAudio(clip).then(audioStream => {
+      loadAudioBlob(clip, audioStream).then(_ => {
+        playAudio(clip);
+      });
+    });
+  }
+};
 
 let onClipClick = (clip) => {
   showingClip = clip;

@@ -1,12 +1,12 @@
 <script>
 import { onMount } from "svelte";
 import { navigation } from "../core/Enums.js";
-import { keywords } from "../core/Keyword.js";
+import { keywords, keywordSync } from "../core/Keyword.js";
 import KeywordBar from "./keywords/KeywordBar.svelte";
 import KeywordEditor from "./keywords/KeywordEditor.svelte";
 import NameInput from "./keywords/NameInput.svelte";
 import Add from "./Add.svelte";
-/*import { FridayAPI } from "./FridayAPI.js"*/
+import { FridayAPI } from "../FridayAPI.js"
 
 
 export let root;
@@ -41,20 +41,13 @@ let renderedKeywords = {}
 
 // Sync keywords to Friday 
 let syncFriday = (keyword, clips) => {
-  console.log("syncing to friday model..");
-  console.log("syncing", keyword, clips);
-
   if (clips.length == 0) {
     delete keywords[keyword];
   } else {
     keywords[keyword] = clips;
   }
   
-  let syncingPromise = new Promise((resolve, _) => {
-    setTimeout(() => {
-      resolve("ok");
-    }, 1000);
-  });
+  let syncingPromise = keywordSync();
 
   return syncingPromise;
 }
@@ -81,9 +74,6 @@ onMount (async () => {
   }
 
   renderedKeywords = keywords;
-
-  onKeywordClick("superfra", keywords["superfra"]);
-  
 });
 
 
