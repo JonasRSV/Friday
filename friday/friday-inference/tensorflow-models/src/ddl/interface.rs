@@ -33,6 +33,8 @@ pub struct Config {
 
 #[derive(Debug, Clone)]
 struct Examples {
+
+    // mapping of filenames to keywords
     audio: HashMap<String, String>,
 
     // These are unique identifiers, likely the file name
@@ -238,9 +240,6 @@ impl DDL {
         // Lock model in outerscope here to avoid a race-condition with model inference, we 
         // pass this model to the update and add to do projection.
 
-        // In a previous iteration update & add locked the model but that causes a race condition
-        // since this function locks the examples. The program ends up in a deadlock where this
-        // thread holds the examples and the inference thread holds the model.
         match self.model.clone().lock() {
             Err(err) =>  frierr!("Sync failed to aquire lock for DDL model - Reason: {}", err),
             Ok(model) =>  match self.examples.clone().write() {

@@ -2,6 +2,9 @@
 
 #[cfg(test)]
 mod tests {
+
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::{Arc, Mutex};
     use friday_logging;
 
     fn infinite_interruptable_loop() {
@@ -42,7 +45,8 @@ mod tests {
         let recording_config = friday_audio::RecordingConfig {
             sample_rate: 8000,
             model_frame_size: model.expected_frame_size(),
-            loudness: 1
+            loudness: 1,
+            device: "default".to_owned()
         };
 
         // Input audio stream, this is shared with the recording web-vendor

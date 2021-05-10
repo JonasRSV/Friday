@@ -35,11 +35,10 @@ create_pi_release () {
   echo "${fg_magenta}Copying 'friday/friday-vendor/vendor-scripts/test-resources/scripts' 'releases/release-raspberrypi3' ${fg_reset}"
   cp -r friday/friday-vendor/vendor-scripts/test-resources/scripts releases/release-raspberrypi3
 
-  echo "${fg_magenta}Copying 'web/nightout/release/' 'releases/release-raspberrypi3/' ${fg_reset}"
-  cp -r web/nightout/release releases/release-raspberrypi3
+  echo "${fg_magenta}Copying 'web/becky/release/' 'releases/release-raspberrypi3/' ${fg_reset}"
+  cp -r web/becky/release releases/release-raspberrypi3
 
-
-  GUI_DIR=releases/release-raspberrypi3/nightout
+  GUI_DIR=releases/release-raspberrypi3/becky
   if [ -d "$GUI_DIR" ]; then rm -Rf $GUI_DIR; fi
 
   echo "${fg_magenta}Renaming 'releases/release-raspberrypi3/release' '$GUI_DIR'${fg_reset}"
@@ -73,11 +72,10 @@ create_linux_release () {
   echo "${fg_magenta}Copying 'friday/friday-vendor/vendor-scripts/test-resources/scripts' 'releases/release-linux' ${fg_reset}"
   cp -r friday/friday-vendor/vendor-scripts/test-resources/scripts releases/release-linux
 
-  echo "${fg_magenta}Copying 'web/nightout/release/' 'releases/release-linux/' ${fg_reset}"
-  cp -r web/nightout/release releases/release-linux
+  echo "${fg_magenta}Copying 'web/becky/release/' 'releases/release-linux/' ${fg_reset}"
+  cp -r web/becky/release releases/release-linux
 
-
-  GUI_DIR=releases/release-linux/nightout
+  GUI_DIR=releases/release-linux/becky
   if [ -d "$GUI_DIR" ]; then rm -Rf $GUI_DIR; fi
 
   echo "${fg_magenta}Renaming 'releases/release-linux/release' '$GUI_DIR'${fg_reset}"
