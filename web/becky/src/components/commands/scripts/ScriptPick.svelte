@@ -123,7 +123,11 @@ main {
 .check-box {
   height: 25px;
   width: 25px;
+}
 
+.script-container {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 main {
@@ -154,12 +158,12 @@ main {
 
     {#each Object.entries(scripts) as [script, active] (script)}
       <div class="d-flex bar shadow flex-row mb-3 mt-3" on:click={() => toggle(script)}>
-        <div class="col-6 d-flex flex-column justify-content-center"> 
-          <h2>
+        <div class="col-11 d-flex flex-column justify-content-center"> 
+          <h2 class="script-container">
             {script} 
           </h2>
         </div>
-        <div class="d-flex col-6 flex-row justify-content-end">
+        <div class="d-flex col-1 flex-row justify-content-end">
           <div class="vertical d-flex flex-column justify-content-center" on:click={(e) => e.stopPropagation()} >
             {#if active}
               <input class="check-box" type="checkbox" checked on:click={() => scripts[script] = false}>

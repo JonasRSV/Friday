@@ -1,6 +1,5 @@
 <script>
 import { onMount } from "svelte";
-/*import { FridayAPI } from "./FridayAPI.js"*/
 import NavBar from "./NavBar.svelte"
 import Commands from "./Commands.svelte"
 import Keywords from "./Keywords.svelte"
@@ -9,14 +8,12 @@ import { getName } from "../core/Device.js"
 /*import { FridayAPI } from "../FridayAPI.js"*/
 
 export let setComponent;
-export let page = navigation.keywords;
+export let page = navigation.commands;
 export let root;
 
 let title = getName();
 
-onMount (async () => { 
-  /*title = getName();*/
-});
+onMount (async () => { });
 
 
 

@@ -25,9 +25,17 @@ export let click;
     justify-content: center
   }
 
+
   .plus {
-    font-size: 30pt;
-    height: 100%;
+    position: absolute;
+    margin: 0 auto;
+    top: 28px;
+    left: 36px;
+
+    /*To truly get it into the center*/
+    transform: translate(-50%, -50%);
+
+    font-size: 40pt;
 
   }
 

@@ -34,14 +34,11 @@ onMount (async () => {
   height: 100%;
 }
 
-
-
-
 </style>
 
 <div class="bar mb-3 shadow rounded text-center d-flex justify-content-center">
   <div class="vertical d-flex flex-column justify-content-center">
-    <h2>
+    <h2 class="script-container">
       {script}
     </h2>
   </div>
