@@ -1,0 +1,12 @@
+[Unit]
+Description=Friday Assistant Service
+After=network.target
+StartLimitIntervalSec=0[Service]
+Type=simple
+Restart=always
+RestartSec=10
+User=pi
+ExecStart=FRIDAY_GUI=/home/pi/release-raspberrypi3/becky FRIDAY_CONFIG=/home/pi/release-raspberrypi3 ./home/pi/release-raspberrypi3/friday-armv7-unknown-linux-gnueabinhf
+
+[Install]
+WantedBy=multi-user.target

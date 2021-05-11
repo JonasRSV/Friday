@@ -23,14 +23,17 @@ create_pi_release () {
   echo "${fg_magenta}Copying 'bin/friday-armv7-unknown-linux-gnueabinhf' 'releases/release-raspberrypi3' ${fg_reset}"
   cp bin/friday-armv7-unknown-linux-gnueabinhf releases/release-raspberrypi3
 
-  echo "${fg_magenta}Copying 'releases/*.json' 'releases/release-raspberrypi3' ${fg_reset}"
-  cp releases/*.json releases/release-raspberrypi3
+  echo "${fg_magenta}Copying 'releases/platform.pi/*' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp releases/platform.pi/* releases/release-raspberrypi3
 
-  echo "${fg_magenta}Copying 'releases/models' 'releases/release-raspberrypi3' ${fg_reset}"
-  cp -r releases/models releases/release-raspberrypi3
+  echo "${fg_magenta}Copying 'releases/platform.common/*.json' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp releases/platform.common/*.json releases/release-raspberrypi3
 
-  echo "${fg_magenta}Copying 'releases/discovery' 'releases/release-raspberrypi3' ${fg_reset}"
-  cp -r releases/discovery releases/release-raspberrypi3
+  echo "${fg_magenta}Copying 'releases/platform.common/models' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp -r releases/platform.common/models releases/release-raspberrypi3
+
+  echo "${fg_magenta}Copying 'releases/platform.common/discovery' 'releases/release-raspberrypi3' ${fg_reset}"
+  cp -r releases/platform.common/discovery releases/release-raspberrypi3
 
   echo "${fg_magenta}Copying 'friday/friday-vendor/vendor-scripts/test-resources/scripts' 'releases/release-raspberrypi3' ${fg_reset}"
   cp -r friday/friday-vendor/vendor-scripts/test-resources/scripts releases/release-raspberrypi3
@@ -60,14 +63,17 @@ create_linux_release () {
   echo "${fg_magenta}Copying 'bin/friday-x86_64-unknown-linux-gnu' 'releases/release-linux' ${fg_reset}"
   cp bin/friday-x86_64-unknown-linux-gnu releases/release-linux
 
-  echo "${fg_magenta}Copying 'releases/*.json' 'releases/release-linux' ${fg_reset}"
-  cp releases/*.json releases/release-linux
+  echo "${fg_magenta}Copying 'releases/platform.li/*' 'releases/release-linux' ${fg_reset}"
+  cp releases/platform.li/* releases/release-linux
 
-  echo "${fg_magenta}Copying 'releases/models' 'releases/release-linux' ${fg_reset}"
-  cp -r releases/models releases/release-linux
+  echo "${fg_magenta}Copying 'releases/platform.common/*.json' 'releases/release-linux' ${fg_reset}"
+  cp releases/platform.common/*.json releases/release-linux
 
-  echo "${fg_magenta}Copying 'releases/discovery' 'releases/release-linux' ${fg_reset}"
-  cp -r releases/discovery releases/release-linux
+  echo "${fg_magenta}Copying 'releases/platform.common/models' 'releases/release-linux' ${fg_reset}"
+  cp -r releases/platform.common/models releases/release-linux
+
+  echo "${fg_magenta}Copying 'releases/platform.common/discovery' 'releases/release-linux' ${fg_reset}"
+  cp -r releases/platform.common/discovery releases/release-linux
 
   echo "${fg_magenta}Copying 'friday/friday-vendor/vendor-scripts/test-resources/scripts' 'releases/release-linux' ${fg_reset}"
   cp -r friday/friday-vendor/vendor-scripts/test-resources/scripts releases/release-linux
