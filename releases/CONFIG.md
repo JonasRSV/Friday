@@ -32,12 +32,12 @@ This file contains configurations for the inference engine.
   - Value of 1 means it reacts as soon as one frame is below sensitivity
   - Value of x means it reacts as soon as the average of x frames is below sensitivity
 - **audio** a key value map mapping audio files to keywords.
-  - This is typically set by the user interface and does not need to be set manually.
+  - This is typically set by the [user interface](../web/becky) and does not need to be set manually.
 
 
 ## discovery
 
-This file contains configurations for the discovery engine
+This file contains configurations for the discovery module
 
 ```javascript
 
@@ -107,7 +107,7 @@ for example:
 ```
 
 - **scripts** is a key value field mapping keywords to a list of scripts.
-  - This is typically populated by the GUI
+  - This is typically populated by the [user interface](../web/becky).
   - No need to set this manually.
 
 In the example above when 'illuminati' is uttered friday will execute the script 'scripts/hello_world.py'.
