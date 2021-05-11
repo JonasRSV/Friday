@@ -2,9 +2,6 @@
   "export_dir": "test-resources/ddl_apr_13_eu",
   "sensitivity": 0.4,
   "audio": {
-    "595-221-349-469.wav": "tänd ljuset",
-    "85-418-988-118.wav": "släck ljuset",
-    "402-792-942-498.wav": "släck ljuset"
   },
   "frames": 2
 }
