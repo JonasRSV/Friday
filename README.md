@@ -1,6 +1,6 @@
 ![logo](art/friday-logo.png)
 
-Friday is a keyword spotting based voice assistant. The main feature is that it is wake word free, offline and uses few-shot learning to add new keywords. 
+Friday is a keyword spotting based voice assistant. The main feature is that it is wake word free, offline and uses few-shot learning to support learning arbitrary keywords. Friday works by listening for keywords it has been taught and then executes scripts on detection. For example to control lights one might teach friday 'illuminate' and 'darkness', then on a detection of 'illuminate' execute a script that turns on lights; and on 'darkness' off. Friday can learn dozen, up to hundreds, of words which can be used to control different lights, set different timers or do whatever can be expressed with a script.
 
 - [Try it Out](#try-it-out)
 - [Contributing](#contributing)
