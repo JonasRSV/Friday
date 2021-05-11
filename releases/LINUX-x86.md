@@ -68,6 +68,6 @@ FRIDAY_CONFIG=. FRIDAY_GUI=nightout ./friday-x86_64-unknown-linux-gnu
 ```
 
 Now, there are many things you might want to configure, such as what microphone the assistant should use and some hyperparameters for voice activity detection. See all 
-configuration options in the [configs](CONFIG.md) guide.
+configuration options in [configs](CONFIG.md).
 
 

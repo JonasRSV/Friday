@@ -1,7 +1,16 @@
 # Assistant configs
 ---
 
-## ddl.json
+This documents presents all the configuration files used by the assistant and what the fields mean.
+
+- [ddl.json](#ddl)
+- [discovery.json](#discovery)
+  - [kartasite.json](#kartasite)
+- [recording.json](#recording)
+- [scripts.json](#scripts)
+- [vad_peaks.json](#vad_peaks)
+
+### ddl 
 
 This file contains configurations for the inference engine.
 
@@ -15,29 +24,51 @@ This file contains configurations for the inference engine.
 }
 ```
 
-**export_dir** is the path to the tensorflow saved model.
+- **export_dir** is the path to the tensorflow saved model.
+- **sensitivity** how sensitive the model is.
+  - Value of 0 means to only ever react to perfect matches.
+  - Value of infinity mean to always pick the most likely match. 
+- **frames** Smoothing of model distances
+  - Value of 1 means it reacts as soon as one frame is below sensitivity
+  - Value of x means it reacts as soon as the average of x frames is below sensitivity
+- **audio** a key value map mapping audio files to keywords.
+  - This is typically set by the user interface and does not need to be set manually.
 
-**sensitivity** A value of 0 means the model only reacts to perfect matches and a value of infinity means it will react to everything.
 
-**frames** smoothing of the inference, 1 frame means the model will react as soon as a audio frame is below the sensitivity for some keyword. n frames means the average across n frames needs to be below sensitivity.
-
-**audio** a key value map mapping audio file names to the utterance it contains. This does not need to be touched since it is populated by the GUI.
-
-
-## discovery.json
+## discovery
 
 This file contains configurations for the discovery engine
 
 ```javascript
 
 {
-  "name": "DEVICE_NAME_HERE"
+  "name": "Friday"
 }
 ```
 
-**name** is the device name of your assistant, e.g (Albert)
+- **name** is the device name of your assistant, e.g (Albert)
+  - This name will show up on the GUI and the discovery site
+  - It can be used to distinguish multiple assistants on the same network.
 
-## recording.json
+### discovery/kartasite
+
+
+```javascript
+{
+  "site_url": "https://discoverfriday.se/ping"
+}
+```
+
+
+- **site_url** url to site it will ping with discovery information.
+  - Navigating to https://discoverfriday.se/ will show all assitant on your local network. 
+  - It will send your device name and the assistants local IP to the website.
+  - It will update that information once every hour if a send is successful 
+  - It will retry once every 5 seconds if a send is unsuccessful 
+
+
+
+## recording
 
 This file contains configuration for the recording module
 
@@ -48,16 +79,15 @@ This file contains configuration for the recording module
 }
 ```
 
-**loudness** is a multiplier for each sample, if your microphone is very quiet this can be used to increase the volume if there are no other means. The inference module works best if the 'Max-Peak' (see later configs) is above 5k when you're saying the keyword.
+- **loudness** is a multiplier for volume. 
+  - Can be used to increase volume if your mic is very quiet and there is no other way.
+  - Should be last resort, try increasing volume through alsamixer or something first.
+  - Only supports whole numbers, no decimals.
+- **device** The microphone you want the assistant to use for recording. 
+  - Use ``arecord -L `` to check for available devices
 
-**device** The microphone you want the assistant to use for recording. You can use 
-```bash
-arecord -L
-```
 
-to list available devices
-
-## scripts.json
+## scripts
 
 for example:
 
@@ -72,10 +102,14 @@ for example:
 
 ```
 
-The following configuration makes it so that when 'illuminati' is uttered friday will execute the script 'scripts/hello_world.py'. This does not need to be populated manually, but rather it can be done in the GUI.
+- **scripts** is a key value field mapping keywords to a list of scripts.
+  - This is typically populated by the GUI
+  - No need to set this manually.
+
+In the example above when 'illuminati' is uttered friday will execute the script 'scripts/hello_world.py'.
 
 
-## vad_peaks.json
+## vad_peaks
 
 ```javascript
 {
@@ -85,23 +119,12 @@ The following configuration makes it so that when 'illuminati' is uttered friday
 }
 ```
 
-**min_peaks** the minimum number of peaks with 'min_peak_height' that need to be present in the audio to pass
-
-**min_peak_height** the minimum height of peaks in audio that counts towards min_peaks
-
-**verbose** if true, prints the max peak in the audio and number of peaks larger than min_peaks
-
-
-## discovery/kartasite.json
-
-
-```javascript
-{
-  "site_url": "https://discoverfriday.se/ping"
-}
-```
-
-
-**site_url** url to site it will ping with information to make it possible to find your Friday on https://discoverfriday.se/ (your device name will show up on that page and it will link to your Fridays local IP.
+- **min_peaks** the minimum number of peaks with 'min_peak_height' that need to be present in the audio to pass to inference
+  - 4 is a fine value, typically does not require tuning
+- **min_peak_height** the minimum height of peaks in audio that counts towards min_peaks
+  - Needs to be tuned on a per mic basis
+- **verbose** if true, prints the max peak in the audio and number of peaks larger than min_peaks
+  - Set to 'true' to print information that is useful when tuning
+  - Set to 'false' when done with tuning to not clutter all other logging.
 
 
