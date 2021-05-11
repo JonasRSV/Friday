@@ -1,3 +1,4 @@
 {
+  "disable": false,
   "site_url": "http://0.0.0.0:7000/ping"
 }

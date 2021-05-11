@@ -55,15 +55,19 @@ This file contains configurations for the discovery engine
 
 ```javascript
 {
+  "disable": false,
   "site_url": "https://discoverfriday.se/ping"
 }
 ```
 
 
+- **disable** set to true to disable this functionality.
+  - if it is disabled no information will be sent from the assistant to the site url.
+  - if disabled https://discoverfriday.se/ won't work for this assistant.
 - **site_url** url to site it will ping with discovery information.
   - Navigating to https://discoverfriday.se/ will show all assitant on your local network. 
   - It will send your device name and the assistants local IP to the website.
-  - It will update that information once every hour if a send is successful 
+  - It will update that information once every day if a send is successful 
   - It will retry once every 5 seconds if a send is unsuccessful 
 
 
