@@ -1,6 +1,6 @@
 # Becky
 
-A frontend for Friday. It enables you to bind scripts to keywords and add new keyword through a graphical user interface.
+Becky is a frontend for Friday, named by [markusaj13](https://github.com/Markusaj13). It enables you to bind scripts to keywords and add new keywords through a graphical user interface.
 
 - [Adding Keywords](#adding-keywords)
 - [Adding Commands](#adding-commands)
