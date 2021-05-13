@@ -1,8 +1,6 @@
 {
   "scripts": {
     "tänd ljuset": [
-      "hello_world.py",
-      "hello_mars.sh"
     ]
   }
 }

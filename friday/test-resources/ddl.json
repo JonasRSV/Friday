@@ -1,7 +1,6 @@
 {
-  "export_dir": "test-resources/ddl_apr_13_eu",
-  "sensitivity": 0.4,
-  "audio": {
-  },
+  "export_dir": "test-resources/16000hz",
+  "sensitivity": 0.3,
+  "audio": { },
   "frames": 2
 }

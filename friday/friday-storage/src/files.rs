@@ -49,12 +49,12 @@ impl Files {
             Ok(mut file) => match wav::read(&mut file){
                 Err(err) => frierr!("Failed to read wav file {:?}", err),
                 Ok((header, data)) => 
-                    match header.sampling_rate == 8000 
+                    match header.sampling_rate == 16000 
                     && header.bits_per_sample == 16 
                     && header.channel_count == 1 { 
                         false => frierr!("Audio file {} contains unexpected header fields \
                             got bits per sample {} - sample rate {} - channel count {} - Audio Format {} \
-                            expect bits per sample 16 - sample rate 8000 - channel count 1 - Audio Format 1",
+                            expect bits per sample 16 - sample rate 16000 - channel count 1 - Audio Format 1",
                             name.as_ref(), 
                             header.bits_per_sample, 
                             header.sampling_rate, 

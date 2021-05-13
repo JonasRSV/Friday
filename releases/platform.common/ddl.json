@@ -1,6 +1,6 @@
 {
-  "export_dir": "models/ddl_apr_13_eu",
-  "sensitivity": 0.6,
+  "export_dir": "models/eu-may-12",
+  "sensitivity": 0.3,
   "frames": 1,
   "audio": {
   }

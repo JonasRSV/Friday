@@ -171,7 +171,7 @@ main {
 }
 
 .goback-icon {
-  position: fixed;
+  position: absolute;
   top: 35px;
   left: 20px;
 
@@ -194,6 +194,10 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
 
+}
+
+.bottom-margin {
+  height: 100px;
 }
 
 </style>
@@ -232,6 +236,7 @@ main {
                  play={playClip}/>
   {/if}
 
+  <div class="bottom-margin"> </div>
   <div class="fixed-bottom d-flex flex-row">
     <button class="recording button col-12" on:click={onRecordingClick}> </button>
   </div>

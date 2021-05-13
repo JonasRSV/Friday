@@ -43,7 +43,7 @@ mod tests {
             .expect("Failed to create discoveryy");
 
         let recording_config = friday_audio::RecordingConfig {
-            sample_rate: 8000,
+            sample_rate: 16000,
             model_frame_size: model.expected_frame_size(),
             loudness: 1,
             device: "default".to_owned()

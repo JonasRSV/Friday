@@ -82,7 +82,6 @@ pub fn serve_friday<M, S, V, R>(
                       Ok(istream) => 
                           match istream.read() {
                               Some(audio) => {
-
                                   match vad.detect(&audio) {
                                       VADResponse::Voice => {
                                           // VAD got voice so we will run inference

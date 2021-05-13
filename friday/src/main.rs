@@ -28,7 +28,7 @@ fn main() {
         .expect("Failed to load model");
 
     let recording_config = friday_audio::RecordingConfig::new(
-        8000, 
+        16000, 
         model.expected_frame_size()).expect("Could not initialize 'RecordingConfig'");
 
     // Input audio stream, this is shared with the recording web-vendor

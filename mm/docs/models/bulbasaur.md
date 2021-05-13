@@ -22,19 +22,19 @@ BULBASAUR_DISTANCE=euclidean
 ```bash
 python3 models/bulbasaur/bulbasaur.py\
     "--train_prefix=${FRIDAY_SESSION?}/ptfexamples.train*"\
-    "--eval_prefix=${FRIDAY_SESSION?}/ptfexamples-gsc-valid*"\
+    "--eval_prefix=${FRIDAY_SESSION?}/ptfexamples-valid*"\
     --margin=1.0\
     --distance=${BULBASAUR_DISTANCE?}\
     --embedding_dim=512\
     --clip_length=2\
     --model_directory=${MODEL_OUTPUT?}\
     --mode="train_eval"\
-    --sample_rate=8000\
+    --sample_rate=16000\
     --batch_size=128\
     --start_learning_rate=0.005\
     --max_steps=1000000\
-    --save_summary_every=20\
-    --eval_every=20\
+    --save_summary_every=400\
+    --eval_every=400\
     --parallel_reads=5
 ```
 

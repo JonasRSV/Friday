@@ -6,7 +6,6 @@ import KeywordBar from "./keywords/KeywordBar.svelte";
 import KeywordEditor from "./keywords/KeywordEditor.svelte";
 import NameInput from "./keywords/NameInput.svelte";
 import Add from "./Add.svelte";
-import { FridayAPI } from "../FridayAPI.js"
 
 
 export let root;
@@ -74,6 +73,7 @@ onMount (async () => {
   }
 
   renderedKeywords = keywords;
+  /*onKeywordClick("good", keywords["good"])*/
 });
 
 
