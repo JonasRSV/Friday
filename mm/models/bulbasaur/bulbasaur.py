@@ -97,8 +97,11 @@ def euclidean_triplet_loss(anchor_embeddings: tf.Tensor,
                            positive_embeddings: tf.Tensor,
                            negative_embeddings: tf.Tensor,
                            margin=1.0):
-    triplet = tf.nn.relu(euclidean_distance(anchor_embeddings, positive_embeddings) -
-                         euclidean_distance(anchor_embeddings, negative_embeddings) + margin)
+    triplet = euclidean_distance(anchor_embeddings, positive_embeddings) \
+            + 10 * tf.nn.relu(margin - euclidean_distance(anchor_embeddings, negative_embeddings))
+
+    # triplet = tf.nn.relu(euclidean_distance(anchor_embeddings, positive_embeddings) -
+                         # euclidean_distance(anchor_embeddings, negative_embeddings) + margin)
 
     return tf.reduce_sum(triplet)
 
@@ -193,11 +196,11 @@ def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     # TODO(jonasrsv): Try dropping first 2 MFCC features
     # To make invariant to loudness (gain)
     return audio.mfcc_feature(signal=signal,
-                             coefficients=27,
+                             coefficients=40,
                              sample_rate=sample_rate,
-                             frame_length=1024,
-                             frame_step=1024,
-                             fft_length=1024,
+                             frame_length=512,
+                             frame_step=512,
+                             fft_length=512,
                              num_mel_bins=120,
                              lower_edge_hertz=1,
                              upper_edge_hertz=sample_rate / 2)
@@ -214,9 +217,9 @@ def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     # Tony says Mel filterbanks is slightly ahead, so we try it! :D
     # return audio.mel_spectrogram_feature(signal=signal,
                                          # sample_rate=sample_rate,
-                                         # frame_length=1024,
-                                         # frame_step=1024,
-                                         # fft_length=1024,
+                                         # frame_length=512,
+                                         # frame_step=512,
+                                         # fft_length=512,
                                          # num_mel_bins=120,
                                          # lower_edge_hertz=1,
                                          # upper_edge_hertz=sample_rate / 2)
