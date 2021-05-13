@@ -211,22 +211,22 @@ if __name__ == '__main__':
                 (positive_audio, positive_text), \
                 (negative_audio, negative_text) = sample_triplet(transformer, utterances)
 
-            try:
-                (positive_audio, positive_text, positive_ok) = pn_map(positive_audio, positive_text, True)
-                (negative_audio, negative_text, negative_ok) = pn_map(negative_audio, negative_text, False)
+            #try:
+            (positive_audio, positive_text, positive_ok) = pn_map(positive_audio, positive_text, True)
+            (negative_audio, negative_text, negative_ok) = pn_map(negative_audio, negative_text, False)
 
-                (anchor_audio, anchor_text, anchor_ok) = anchor_map(anchor_audio, anchor_text)
+            (anchor_audio, anchor_text, anchor_ok) = anchor_map(anchor_audio, anchor_text)
 
-                if anchor_ok == positive_ok == negative_ok == True:
-                    written_mbs = writers.write(args.sample_rate,
-                                                anchor_audio,
-                                                anchor_text,
-                                                positive_audio,
-                                                positive_text,
-                                                negative_audio,
-                                                negative_text)
+            if anchor_ok == positive_ok == negative_ok == True:
+                written_mbs = writers.write(args.sample_rate,
+                                            anchor_audio,
+                                            anchor_text,
+                                            positive_audio,
+                                            positive_text,
+                                            negative_audio,
+                                            negative_text)
 
-                    progress_bar.update(n=written_mbs)
-            except Exception as e:
-                print(f"triplet construction failed, reason: {e}")
+                progress_bar.update(n=written_mbs)
+            # except Exception as e:
+                # print(f"triplet construction failed, reason: {e}")
 

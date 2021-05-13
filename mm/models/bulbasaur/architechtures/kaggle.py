@@ -9,14 +9,15 @@ def kaggle_cnn(x: tf.Tensor,
     with tf.variable_scope('kaggle_cnn', reuse=tf.AUTO_REUSE):
         x = tf.expand_dims(x, -1)
         print("x", x)
-        x = tf.compat.v1.layers.Conv2D(filters=64,
-                                       kernel_size=(7, 3),
+        x = tf.compat.v1.layers.Conv2D(filters=128,
+                                       kernel_size=(6, 6),
+                                       strides=(2, 2),
                                        activation=tf.nn.relu,
                                        name="kaggle_cnn_1_c")(x)
-        print("x", x)
-        x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 3), strides=(1, 3),
-                                             name="kaggle_cnn_1_m")(x)
-       #x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 3), strides=(1, 1), name="kaggle_cnn_1_m")(x)
+
+        # x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 3), strides=(1, 3),
+                                             # name="kaggle_cnn_1_m")(x)
+        # x = tf.compat.v1.layers.MaxPooling2D(pool_size=(1, 3), strides=(1, 1), name="kaggle_cnn_1_m")(x)
         print("x", x)
         x = tf.compat.v1.layers.Conv2D(filters=128,
                                        kernel_size=(1, 7),
@@ -27,13 +28,14 @@ def kaggle_cnn(x: tf.Tensor,
                                              name="kaggle_cnn_2_m")(x)
         print("x", x)
         x = tf.compat.v1.layers.Conv2D(filters=256,
-                                       kernel_size=(1, 10),
+                                       kernel_size=(1, 9),
                                        padding="valid",
                                        activation=tf.nn.relu,
                                        name="kaggle_cnn_3_c")(x)
         print("x", x)
         x = tf.compat.v1.layers.Conv2D(filters=512,
                                        kernel_size=(7, 1),
+                                       strides=(1, 1),
                                        activation=tf.nn.relu,
                                        name="kaggle_cnn_4_c")(x)
         print("x", x)

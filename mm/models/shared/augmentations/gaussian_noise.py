@@ -16,6 +16,7 @@ class GaussianNoise(Augmentation):
         self.stddev = stddev / self.normalization
 
     def apply(self, audio: np.ndarray, sample_rate: int):
+        audio = np.array(audio)
         return audio + np.clip(
             np.random.normal(loc=self.loc, scale=self.stddev, size=audio.shape) * self.normalization,
             -self.normalization,
