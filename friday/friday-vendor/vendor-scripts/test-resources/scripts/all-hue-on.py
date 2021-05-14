@@ -11,5 +11,5 @@ if __name__ == "__main__":
 
     ids = [light.light_id for light in b.lights]
 
-    b.set_light(ids, "on", True, 5)
-    b.set_light(ids, "bri", 200, 5)
+    for light in b.lights:
+        b.set_light(light.light_id, parameter={"on": True, "bri": 200}, transitiontime=5)
