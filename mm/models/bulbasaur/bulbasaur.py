@@ -198,9 +198,9 @@ def extract_audio_feature(signal: tf.Tensor, sample_rate: int):
     return audio.mfcc_feature(signal=signal,
                              coefficients=40,
                              sample_rate=sample_rate,
-                             frame_length=512,
+                             frame_length=1024,
                              frame_step=512,
-                             fft_length=512,
+                             fft_length=1024,
                              num_mel_bins=120,
                              lower_edge_hertz=1,
                              upper_edge_hertz=sample_rate / 2)
@@ -314,6 +314,10 @@ def make_model_fn(distance: Distance,
             tf.identity(tf.shape(min_distance_op), name="min_distance_shape")
         else:
             raise Exception(f"Unknown ModeKey {mode}")
+
+
+        for v in tf.all_variables():
+            print(v.name)
 
         return tf.estimator.EstimatorSpec(mode=mode,
                                           predictions=predict_op,
