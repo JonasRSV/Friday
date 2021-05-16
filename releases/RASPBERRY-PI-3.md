@@ -239,6 +239,8 @@ In this section we will pick our microphone, tune microphone configurations and 
 - [Tuning Microphone](#tuning-microphone)
 - [Tuning Sensitivity](#tuning-sensitivity)
 
+All configuration options are described in [CONFIG.md](CONFIG.md), in this guide we only cover the most essential ones.
+
 
 #### Picking Microphone
 
