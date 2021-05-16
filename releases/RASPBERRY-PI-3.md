@@ -334,7 +334,7 @@ Once my volume was tuned the logging looked like so
 ```
 
 
-With the microphone tuned we are ready to [run the assistant](#running-assistant) or optionally, and recommended, [tune the sensitivity](#tuning-sensitivity) of the assistant for your use case.
+With the microphone tuned we are ready to [run the assistant](#running-assistant) or optionally, and recommended, [tune the sensitivity](#tuning-sensitivity) of the assistant for your use case. Once it is tuned, I recommend turning of the verbose VAD logging, do this by setting ```verbose: false``` in ```vad_peaks.json```.
 
 
 #### Tuning Sensitivity
