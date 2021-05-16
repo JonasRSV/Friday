@@ -5,6 +5,9 @@
 - [Releases](#releases)
 - [Build](#build)
 
+Please see the [raspberrypi](RASPBERRY-PI-3.md) guide for more information on running and tuning the assistant
+
+
 ## Prerequisites
 
 Friday uses libtensorflow, make sure you have it installed in your library by running
@@ -25,7 +28,7 @@ sudo ldconfig
 
 ## Releases
 
-Precompiled Linux X86 are not available yet, to try it out you'll have to build it yourself
+Go to the [release page](https://github.com/JonasRSV/Friday/releases/tag/v0.01) and download latest 'li-release.zip'
 
 ## Build
 

@@ -15,7 +15,7 @@ This here is a installation and configuration guide for setting up the Friday as
     - [Picking Microphone](#picking-microphone)
     - [Tuning Microphone](#tuning-microphone)
     - [Tuning Sensitivity](#tuning-sensitivity)
-- [Running](#running)
+- [Running](#running-assistant)
 
 ## Prerequisites
 
