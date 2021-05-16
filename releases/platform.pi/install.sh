@@ -57,12 +57,12 @@ print_help() {
       echo " "
       echo "${fg_white} options:"
       echo "-h, --help  show brief help"
-      echo "${fg_magenta}-install ${fg_white}, Installs on the pi."
-      echo "${fg_magenta}-enable ${fg_white}, Enable auto start assistant."
-      echo "${fg_magenta}-disable ${fg_white}, Disable auto start of assistant."
-      echo "${fg_magenta}-start ${fg_white},  Start the assistant service."
-      echo "${fg_magenta}-stop ${fg_white},  Stop the assistant service."
-      echo "${fg_magenta}-status ${fg_white},  Status of the assistant service."
+      echo "${fg_magenta}--install ${fg_white}, Installs on the pi."
+      echo "${fg_magenta}--enable ${fg_white}, Enable auto start assistant."
+      echo "${fg_magenta}--disable ${fg_white}, Disable auto start of assistant."
+      echo "${fg_magenta}--start ${fg_white},  Start the assistant service."
+      echo "${fg_magenta}--stop ${fg_white},  Stop the assistant service."
+      echo "${fg_magenta}--status ${fg_white},  Status of the assistant service."
       exit 0
 }
 
@@ -85,15 +85,15 @@ case "$1" in
     disable
     exit 0
     ;;
-  -start)
+  --start)
     run
     exit 0
     ;;
-  -stop)
+  --stop)
     end
     exit 0
     ;;
-  -status)
+  --status)
     info
     exit 0
     ;;
