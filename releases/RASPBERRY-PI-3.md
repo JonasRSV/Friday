@@ -117,7 +117,7 @@ zip -r pi-release.zip releases/release-raspberrypi3
 
 ### Deploying 
 
-Before deploying the assistant release on the raspberry pi we must make sure that libtensorflow is installed on the pi, and if not install it. [libtensorflow](https://www.tensorflow.org/install/lang_c) is used for serving of the deep learning models and has to be installed on the system.
+Before deploying the assistant release on the Raspberry Pi we must make sure that libtensorflow is installed on the Pi, and if not: install it. [libtensorflow](https://www.tensorflow.org/install/lang_c) is used for serving of the deep learning models and has to be installed on the system.
 
 - [Installing libtensorflow](#installing-libtensorflow)
 - [Installing release](#installing-release)
