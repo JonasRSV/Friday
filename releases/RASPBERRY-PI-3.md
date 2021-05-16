@@ -318,6 +318,10 @@ Once my volume was tuned the logging looked like so
 
 
 ```bash
+.
+.
+.
+
 2021-05-16T12:46:48Z vad_peaks.rs:43 - Max peak 8388, peaks > 6000: 128
 2021-05-16T12:46:48Z interface.rs:370 - Cannot infer without examples
 2021-05-16T12:46:48Z vad_peaks.rs:43 - Max peak 8388, peaks > 6000: 128
@@ -331,6 +335,10 @@ Once my volume was tuned the logging looked like so
 2021-05-16T12:46:49Z vad_peaks.rs:43 - Max peak 3826, peaks > 6000: 0
 2021-05-16T12:46:49Z serving.rs:140 - Model was reset
 2021-05-16T12:46:49Z vad_peaks.rs:43 - Max peak 9080, peaks > 6000: 27
+
+.
+.
+.
 ```
 
 
@@ -365,6 +373,10 @@ For example, I recorded one example for four different keywords.
 Then I tried saying the words, and also just talked randomly afterwards.
 
 ```bash
+.
+.
+.
+
 2021-05-16T13:00:43Z interface.rs:391 - D(movie time ) = 0.84672344 -- M(movie time ) = 0.84672344
 2021-05-16T13:00:44Z interface.rs:391 - D(släck ljuset) = 0.41937762 -- M(släck ljuset) = 0.41937762
 2021-05-16T13:00:44Z interface.rs:391 - D(släck ljuset) = 0.34784487 -- M(släck ljuset) = 0.34784487
