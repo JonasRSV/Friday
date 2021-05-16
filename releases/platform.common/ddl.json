@@ -1,5 +1,5 @@
 {
-  "export_dir": "models/eu-may-12",
+  "export_dir": "models/100k-eu-nt/",
   "sensitivity": 0.3,
   "frames": 1,
   "audio": {

@@ -11,9 +11,9 @@ A brief description of its contents:
 - **platform.xx** contains files for platform xx
   - service files
   - startup scripts
-- **CONFIG.md** documentation of the configuration options for Friday.
-- **LINUX-x86.md** documentation of how to install on common linux systems
-- **RASPBERRY-PI-3.md** documentation of how to install on raspberry pi 
+- [**CONFIG.md**](CONFIG.md) documentation of the configuration options for Friday.
+- [**LINUX-x86.md**](LINUX-x86.md) documentation of how to install on common linux systems
+- [**RASPBERRY-PI-3.md**](RASPBERRY-PI-3.md) documentation of how to install on raspberry pi 
 
 
 Once the release script is run it will produce a folder release-\* which contains the files necessary to deploy the assistant. 
