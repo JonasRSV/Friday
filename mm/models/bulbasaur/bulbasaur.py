@@ -86,8 +86,12 @@ def cosine_triplet_loss(anchor_embeddings: tf.Tensor,
     positive_embeddings = tf.linalg.l2_normalize(positive_embeddings, axis=1)
     negative_embeddings = tf.linalg.l2_normalize(negative_embeddings, axis=1)
 
-    triplet = tf.nn.relu(cosine_distance(anchor_embeddings, positive_embeddings) -
-                         cosine_distance(anchor_embeddings, negative_embeddings) + margin)
+    # Minimizing absolute distance rather than relative distance works better
+    triplet = cosine_distance(anchor_embeddings, positive_embeddings) \
+            + 10 * tf.nn.relu(margin - cosine_distance(anchor_embeddings, negative_embeddings))
+
+    # triplet = tf.nn.relu(cosine_distance(anchor_embeddings, positive_embeddings) -
+                         # cosine_distance(anchor_embeddings, negative_embeddings) + margin)
 
     # return similarity_loss(left_embeddings, right_embeddings)
     return tf.reduce_sum(triplet)
@@ -97,6 +101,8 @@ def euclidean_triplet_loss(anchor_embeddings: tf.Tensor,
                            positive_embeddings: tf.Tensor,
                            negative_embeddings: tf.Tensor,
                            margin=1.0):
+
+    # Minimizing absolute distance rather than relative distance works better
     triplet = euclidean_distance(anchor_embeddings, positive_embeddings) \
             + 10 * tf.nn.relu(margin - euclidean_distance(anchor_embeddings, negative_embeddings))
 
