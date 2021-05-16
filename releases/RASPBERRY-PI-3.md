@@ -1,6 +1,6 @@
 # Raspberry Pi 3 
 
-This here is a installation and configuration guide for setting up the Friday assistant on a Raspberry Pi. The guide was developed on a linux laptop but it should translate pretty well to mac too. 
+This is the installation and configuration guide for setting up Friday on a Raspberry Pi. The guide was developed on a Linux laptop.
 
 - [Prerequisites](#prerequisites)
 - [Setting up the Raspberry Pi](#setting-up-the-raspberry-pi)
@@ -10,12 +10,12 @@ This here is a installation and configuration guide for setting up the Friday as
     - [Build](#build)
   - [Deploying](#deploying)
     - [Installing libtensorflow](#installing-libtensorflow)
-    - [Installing Assistant on Pi](#installing-assistant-on-pi)
+    - [Installing release](#installing-release)
   - [Configuring](#configuring)
     - [Picking Microphone](#picking-microphone)
     - [Tuning Microphone](#tuning-microphone)
     - [Tuning Sensitivity](#tuning-sensitivity)
-- [Running](#running-assistant)
+- [Running Assistant](#running-assistant)
 
 ## Prerequisites
 
@@ -27,86 +27,40 @@ This here is a installation and configuration guide for setting up the Friday as
 - SD-card 
 - SD-card adapter
 - Microphone
-- Laptop to Flash SD-card and build release
+
 
 
 ## Setting up the Raspberry Pi
 
-For this guide I used the Raspberry Pi OS Lite, it can be found on the Raspberry Pi [OS page](https://www.raspberrypi.org/software/operating-systems/). Start by following [this guide](https://www.raspberrypi.org/documentation/installation/installing-images/) to install the operating system onto your SD card.
-
-
-Secondly, we want to start the SSH server and connect the raspberry pi to your wifi. Begin by inserting the flashed SD card then plug in the Raspberry Pis power and connect it to a screen with keyboard and mouse. If all went well you should see the login screen, since it is your first login the username and password is
-
+For the Operating System I recommend using Raspberry Pi OS Lite, it can be found on the Raspberry Pi [OS page](https://www.raspberrypi.org/software/operating-systems/). Follow the [Raspberry Pi OS install guide](https://www.raspberrypi.org/documentation/installation/installing-images/) to flash the operating system onto your SD card. Thereafter enable WIFI and SSH on your Pi, do this by plugging in a keyboard, mouse and monitor into the raspberry pi and then start it. If this is your first time starting it you can log in with the default credentials
 
 ```bash
 username = pi
 password = raspberry
 ```
 
-Once logged in change the default password using 
+It is then recommended to change the default password for your raspberry Pi, do this with ```sudo passwd pi```. For future reference ```PIUSER=pi``` and ```PIPASS=..``` will represent your user and password in this guide.  Now when logged into your Pi enable SSH and WIFI, an easy way to do this is by typing ```sudo raspi-config``` into the terminal. Then under **Interface Options** you will be able to start the SSH server and under **System Options** you can log into the WIFI.  Once you're done with raspi-config it should give you the option to reboot, do so.
+
+
+Once restarted use ```ifconfig | grep inet``` to get the IP address. For example my Pi has 
 
 ```bash
-sudo passwd pi
+inet 127.0.0.1  netmask 255.0.0.0
+inet6 ::1  prefixlen 128  scopeid 0x10<host>
+inet 192.168.1.19  netmask 255.255.255.0  broadcast 192.168.1.255
+inet6 fe80::4f2d:1ce2:ead1:961f  prefixlen 64  scopeid 0x20<link>
 ```
 
-For future reference in this guide the environment variables 
-
-```bash
-PIUSER=pi
-PIPASS=..
-```
-
-will be used to reference your pis username and password. Now on your pi in the terminal type
-
-
-```bash
-sudo raspi-config
-```
-
-Navigate into interface options and enable SSH. Then go into, in raspi-config, System Options and pick 'Wireless LAN' to join the wifi, the SSID is the name of your wifi. Once you're done with raspi-config it should give you the option to reboot, do so.
-
-
-Once logged in again you should be able to see your devices local ip using 
-
-```bash
-ifconfig
-```
-
-Use
-
-```bash
-ifconfig | grep inet
-```
-
-to see only the rows with ip addresses. For future reference in the guide the PIs ip will be refered to as
-
-```bash
-PIIP=..
-```
-
-In my case it is
-
-```bash
-PIIP=192.168.1.19
-```
-
-You should now be able to unplug the keyboard, mouse and screen from the raspberry pi and connect to it via ssh. To check that all up until this point is working try connecting to the pi via SSH
+and 192.168.1.19 is the address I am looking for. Remember the IP adress, now you can unplug the Keyboard, Mouse and Screen and connect to the Raspberry Pi using SSH. For future reference ```PIIP=192.168.1.19``` will be used to refer to the Pis IP in this guide, exchange my IP adress for yours. It should now be possible to connect to the Pi, with for example: 
 
 ```bash
 ssh ${PIUSER?}@${PIIP?}
 ```
 
 
-Using SSH is not necessary but it is convenient, we will use it to move files between your computer and the Pi when installing the assistant. Technically this can be done without SSH by moving files using a USB or other means, if you don't like SSH just substitute all file transfers with your favorite method.
-
-
-
-
-
-
 ## Installation
 
-The installation of the assistant is done in three steps
+The installation of the assistant is done in three steps. First we aquire a release, then we deploy this release onto the Raspberry Pi and finally we can configure it. Unfortunately some manual configuration has to be done to make it work well with different microphones.
 
 1. [Aquire a Release](#releases)
 2. [Deploy](#deploying) Release on Assistant
@@ -115,7 +69,7 @@ The installation of the assistant is done in three steps
 
 ### Releases
 
-The first step is to aquire a release of the assistant.
+Begin by aquiring an assistant release, either a prebuilt one or if you want the lastest features build it yourself from the main branch.
 
 #### Prebuilt
 
@@ -163,24 +117,37 @@ zip -r pi-release.zip releases/release-raspberrypi3
 
 ### Deploying 
 
-The second step is deploying the release on the raspberry pi.  The first time you do this you also have to install libtensorflow on your raspberry pi, it is used by the assistant to serve its deep learning models. 
+Before deploying the assistant release on the raspberry pi we must make sure that libtensorflow is installed on the pi, and if not install it. [libtensorflow](https://www.tensorflow.org/install/lang_c) is used for serving of the deep learning models and has to be installed on the system.
+
+- [Installing libtensorflow](#installing-libtensorflow)
+- [Installing release](#installing-release)
+
+You can check for a libtensorflow installation using
+
+```bash
+ldconfig -p | grep tensorflow
+```
+
+If the output is empty, it is not installed.
+
 
 #### Installing libtensorflow
 
-libtensorflow is provided under friday/platforms.Resources/libtensorflow-unknown-linux-pi32.zip copy it to your pi using
+libtensorflow is provided under [platforms.Resources](../platforms.Resources). Download the zip file for Raspberry Pi and copy it to the Raspberry Pi, then install it into your Pis library. One way of doing this is provided with the following sequence of commands.
+
+First copy the library from your computer onto the Raspberry Pi
 
 ```bash
 scp platforms.Resources/libtensorflow-unknown-linux-pi32.zip ${PIUSER?}@${PIIP?}:/home/${PIUSER?}
 ```
 
-connect to your pi
-
+Then connect to your Pi
 
 ```bash
 ssh ${PIUSER?}@${PIIP?}
 ```
 
-under /home/pi you should see libtensorflow-unknown-linux-pi32.zip, open it with
+Open the library file on your Pi
 
 ```bash
 unzip libtensorflow-unknown-linux-pi32.zip
@@ -192,68 +159,59 @@ Move the files to the system library and update the cache
 sudo mv *.so /usr/lib && sudo ldconfig
 ```
 
-You should see them when running the following command
+You can now verify the installation again, if you see something similar to
 
 ```bash
-ldconfig -p | grep tensorflow
+pi@raspberrypi:~$ ldconfig -p | grep tensorflow
+        libtensorflow_framework.so (libc6,hard-float) => /lib/libtensorflow_framework.so
+        libtensorflow.so (libc6,hard-float) => /lib/libtensorflow.so
+
 ```
 
-If so, the installation of libtensorflow went well.
+all likely went well.
 
 
-#### Installing Assistant on Pi
+#### Installing release
 
-Assuming you got your hands on a release from the first step, move it to the assistant.
+
+Assuming you got your hands on a ```pi-release.zip``` from the [releases step](#releases). Move it to and unzip it on the Raspberry Pi, one way of doing this is exemplified with the following commands.
 
 ```bash
 scp pi-release.zip ${PIUSER?}@${PIIP?}:/home/${PIUSER?}
 ```
 
-then connect to the pi and open it with 
+Then connect to your Pi
 
+```bash
+ssh ${PIUSER?}@${PIIP?}
+```
+
+Open with
 
 ```bash
 unzip pi-release.zip
 ```
 
-you should now have 'release-raspberrypi3' in '/home/pi'
+You should now see
 
+```bash
+pi@raspberrypi:~$ ls
+empty  pi-release.zip  release-raspberrypi3
+```
 
-With this you should be able to start the assistant. Go into the release-raspberrypi3 folder and run
+The important folder is the ```release-raspberrypi3``` folder. Navigate into it and try starting the assistant
+
 
 ```bash
 FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf
 ```
 
-However it will quit, with the following message:
+If you haven't plugged in your microphone yet you should see something like:
 
 ```bash
-pi@raspberrypi:~/release-raspberrypi3$ FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf
-2021-05-16T12:32:49Z model.rs:232 - (tensorflow-models): Loading models/100k-eu-nt/
-2021-05-16 13:32:49.864580: I tensorflow/cc/saved_model/reader.cc:31] Reading SavedModel from: models/100k-eu-nt/
-2021-05-16 13:32:49.886595: I tensorflow/cc/saved_model/reader.cc:54] Reading meta graph with tags { serve }
-2021-05-16 13:32:49.956179: I tensorflow/cc/saved_model/loader.cc:182] Restoring SavedModel bundle.
-2021-05-16 13:32:50.226253: I tensorflow/cc/saved_model/loader.cc:132] Running initialization op on SavedModel bundle.
-2021-05-16 13:32:50.275430: I tensorflow/cc/saved_model/loader.cc:285] SavedModel load for tags { serve }; Status: success. Took 412419 microseconds.
-2021-05-16T12:32:50Z model.rs:281 - (tensorflow-models): Successfully loaded session from saved model
-2021-05-16T12:32:50Z model.rs:84 - Loading tensor audio
-2021-05-16T12:32:50Z model.rs:118 - Successfully loaded tensor "audio"
-2021-05-16T12:32:50Z model.rs:84 - Loading tensor embeddings
-2021-05-16T12:32:50Z model.rs:118 - Successfully loaded tensor "embeddings"
-2021-05-16T12:32:50Z model.rs:84 - Loading tensor project
-2021-05-16T12:32:50Z model.rs:118 - Successfully loaded tensor "project"
-2021-05-16T12:32:50Z model.rs:84 - Loading tensor distances
-2021-05-16T12:32:50Z model.rs:118 - Successfully loaded tensor "distances"
-ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
-ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
-ALSA lib pcm_dsnoop.c:575:(snd_pcm_dsnoop_open) The dsnoop plugin supports only capture stream
-ALSA lib pcm_dsnoop.c:638:(snd_pcm_dsnoop_open) unable to open slave
-ALSA lib pcm_dmix.c:1108:(snd_pcm_dmix_open) unable to open slave
-ALSA lib pcm_dmix.c:1108:(snd_pcm_dmix_open) unable to open slave
-ALSA lib pcm_dmix.c:1108:(snd_pcm_dmix_open) unable to open slave
-ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
-ALSA lib pcm_dsnoop.c:575:(snd_pcm_dsnoop_open) The dsnoop plugin supports only capture stream
-thread 'main' panicked at 'Failed to start audio recording:
+.
+.
+.
 
 --- Friday Error ---
 
@@ -263,31 +221,28 @@ thread 'main' panicked at 'Failed to start audio recording:
 
 
 --- End ---
-', src/main.rs:37:10
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+.
+.
+.
 
 ```
 
-This is expected since we have not plugged in the microphone yet. If you got some other type of error, please open an issue. 
-
-In the next section we will be configuring the microphone for the assistant.
-
+Where the dots represent additional logging. This is completely expected, in the next section we will plug in the microphone and configure the assistant.
 
 
 ### Configuring
 
-This section describes how to pick your microphone, how to tune the microphone and how to tune the sensitivity.
+In this section we will pick our microphone, tune microphone configurations and tune model sensitivity.
+
+- [Picking Microphone](#picking-microphone)
+- [Tuning Microphone](#tuning-microphone)
+- [Tuning Sensitivity](#tuning-sensitivity)
+
 
 #### Picking Microphone
 
-Plug in your microphone in the pi, then on the raspberry pi run
-
-
-```bash
-arecord -L
-```
-
-This will show all of your audio devices, on my raspberry pi it shows
+Plug in your favorite Microphone in the Raspberry Pi and connect to the Raspberry Pi ```ssh ${PIUSER?}@${PIIP?}```. On your Pi you can list all the connected audio devices with ```arecord -L```, on my Pi it gives the following output
 
 ```bash
 pi@raspberrypi:~/release-raspberrypi3$ arecord -L
@@ -299,46 +254,12 @@ default:CARD=MICCU100BK
 sysdefault:CARD=MICCU100BK
     nedis  MICCU100BK, USB Audio
     Default Audio Device
-front:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    Front speakers
-surround21:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    2.1 Surround output to Front and Subwoofer speakers
-surround40:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    4.0 Surround output to Front and Rear speakers
-surround41:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    4.1 Surround output to Front, Rear and Subwoofer speakers
-surround50:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    5.0 Surround output to Front, Center and Rear speakers
-surround51:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    5.1 Surround output to Front, Center, Rear and Subwoofer speakers
-surround71:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    7.1 Surround output to Front, Center, Side, Rear and Woofer speakers
-iec958:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    IEC958 (S/PDIF) Digital Audio Output
-dmix:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    Direct sample mixing device
-dsnoop:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    Direct sample snooping device
-hw:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    Direct hardware device without any conversions
-plughw:CARD=MICCU100BK,DEV=0
-    nedis  MICCU100BK, USB Audio
-    Hardware device with all software conversions
-
+.
+.
+.
 ```
 
-I see that the default device is the nedis microphone I bought for the assistant, to pick what device the assistant should use I copy the device ID into 'recording.json', like so:
+Copy the ID of the audio device you want to use into the ```recording.json``` configuration. For example my configuration uses the default nedis microphone
 
 ```bash
 {
@@ -350,62 +271,33 @@ I see that the default device is the nedis microphone I bought for the assistant
 > This is the content of recording.json
 
 
+Now we are ready to start tuning the assistant for this microphone.
+
 
 
 #### Tuning Microphone
 
-Once we have picked the microphone, try starting the assistant again
+Try starting the assistant again
 
 
 ```bash
 FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf
 ```
 
-This time around the assistant should start, the logging should look something like so:
+Once its on, look at the logging and start making some noise, you should be able to observe logging lines such as 
 
 
 ```bash
-pi@raspberrypi:~/release-raspberrypi3$ FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf
-2021-05-16T12:43:17Z model.rs:232 - (tensorflow-models): Loading models/100k-eu-nt/
-2021-05-16 13:43:17.329090: I tensorflow/cc/saved_model/reader.cc:31] Reading SavedModel from: models/100k-eu-nt/
-2021-05-16 13:43:17.339458: I tensorflow/cc/saved_model/reader.cc:54] Reading meta graph with tags { serve }
-2021-05-16 13:43:17.382299: I tensorflow/cc/saved_model/loader.cc:182] Restoring SavedModel bundle.
-2021-05-16 13:43:17.517050: I tensorflow/cc/saved_model/loader.cc:132] Running initialization op on SavedModel bundle.
-2021-05-16 13:43:17.555874: I tensorflow/cc/saved_model/loader.cc:285] SavedModel load for tags { serve }; Status: success. Took 226754 microseconds.
-2021-05-16T12:43:17Z model.rs:281 - (tensorflow-models): Successfully loaded session from saved model
-2021-05-16T12:43:17Z model.rs:84 - Loading tensor audio
-2021-05-16T12:43:17Z model.rs:118 - Successfully loaded tensor "audio"
-2021-05-16T12:43:17Z model.rs:84 - Loading tensor embeddings
-2021-05-16T12:43:17Z model.rs:118 - Successfully loaded tensor "embeddings"
-2021-05-16T12:43:17Z model.rs:84 - Loading tensor project
-2021-05-16T12:43:17Z model.rs:118 - Successfully loaded tensor "project"
-2021-05-16T12:43:17Z model.rs:84 - Loading tensor distances
-2021-05-16T12:43:17Z model.rs:118 - Successfully loaded tensor "distances"
-ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
-ALSA lib pcm_dmix.c:1043:(snd_pcm_dmix_open) The dmix plugin supports only playback stream
-ALSA lib pcm_dsnoop.c:575:(snd_pcm_dsnoop_open) The dsnoop plugin supports only capture stream
-ALSA lib pcm_dsnoop.c:638:(snd_pcm_dsnoop_open) unable to open slave
-ALSA lib pcm_dmix.c:1108:(snd_pcm_dmix_open) unable to open slave
-2021-05-16T12:43:17Z friday_cpal.rs:82 - Found recording device default:CARD=MICCU100BK
-2021-05-16T12:43:17Z friday_cpal.rs:109 - Using device default:CARD=MICCU100BK
-2021-05-16T12:43:17Z server.rs:113 - Starting Server on 0.0.0.0:8000
-2021-05-16T12:43:17Z karta_site.rs:46 - new
-2021-05-16T12:43:17Z serving.rs:58 - Purging some audio... (takes 2 seconds)
-2021-05-16T12:43:19Z serving.rs:66 - Listening..
+.
+.
+.
+
 2021-05-16T12:43:19Z vad_peaks.rs:43 - Max peak 288, peaks > 6000: 0
 2021-05-16T12:43:20Z vad_peaks.rs:43 - Max peak 288, peaks > 6000: 0
 2021-05-16T12:43:20Z vad_peaks.rs:43 - Max peak 288, peaks > 6000: 0
 2021-05-16T12:43:20Z vad_peaks.rs:43 - Max peak 288, peaks > 6000: 0
 2021-05-16T12:43:20Z vad_peaks.rs:43 - Max peak 2006, peaks > 6000: 0
 2021-05-16T12:43:21Z vad_peaks.rs:43 - Max peak 2366, peaks > 6000: 0
-2021-05-16T12:43:21Z vad_peaks.rs:43 - Max peak 2366, peaks > 6000: 0
-2021-05-16T12:43:21Z vad_peaks.rs:43 - Max peak 2366, peaks > 6000: 0
-2021-05-16T12:43:21Z vad_peaks.rs:43 - Max peak 2366, peaks > 6000: 0
-2021-05-16T12:43:22Z vad_peaks.rs:43 - Max peak 2366, peaks > 6000: 0
-2021-05-16T12:43:22Z vad_peaks.rs:43 - Max peak 2366, peaks > 6000: 0
-2021-05-16T12:43:22Z vad_peaks.rs:43 - Max peak 2366, peaks > 6000: 0
-2021-05-16T12:43:22Z karta_site.rs:133 - Discovery: https://discoverfriday.se/ping status 200
-2021-05-16T12:43:22Z discovery.rs:86 - Discovery - Waiting for 3595 seconds
 2021-05-16T12:43:22Z vad_peaks.rs:43 - Max peak 2366, peaks > 6000: 0
 2021-05-16T12:43:23Z vad_peaks.rs:43 - Max peak 1853, peaks > 6000: 0
 2021-05-16T12:43:23Z vad_peaks.rs:43 - Max peak 881, peaks > 6000: 0
@@ -413,13 +305,15 @@ ALSA lib pcm_dmix.c:1108:(snd_pcm_dmix_open) unable to open slave
 2021-05-16T12:43:23Z vad_peaks.rs:43 - Max peak 3777, peaks > 6000: 0
 2021-05-16T12:43:24Z vad_peaks.rs:43 - Max peak 3777, peaks > 6000: 0
 
+.
+.
+.
 ```
 
-We need to tune the VAD detection, currently the inference will not start unless the audio peaks above 6000, when I spoke the audio went as high as 3777 which is still too low. This is because my microphone is too quiet.
+Begin by setting the volume on the microphone such that Max peak is above 6000 when you're uttering your keywords. Preferably significantly above 6000, I would say around 10 000 is good. You can use ```alsamixer``` and also the loudness configuration in ```recording.json``` to tune the volume, or your favorite volume control tool. It is also possible to tune the Voice Activity Detection (VAD) in the ```vad_peaks.json```. I don't recommend lowering the peak threshold, if anything you can increse it.
 
+Once my volume was tuned the logging looked like so
 
-To fix this I turn up the volume of my microphone using the command 'alsamixer', feel free to use your favorite volume control though.  Now with a louder microphone I 
-trigger the inference when I am talking.
 
 ```bash
 2021-05-16T12:46:48Z vad_peaks.rs:43 - Max peak 8388, peaks > 6000: 128
@@ -437,27 +331,29 @@ trigger the inference when I am talking.
 2021-05-16T12:46:49Z vad_peaks.rs:43 - Max peak 9080, peaks > 6000: 27
 ```
 
-You can tune the VAD barrier yourself if you want in vad_peaks.json, but I recommend using 6000, or higher, if you can make it work with your microphone. Once the VAD is tuned you can remove its logging, by setting verbose to false in vad_peaks.json
 
+With the microphone tuned we are ready to [run the assistant](#running-assistant) or optionally, and recommended, [tune the sensitivity](#tuning-sensitivity) of the assistant for your use case.
 
 
 #### Tuning Sensitivity
 
-Start the assistant again
+Assuming that the assistants microphone is properly configured: configure the sensitivity by adding a few example keywords and observe the inference logging as you're speaking. Use the inference logging to decide on a value for ```sensitivity``` in ```ddl.json```. One way of doing this is exemplified here
 
+Begin by starting the assistant on the Raspberry Pi
 
 ```bash
 FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf
 ```
 
-Then open the GUI by either
+Then open its GUI by one of the following methods
 
-1. Open discoverfriday.se and pick your device name
+1. Open discoverfriday.se and pick your device name (If [discovery/karta_site.json](platform.common/discovery/kartasite.json) is enabled)
 2. Navigate to the Pi's local IP at port 8000
 
-You can use the GUI to record a few examples, **TODO** include link here to DEMO to show how.
+Use the GUI to add a few keywords. Look at the demo for an example of how that is done
 
-For example, I recorded one example for 4 different keywords in the GUI
+
+For example, I recorded one example for four different keywords.
 
 - släck ljuset (Swedish for torn off the light)
 - tänd ljuset (Swedish for turn on the light)
@@ -504,40 +400,40 @@ Then I tried saying the words, and also just talked randomly afterwards.
 
 ```
 
-Using this you can see the 'distance' your speech is from the keywords as you speak, you can use this logging information to tune the sensitivity of the model, see ddl.json. I myself picked 0.4, if you want it to be more trigger happy then a higher number is good. If you want it to be more conservative a lower number is good.
-
-A trick is to have multiple recordings per keyword and then quite a low sensitivity, this will make it very conservative and reduce the number of false positivies.
+Using this I settled on a sensitivity of 0.4. A high value will make the assistant more trigger happy and a low value less so.  One trick is to have a lower value and then provide multiple example recordings per keyword. 
 
 
 
 ## Running Assistant
 
-Once you have a configured assistant deployed on your pi you could technically just start it with
+With a configured and tuned assistant you could just start it ```FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf ``` and leave it. But if you for example SSH'd to connect to the Pi this means the assistant is only alive as long as the SSH session, to mitigate this you can use tmux or screen. But even if you persist the assistant across SSH sessions it would have to be manually restarted everytime the Raspberry Pi is restarted. 
 
-```bash                                                                                                                                                                                    
-FRIDAY_GUI=becky FRIDAY_CONFIG=. ./friday-armv7-unknown-linux-gnueabinhf 
-```
+For convenience the Raspberry Pi release contains a service file which can be used to turn the assistant into a system service so that it is automatically started when the Raspberry Pi is started. You can install this system service with the following sequence of commands on the Raspberry Pi.
 
-and leave it, but if you're SSHing into the assistant it means that the assistant will die as soon as the SSH session dies. A quick workaround for this is to launch it in tmux or screen, I myself like to make use of tmux. But this has the drawback that you have to restart the assistant manually everytime the raspberry pi is restarted.
 
-Instead you can install the assistant service on the pi with
+Copy the friday.service file with:
 
 ```bash                                                                                                                                                                                    
 ./install.sh --install
 ```
 
-Then enable auto restart with
+Enable the Service with (makes sure it will start on boot)
 
 ```bash                                                                                                                                                                                    
 ./install.sh --enable
 ```
 
-
-And start Assistant
+Start assistant for current boot with
 
 
 ```bash                                                                                                                                                                                    
 ./install.sh --start
+```
+
+Check assistant status with
+
+```bash                                                                                                                                                                                    
+./install.sh --status
 ```
 
 To watch stdout when assistant is started as a service, use:
