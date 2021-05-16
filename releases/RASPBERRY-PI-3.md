@@ -365,7 +365,7 @@ Use the GUI to add a few keywords. Look at the demo for an example of how that i
 
 For example, I recorded one example for four different keywords.
 
-- släck ljuset (Swedish for torn off the light)
+- släck ljuset (Swedish for turn off the light)
 - tänd ljuset (Swedish for turn on the light)
 - cookies
 - movie time
