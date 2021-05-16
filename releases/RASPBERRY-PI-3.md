@@ -270,13 +270,13 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
 This is expected since we have not plugged in the microphone yet. If you got some other type of error, please open an issue. 
 
-In the final section we will be configuring the assistant for your microphone.
+In the next section we will be configuring the microphone for the assistant.
 
 
 
 ### Configuring
 
-This section describes how to pick your microphone, how to tune the microphone, how to tune the sensitivity and how to create a service.
+This section describes how to pick your microphone, how to tune the microphone and how to tune the sensitivity.
 
 #### Picking Microphone
 
