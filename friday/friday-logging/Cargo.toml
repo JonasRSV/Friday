@@ -11,3 +11,4 @@ edition = "2018"
 humantime = "2.0.1"
 # For pretty colors
 ansi_term = "0.12.1"
+lazy_static = "1.4.0"

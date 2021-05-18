@@ -30,6 +30,21 @@ macro_rules! propagate {
     }
 }
 
+#[macro_export]
+macro_rules! log_if_err {
+    ($arg:expr) => {
+        match $arg {
+            Ok(_) => (),
+            Err(err) => friday_logging::error!("{}:{}:{} {:?}", 
+                std::file!(),
+                std::line!(),
+                std::column!(),
+                err)
+        }
+    }
+}
+
+
 pub fn merge(a : &mut FridayError, b : &FridayError) -> FridayError {
     a.trace.extend(b.trace.clone());
     return a.clone();
@@ -85,6 +100,7 @@ impl<T> Into<Result<T, FridayError>> for FridayError {
         return Err(self);
     }
 }
+
 
 #[cfg(test)]
 mod tests {

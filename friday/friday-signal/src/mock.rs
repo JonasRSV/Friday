@@ -4,11 +4,16 @@ use crate::core::{Signal, Device};
 
 pub struct MockDevice;
 
+impl MockDevice {
+    pub fn new() -> MockDevice {
+        MockDevice{}
+    }
+}
+
 impl Device for MockDevice {
     fn name(&self) -> String { "mock".to_owned() }
     fn send(&mut self, signal: &Signal) -> Result<(), FridayError> {
-        friday_logging::debug!("Sending {:?} Listening..", signal);
-
+        friday_logging::debug!("Sending signal {:?}", signal);
         Ok(())
     }
 }

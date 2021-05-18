@@ -638,6 +638,7 @@ version = "0.1.0"
 dependencies = [
  "ansi_term 0.12.1",
  "humantime 2.0.1",
+ "lazy_static",
 ]
 
 [[package]]

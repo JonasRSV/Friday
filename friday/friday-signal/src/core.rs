@@ -1,19 +1,30 @@
 use friday_error::FridayError;
 
+#[derive(Debug)]
+pub enum Listening {
+    Start,
+    Stop
+}
+
+#[derive(Debug)]
+pub enum Inference {
+    Start,
+    Stop
+}
+
+#[derive(Debug)]
+pub enum Dispatch {
+    Start,
+    Stop
+}
+
 
 #[derive(Debug)]
 pub enum Signal {
-
     // States of the main thread
-    StartListening,
-    StopListening,
-
-    StartInferring,
-    StopInferring,
-
-    StartDispatching,
-    StopDispatching
-        
+    Listening(Listening),
+    Inference(Inference),
+    Dispatch(Dispatch)
 
 }
 

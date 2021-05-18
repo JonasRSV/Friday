@@ -2,6 +2,7 @@ use friday_vendor;
 use friday_vendor::DispatchResponse;
 use friday_vendor::Vendor;
 use friday_signal;
+use friday_signal::core::{Signal, Listening, Inference, Dispatch};
 
 
 use friday_audio;
@@ -15,6 +16,8 @@ use friday_inference::Model;
 
 
 use friday_logging;
+
+use friday_error::log_if_err;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -42,7 +45,7 @@ pub fn serve_friday<M, S, V, R>(
     model: &mut M, 
     vendors: &Vec<Box<V>>, 
     shared_istream: Arc<Mutex<R>>,
-    composer: &mut friday_signal::Composer) 
+    mut signal_device: Box<dyn friday_signal::core::Device>) 
     where M: Model,
           S: SpeakDetector,
           V: Vendor + ?Sized,
@@ -66,7 +69,8 @@ pub fn serve_friday<M, S, V, R>(
               friday_logging::info!("Listening..");
 
               // Friday is listening
-              composer.send(&friday_signal::core::Signal::StartListening);
+              log_if_err!(signal_device.send(&Signal::Listening(Listening::Start)));
+
               while running.load(Ordering::SeqCst) {
                   std::thread::sleep(std::time::Duration::from_millis(250));
 
@@ -90,7 +94,7 @@ pub fn serve_friday<M, S, V, R>(
                                           previous_was_inference = true;
 
                                           // Friday starts inferring
-                                          composer.send(&friday_signal::core::Signal::StartInferring);
+                                          log_if_err!(signal_device.send(&Signal::Inference(Inference::Start)));
 
                                           match model.predict(&audio) {
                                               Ok(prediction) => match prediction {
@@ -100,7 +104,7 @@ pub fn serve_friday<M, S, V, R>(
                                                       friday_logging::info!("Dispatching {}", class);
 
                                                       // Friday starts dispatching
-                                                      composer.send(&friday_signal::core::Signal::StartDispatching);
+                                                      log_if_err!(signal_device.send(&Signal::Dispatch(Dispatch::Start)));
 
                                                       //Sleep to clear the replay buffer
                                                       //std::thread::sleep(std::time::Duration::from_millis(2000));
@@ -122,7 +126,7 @@ pub fn serve_friday<M, S, V, R>(
                                                       dispatch(vendors, class);
 
                                                       // Friday stops dispatching
-                                                      composer.send(&friday_signal::core::Signal::StopDispatching);
+                                                      log_if_err!(signal_device.send(&Signal::Dispatch(Dispatch::Stop)));
                                                   },
                                                   friday_inference::Prediction::Silence => (),
                                                   friday_inference::Prediction::Inconclusive => ()
@@ -134,7 +138,7 @@ pub fn serve_friday<M, S, V, R>(
                                       },
                                       VADResponse::Silence => {
                                           if previous_was_inference {
-                                              composer.send(&friday_signal::core::Signal::StopInferring);
+                                              log_if_err!(signal_device.send(&Signal::Inference(Inference::Stop)));
 
                                               match model.reset() {
                                                   Ok(()) => friday_logging::debug!("Model was reset"),
@@ -143,10 +147,8 @@ pub fn serve_friday<M, S, V, R>(
                                                           "Failed to reset model, Reason: {:?} \
                                                       exiting..", err);
                                                       break;
-
-
-
-}                                              }
+                                                  }
+                                              }
                                           }
 
                                           previous_was_inference = false;
@@ -157,4 +159,6 @@ pub fn serve_friday<M, S, V, R>(
                           }
                   }
               }
+
+              log_if_err!(signal_device.send(&Signal::Listening(Listening::Stop)));
           }

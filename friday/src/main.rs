@@ -15,10 +15,7 @@ use tensorflow_models;
 
 use friday_web::server::Server;
 
-
 use std::sync::{Arc, Mutex};
-use std::cell::RefCell;
-use std::rc::Rc;
 
 
 fn main() {
@@ -102,17 +99,10 @@ fn main() {
     let mut vad = friday_vad::vad_peaks::PeakBasedDetector::new()
         .expect("Failed to create VAD - PeakBasedDetector");
 
-    let mut composer = friday_signal::Composer::new().expect("Failed to construct signal composer");
-
-    composer.register_devices(
-        vec![
-            //Rc::new(RefCell::new(friday_signal::mock::MockDevice{}))
-            
-        ]
-    );
+    let signal_device = Box::new(friday_signal::mock::MockDevice::new());
 
     // Serve friday using the main thread
-    serving::serve_friday(&mut vad, &mut model, &vendors, istream, &mut composer);
+    serving::serve_friday(&mut vad, &mut model, &vendors, istream, signal_device);
 
     friday_logging::info!("Shutting Down Webserver.. Might take a few seconds");
     web_handle.stop();

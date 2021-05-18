@@ -132,3 +132,13 @@ In the example above when 'illuminati' is uttered friday will execute the script
   - Set to 'false' when done with tuning to not clutter all other logging.
 
 
+
+In general you can control fridays log level with the environment variable
+
+```bash
+FRIDAY_LOG_LEVEL=DEBUG
+FRIDAY_LOG_LEVEL=INFO
+FRIDAY_LOG_LEVEL=WARNING
+FRIDAY_LOG_LEVEL=ERROR
+FRIDAY_LOG_LEVEL=FATAL
+```
