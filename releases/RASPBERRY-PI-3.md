@@ -312,7 +312,7 @@ Once its on, look at the logging and start making some noise, you should be able
 .
 ```
 
-Begin by setting the volume on the microphone such that Max peak is above 6000 when you're uttering your keywords. Preferably significantly above 6000, I would say around 10 000 is good. You can use ```alsamixer``` and also the loudness configuration in ```recording.json``` to tune the volume, or your favorite volume control tool. It is also possible to tune the Voice Activity Detection (VAD) in the ```vad_peaks.json```. I don't recommend lowering the peak threshold, if anything you can increse it.
+Begin by setting the volume on the microphone such that Max peak is above 6000 when you're uttering your keywords. Preferably significantly above 6000, I would say around 10 000 is good. You can use ```alsamixer``` and also the loudness configuration in ```recording.json``` to tune the volume, or your favorite volume control tool. It is also possible to tune the Voice Activity Detection (VAD) in the ```vad_peaks.json```. I don't recommend lowering the peak threshold, if anything you can increase it.
 
 Once my volume was tuned the logging looked like so
 
