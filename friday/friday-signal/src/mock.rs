@@ -18,4 +18,18 @@ impl Device for MockDevice {
     }
 }
 
+pub struct SilentMockDevice;
 
+impl SilentMockDevice {
+    pub fn new() -> SilentMockDevice {
+        SilentMockDevice{}
+    }
+}
+
+
+impl Device for SilentMockDevice {
+    fn name(&self) -> String { "SilentMock".to_owned() }
+    fn send(&mut self, _: &Signal) -> Result<(), FridayError> {
+        Ok(())
+    }
+}

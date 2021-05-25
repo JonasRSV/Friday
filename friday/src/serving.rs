@@ -109,6 +109,12 @@ pub fn serve_friday<M, S, V, R>(
                                                       //Sleep to clear the replay buffer
                                                       //std::thread::sleep(std::time::Duration::from_millis(2000));
 
+                                                      // Dispatch the command
+                                                      dispatch(vendors, class);
+
+                                                      // Friday stops dispatching
+                                                      log_if_err!(signal_device.send(&Signal::Dispatch(Dispatch::Stop)));
+
 
                                                       // Clear buffer of any trace of the signal
                                                       // that trigged this command
@@ -122,11 +128,6 @@ pub fn serve_friday<M, S, V, R>(
                                                           Ok(()) => ()
                                                       };
 
-                                                      // Dispatch the command
-                                                      dispatch(vendors, class);
-
-                                                      // Friday stops dispatching
-                                                      log_if_err!(signal_device.send(&Signal::Dispatch(Dispatch::Stop)));
                                                   },
                                                   friday_inference::Prediction::Silence => (),
                                                   friday_inference::Prediction::Inconclusive => ()

@@ -99,7 +99,7 @@ fn main() {
     let mut vad = friday_vad::vad_peaks::PeakBasedDetector::new()
         .expect("Failed to create VAD - PeakBasedDetector");
 
-    let signal_device = Box::new(friday_signal::mock::MockDevice::new());
+    let signal_device = Box::new(friday_signal::mock::SilentMockDevice::new());
 
     // Serve friday using the main thread
     serving::serve_friday(&mut vad, &mut model, &vendors, istream, signal_device);
