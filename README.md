@@ -2,7 +2,6 @@
 
 Friday is a special kind of voice assistant, it is not very smart, all it does is execute scripts when it spots key-phrases. Friday is based on a few-shot learning method that enables it to learn new key phrases from just one example, although providing a few does not hurt. 
 
-![friday-example](art/friday-example.png)
 
 By combining scripts you can make pretty cool things happend, Friday also ships with a [GUI](web/becky/) to make adding keywords and binding them to scripts easier.
 
@@ -11,7 +10,7 @@ By combining scripts you can make pretty cool things happend, Friday also ships 
 
 
 
-TODO.. Demo
+<img src="art/Thumbnail_Play.png"/>
 
 # Try it Out
 
