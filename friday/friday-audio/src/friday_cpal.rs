@@ -7,7 +7,6 @@ use friday_error::{frierr, propagate, FridayError};
 use friday_logging;
 use crate::recorder::Recorder;
 use crate::RecordingConfig;
-use crate::bandpass::FIR;
 
 use std::thread;
 use std::time;
@@ -34,7 +33,7 @@ fn write_to_buffer<T>(input: &[T], buffer: &Arc<Mutex<CircularQueue<i16>>>,
 
                     };
                 }
-        }
+            }
 
         match buffer.lock() {
             Ok(mut guard) => insert(input, &mut guard, loudness_contant),
@@ -61,12 +60,6 @@ fn get_recording_device(conf: &RecordingConfig) -> Result<cpal::Device, FridayEr
     //for device in cpal::default_host().devices().unwrap() {
     //friday_logging::info!("Found device {}", device.name().unwrap());
     //}
-    // TODO: Make a smart choice of device here
-    // For some platforms the default device is not a good choice
-    // E.g raspberry PI
-    // The current work-around is that I manually set the default device on the pi
-    // to make this code work - but would be better if this code could
-    // recognize what device has recording capabilities and then use it
 
     match cpal::default_host().input_devices() {
         Err(err) => frierr!("Failed to read input devices, Reason: {:?}", err),
@@ -93,7 +86,6 @@ pub struct CPALIStream {
     _stream: cpal::Stream,
     buffer: Arc<Mutex<CircularQueue<i16>>>,
 
-    fir: FIR
 }
 
 // If things break, this is possibly a culprit
@@ -140,18 +132,11 @@ impl CPALIStream {
                         stream.play()
                             .map_or_else(
                                 |err| frierr!("Recording Failed {}", err),
-                                |_| {
-                                    match FIR::new() {
-                                        Err(err) => frierr!("Failed to create FIR, Reason {:?}", err),
-                                        Ok(fir) => Ok(Arc::new(Mutex::new(CPALIStream{
-                                            config: conf.clone(),
-                                            _stream: stream,
-                                            buffer: read_buffer,
-                                            fir
-                                        })))
-
-                                    }
-                                })
+                                |_| Ok(Arc::new(Mutex::new(CPALIStream{
+                                    config: conf.clone(),
+                                    _stream: stream,
+                                    buffer: read_buffer,
+                                }))) )
 
                     });
                 });
