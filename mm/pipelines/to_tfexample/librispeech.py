@@ -96,9 +96,7 @@ if __name__ == "__main__":
     argparser.add_argument("--sample_rate", type=int, default=8000, help="Sample rate of audio")
 
     datasets_to_convert = [
-        "train-clean-100",
-        "train-clean-360",
-        "train-other-500"
+        "test-clean",
     ]
 
     args = argparser.parse_args()

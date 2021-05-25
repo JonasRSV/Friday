@@ -52,6 +52,7 @@ class ODTW:
         return dtw(x, template, mem, template_length, sequence_length, distance)
 
 
+
 if __name__ == "__main__":
     # sequence = [0, 1, 2, 1, 0, 0, 0]
     # template = [1, 1, 1, 2, 1, 2, 1]

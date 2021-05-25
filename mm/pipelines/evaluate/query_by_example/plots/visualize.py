@@ -63,7 +63,7 @@ def efficacy(df: pd.DataFrame):
     plt.text(-3.2, 50.0, "efficacy", fontsize=9)
     plt.text(-1.0, -20.0, "distance", fontsize=9)
 
-    plt.legend(fontsize=7, ncol=4, bbox_to_anchor=(-0.2, -0.25))
+    plt.legend(fontsize=7, ncol=3, bbox_to_anchor=(0.2, -0.25))
 
     plt.savefig(get_plot_dir() / f"efficacy.pdf", bbox_inches="tight")
     plt.show()
