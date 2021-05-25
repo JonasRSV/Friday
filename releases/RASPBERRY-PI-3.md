@@ -362,6 +362,8 @@ Then open its GUI by one of the following methods
 
 Use the GUI to add a few keywords. Look at the demo for an example of how that is done
 
+[![Demo thumbnail](../art/Thumbnail_Play.png)](https://www.youtube.com/watch?v=bcSGfgMJVeU)
+
 
 For example, I recorded one example for four different keywords.
 
