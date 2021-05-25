@@ -10,7 +10,7 @@ By combining scripts you can make pretty cool things happend, Friday also ships 
 
 
 
-<img src="art/Thumbnail_Play.png"/>
+<img src="art/Thumbnail_Play.png" href="https://www.youtube.com/watch?v=bcSGfgMJVeU"/>
 
 # Try it Out
 
