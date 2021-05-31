@@ -9,6 +9,7 @@ import pandas as pd
 import pipelines.evaluate.query_by_example.core as core
 import seaborn as sb
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from enum import Enum
 from pipelines.evaluate.query_by_example.metrics.gsc import multiclass_accuracy
 import argparse
@@ -29,7 +30,15 @@ class Visualizations(Enum):
 
 def efficacy(df: pd.DataFrame):
     plt.figure(figsize=(7, 3))
-    sb.set_style("whitegrid")
+    #sb.set_style("whitegrid")
+
+    COLOR = "#00c3b1"
+    mpl.rcParams['text.color'] = COLOR
+    mpl.rcParams['axes.labelcolor'] = COLOR
+    mpl.rcParams['xtick.color'] = COLOR
+    mpl.rcParams['ytick.color'] = COLOR
+    mpl.rc("axes", edgecolor=COLOR)
+
 
     plots = ["accuracy_as_first", "accuracy_as_some_point", "accuracy_as_majority"]
     for (model, t), df in df.groupby(by=["model", "time"]):
@@ -65,7 +74,7 @@ def efficacy(df: pd.DataFrame):
 
     plt.legend(fontsize=7, ncol=3, bbox_to_anchor=(0.2, -0.25))
 
-    plt.savefig(get_plot_dir() / f"efficacy.pdf", bbox_inches="tight")
+    plt.savefig(get_plot_dir() / f"efficacy.png", bbox_inches="tight", transparent=True)
     plt.show()
 
 
@@ -153,7 +162,18 @@ def latencies(df: pd.DataFrame):
     with sb.plotting_context(rc={"legend.fontsize": 12,
                                  "legend.title_fontsize": 12}):
         plt.figure(figsize=(10, 4))
-        sb.set_style("whitegrid")
+        #sb.set_style("whitegrid")
+        COLOR = "#00c3b1"
+        sb.set_style("darkgrid")
+        # plt.grid(color=COLOR, linewidth=0.7, linestyle="-.")
+        mpl.rcParams['text.color'] = COLOR
+        mpl.rcParams['axes.labelcolor'] = COLOR
+        mpl.rcParams['xtick.color'] = COLOR
+        mpl.rcParams['ytick.color'] = COLOR
+        mpl.rcParams['legend.frameon'] = 'False'
+
+        mpl.rc("axes", edgecolor=COLOR)
+
         sb.lineplot(x="K", y="latency", data=df, hue="model", style="model", markers=True, dashes=True, ci=68)
 
         plt.plot(np.arange(0, df["K"].max() + 2), np.ones(df["K"].max() + 2) * 0.25, 'r--')
@@ -166,7 +186,7 @@ def latencies(df: pd.DataFrame):
         plt.xlabel("K", fontsize=20)
 
         plt.legend(ncol=3, bbox_to_anchor=(0.84, -0.25))
-        plt.savefig(get_plot_dir() / f"latencies.png", bbox_inches="tight")
+        plt.savefig(get_plot_dir() / f"latencies.png", bbox_inches="tight", transparent=True)
         plt.show()
 
 
@@ -177,9 +197,21 @@ def gcs_accuracy(df: pd.DataFrame):
         accuracies.append(multiclass_accuracy(df))
 
     plt.figure(figsize=(10, 4))
-    sb.set_style("whitegrid")
-    pal = sb.cubehelix_palette(start=2, rot=0, dark=0.15, light=.7, reverse=False, n_colors=len(names))
+
+    COLOR = "#00c3b1"
+    sb.set_style("darkgrid")
+    #plt.grid(color=COLOR, linewidth=0.7, linestyle="-.")
+    mpl.rcParams['text.color'] = COLOR
+    mpl.rcParams['axes.labelcolor'] = COLOR
+    mpl.rcParams['xtick.color'] = COLOR
+    mpl.rcParams['ytick.color'] = COLOR
+    mpl.rc("axes", edgecolor=COLOR)
+
+    pal = sb.cubehelix_palette(start=2.6, rot=0, dark=0.32, light=.7, reverse=False, n_colors=len(names))
+    #pal = sb.cubehelix_palette(start=2, rot=0, dark=0.15, light=.7, reverse=False, n_colors=len(names))
     accuracies = np.array(accuracies)
+    
+
 
     rank = accuracies.argsort().argsort()  # http://stackoverflow.com/a/6266510/1628638
     sb.barplot(x=accuracies, y=names, palette=np.array(pal[::-1])[rank])
@@ -188,7 +220,7 @@ def gcs_accuracy(df: pd.DataFrame):
     plt.ylabel("accuracy", fontsize=16)
     plt.yticks(fontsize=11)
     plt.xticks(fontsize=14)
-    plt.savefig(get_plot_dir() / f"gsc_accuracies.png", bbox_inches="tight")
+    plt.savefig(get_plot_dir() / f"gsc_accuracies.png", bbox_inches="tight", transparent=True)
     plt.show()
 
 
@@ -234,8 +266,17 @@ def gcs_distribution(df: pd.DataFrame):
     print("data", data)
     print("data", type(data))
     plt.figure(figsize=(10, 4))
-    sb.set_style("whitegrid")
-    pal = sb.cubehelix_palette(start=2, rot=0, dark=0.15, light=.7, reverse=False, n_colors=len(data))
+    #plt.axis("off")
+
+    COLOR = "#00c3b1"
+    mpl.rcParams['text.color'] = COLOR
+    mpl.rcParams['axes.labelcolor'] = COLOR
+    mpl.rcParams['xtick.color'] = COLOR
+    mpl.rcParams['ytick.color'] = COLOR
+    mpl.rc("axes", edgecolor=COLOR)
+
+    #sb.set_style("whitegrid")
+    pal = sb.cubehelix_palette(start=2.6, rot=0, dark=0.32, light=.7, reverse=False, n_colors=len(data))
 
     rank = data.argsort().argsort()  # http://stackoverflow.com/a/6266510/1628638
     sb.barplot(x=data.index, y=data.values, palette=np.array(pal[::-1])[rank])
@@ -243,7 +284,9 @@ def gcs_distribution(df: pd.DataFrame):
     plt.ylabel("samples", fontsize=16)
     plt.yticks(fontsize=11)
     plt.xticks(fontsize=14)
-    plt.savefig(get_plot_dir() / f"gsc_distribution.png", bbox_inches="tight")
+
+
+    plt.savefig(get_plot_dir() / f"gsc_distribution.png", bbox_inches="tight", transparent=True)
     plt.show()
 
 
@@ -252,7 +295,20 @@ def usability(df: pd.DataFrame):
     # colors = sb.color_palette("rocket")
     for j, ((model, _), df) in enumerate(df.groupby(by=["model", "time"])):
         plt.figure(figsize=(10, 2.5))
-        sb.set_style("whitegrid")
+
+        COLOR = "#00c3b1"
+        #sb.set_style("darkgrid")
+        # plt.grid(color=COLOR, linewidth=0.7, linestyle="-.")
+        mpl.rcParams['text.color'] = COLOR
+        mpl.rcParams['axes.labelcolor'] = COLOR
+        mpl.rcParams['xtick.color'] = COLOR
+        mpl.rcParams['ytick.color'] = COLOR
+        mpl.rcParams['legend.frameon'] = 'False'
+
+        #plt.yticks([])
+        #plt.xticks(np.linspace(0, 1, 10))
+
+        #sb.set_style("whitegrid")
         for i, (keyword, from_df) in enumerate(df.groupby(by="from")):
             same = from_df.loc[from_df["to"] == keyword]["distance"]
             different = from_df.loc[from_df["to"] != keyword]["distance"]
@@ -266,9 +322,11 @@ def usability(df: pd.DataFrame):
         # sb.kdeplot(data=df, x="distance", hue="from")
         plt.title(model, fontsize=14)
         plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
+        plt.yticks([], fontsize=12)
         plt.legend(fontsize=10)
-        plt.savefig(get_plot_dir() / f"usability-{j}.png", bbox_inches="tight")
+        plt.xlabel("Distance", fontsize=14)
+        plt.ylabel("Density", fontsize=14)
+        plt.savefig(get_plot_dir() / f"usability-{j}.png", bbox_inches="tight", transparent=True)
         plt.show()
 
 
