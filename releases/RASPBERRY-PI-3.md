@@ -73,7 +73,7 @@ Begin by aquiring an assistant release, either a prebuilt one or if you want the
 
 #### Prebuilt
 
-Go to the [release page](https://github.com/JonasRSV/Friday/releases/tag/v0.01) and download latest 'pi-release.zip'
+Go to the [release page](https://github.com/JonasRSV/Friday/releases/) and download latest 'pi-release.zip'
 
 #### Build
 
